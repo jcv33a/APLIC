@@ -1,0 +1,1220 @@
+// Module Name: FORM.COD FOR 1.1
+// Description: This module produces dBASE IV .FMT files
+//              with popups for VALID clause field validation and
+//              Context Sensitive Help for each field
+//
+
+Plantilla para Formatos (.fmt) con men£s de ventana para validaci¢n de campos
+-----------------------------------------------------------------------------
+Versi¢n 1.1.19
+Ashton-Tate (c) 1987, 1988, 1989, 1990
+Escrito por Kirk J. Nason y Bill Ramos
+
+Esta plantilla puede proporcionar men£s de ventana para validar campos mediante
+la cla£sula VALID, as¡ como ayuda sensible al contexto para cada campo.
+
+Ejemplo: En "Aceptar valores cuando" del men£ "Opciones de edici¢n" introduzca:
+        "POPUP" = "Vendedor->C¢d_vend ORDER C¢d_vend REQ SHADOW"
+        --------------------------------------------------------
+        De este modo se activar  un men£ de ventana si los datos introducidos
+        en el campo no son v lidos y adem s se define el campo como obligatorio.
+
+Explicaci¢n de la serie POPUP :
+
+POPUP              Indica que se va a usar un men£ de ventana para este campo.
+Vendedor->C¢d_vend Base de datos y campo que contienen los valores v lidos.
+ORDER C¢d_vend     Indica la etiqueta del ¡ndice en el que buscar.
+REQ                Indica que es obligatorio introducir datos en el campo.
+                   No ponga REQ si el campo puede quedar vac¡o.    ­OPCIONAL!
+SHADOW             Efecto de sombra en expansi¢n en los men£s      ­OPCIONAL!
+NOTA: La serie POPUP debe ser introducida con las comillas igual que en el ej.
+
+--------------------------------------------------------------------------------
+
+Explicaci¢n de la Ayuda Sensible al Contexto:
+
+Esta es la estructura que necesita si desea crearse su propio fichero de ayuda.
+
+Estructura de la base de datos de Ayuda (.dbf):
+<primeros 6 caracteres del nombre del fichero de formato>_H.dbf
+
+Campo  Nombre      Tipo       Ancho  Dec Indi.
+-----------------------------------------------
+    1  FLD_NAME    Car cter     10          Si  Nombres de los campos con ayuda
+    2  FLD_HEADNG  Car cter     25          No  Cabeceras de ventanas de ayuda
+    3  FLD_HELP    Memo         10          No  Textos de ayuda para el usuario
+-----------------------------------------------
+      Total                     46
+{
+include "form.def"    // Form selectors
+include "builtin.def" // Builtin functions
+//
+// Enum string constants for international translation
+//
+enum wrong_class = "Imposible usar FORM.GEN en objetos que no sean formatos. ",
+     form_empty  = "Dise¤o de formato vac¡o.  "
+     bad_pick    = "Coord. de lista de opciones exceden la columna 79 - mueva el campo a la izq.",
+     bad_shadow  = "Las coordenadas del sombreado exceden la columna 79 - mueva el campo a la izq.",
+     select_msg1 = "[Seleccionar: ]+CHR(17)+CHR(196)+CHR(217)+[   Cancelar: Esc]",
+     help_msg1   = "Desplazarse por Ayuda: Ctrl-Home      Salir: Esc     ",
+     help_msg2   = "Ver Pantalla Original: F3"
+;
+enum  offset = 3; // Offset for lmarg()
+//
+
+if FRAME_CLASS != form then // We are not processing a form object
+  pause(wrong_class + any_key)
+  goto NoGen;
+endif
+
+var  fmt_name,     // Format file name
+     crlf,         // line feed
+     carry_flg,    // Flag to test carry loop
+     carry_cnt,    // Count of the number of fields to carry
+     carry_len,    // Cumulative length of carry line until 75 characters
+     carry_lent,   // Total cumulative length of carry line
+     carry_first,  // Flag to test "," output for carry fields
+     color_flg,    // Flag to if color should stay on am line
+     line_cnt,     // Count for total lines processed (Mulitple page forms)
+     page_cnt,     // Count for total pages processed (Mulitple page forms)
+     temp,         // tempory work variable
+     cnt,          // Foreach loop variable
+     wnd_cnt,      // Window counter
+     wnd_names,    // Window names so I can clear them at the bottom of the file
+     default_drv,  // dBASE default drive
+     dB_status,    // dBASE status before entering designer
+     scrn_size,    // Screen size when generation starts
+     left_delimiter, // Delimiter to put around SAY
+     right_delimiter,// Delimiter to put around SAY
+     max_pop_row,  // Maximum row that a popup or shadow can start
+     display,      // Type of display screen we are on
+     is_popup,     // POPUP validation requested
+     is_help,      // HELP (context sensitive) requested
+     udf_file,     // UDF file has been created
+     hlp_name,     // HELP .dbf name
+     trow_positn,  // Temporary variable for row_positn
+     tcol_positn,  // Temporary variable for col_positn
+     at_pop,       // "POPUP" is in FLD_OK_COND
+     color;        // Color returned from getcolor function
+
+ //-----------------------------------------------
+ // Assign default values to some of the variables
+ //-----------------------------------------------
+ carry_flg = carry_first = carry_cnt = carry_len = carry_lent =
+ wnd_cnt = line_cnt =  color_flg = cnt = 0
+ crlf = chr(10)
+ temp = ""
+ page_cnt = 1
+ is_popup = is_help = udf_file = 0
+ left_delimiter = right_delimiter = "\""
+
+ screen_size()
+ //-------------------------------
+ // Create Format file
+ //-------------------------------
+ if !make_Fmt() then goto nogen
+
+ header()                   // Print Header in the Format file
+ fmt_file_initialization()  // Format file initializtion code
+ fmt_file_body()            // @ SAY GET Processing
+ fmt_file_exit()            // Format file exit code
+ make_pop_code()            // Create the Procedure File for POPUP's if required
+ make_help_code()           // Make procedures for the help system
+
+ if cnt == 0 then
+    pause(form_empty + any_key)
+ endif
+ fileerase(fmt_name+".FMO")
+ nogen:
+return 0;
+
+
+//---------------------------------------
+// Template user defined functions follow
+//---------------------------------------
+
+define fmt_file_initialization()
+//
+// Format file initialization code
+//
+}
+
+*-- C¢digo de inicializaci¢n del fichero de formato de pantalla -------------
+
+*-- Algunas de las variables PRIVATE han sido creadas seg£n las necesidades del
+*-- generador de c¢digo y pueden no ser usadas por su fichero .fmt particular
+PRIVATE lc_talk, lc_cursor, lc_display, lc_status, lc_carry, lc_proc,;
+        ln_typeahd, gc_cut
+
+IF SET("TALK") = "ON"
+   SET TALK OFF
+   lc_talk = "ON"
+ELSE
+   lc_talk = "OFF"
+ENDIF
+lc_cursor = SET("CURSOR")
+SET CURSOR ON
+{if at("43", display_type()) then}
+
+*-- Este formato de pantalla ha sido creado con modo de visualizaci¢n {display_type()}
+lc_display = SET("display")
+// MONO, COLOR, EGA25, EGA43, MONO43
+IF .NOT. "43" $ lc_display                           && En modo 25 l¡neas
+   IF "EGA" $ lc_display
+      *-- Si EGA est  contenido en lc_display, establece EGA43
+      SET DISPLAY TO EGA43
+   ELSE
+      *-- En otro caso, establece MONO43
+      SET DISPLAY TO MONO43
+   ENDIF
+ENDIF
+{endif}
+
+lc_status = SET("STATUS")
+*-- SET STATUS estaba \
+{if dB_status then}
+ON cuando se entr¢ en el Dise¤ador de Pantallas.
+IF lc_status = "OFF"
+   SET STATUS ON
+{else}
+OFF cuando se entr¢ en el Dise¤ador de Pantallas.
+IF lc_status = "ON"
+   SET STATUS OFF
+{endif}
+ENDIF
+//-----------------------------------------------------------------------
+// Process fields to build "SET CARRY" and WINDOW commands.
+//-----------------------------------------------------------------------
+{
+ foreach FLD_ELEMENT flds
+   new_page(flds)
+   if FLD_CARRY then carry_flg = 1; ++carry_cnt endif
+   if chr(FLD_VALUE_TYPE) == "M" and FLD_MEM_TYP and wnd_cnt < 20 then
+      ++wnd_cnt
+      wnd_names = wnd_names + "wndow" + wnd_cnt + ",";
+}
+
+*-- Ventana para el campo memo {cap_first(FLD_FIELDNAME)}.
+DEFINE WINDOW { Window_Def(flds)}\
+{  endif
+ next flds
+ print(crlf);
+ if carry_flg then
+}
+
+lc_carry = SET("CARRY")
+*-- Campos que se copian al utilizar APPEND.
+SET CARRY TO { Carry_Flds()}
+
+{endif}
+{
+ if check_for_popups() then
+}
+
+ON KEY LABEL F2 ?? chr(7)
+
+lc_proc = SET("procedure")   && Almacena el nombre del fichero de procedimientos
+SET PROCEDURE TO u_{substr(name,1,6)}
+
+{    endif
+     if check_for_help() then
+        if !is_popup then}
+lc_proc = SET("procedure")   && Almacena el nombre del fichero de procedimientos
+SET PROCEDURE TO u_{substr(name,1,6)}
+{       endif}
+ON KEY LABEL F1 DO Help WITH VARREAD()
+{    endif
+return;
+// eof - fmt_file_init()
+enddef
+
+//----------------------------------------------------------------
+define fmt_file_body()
+}
+
+*-- Procesado de @ SAY GETS.---------------------------------------------------
+
+*-- P gina de Formato: {page_cnt = 1
+                         page_cnt}
+
+{line_cnt = wnd_cnt = 0
+ foreach ELEMENT k
+   color = getcolor(FLD_DISPLAY, FLD_EDITABLE) // get color of element
+   if new_page(k) then
+}
+READ
+
+*-- P gina de Formato: {page_cnt}
+
+{  endif
+//
+
+   if ELEMENT_TYPE == @TEXT_ELEMENT or ELEMENT_TYPE == @FLD_ELEMENT then
+     if FLD_FIELDTYPE == calc then
+}
+*-- Campo calculado: {cap_first(FLD_FIELDNAME)} - {FLD_DESCRIPT}
+{    endif
+     if FLD_FIELDTYPE == memvar then
+}
+*-- Variable de memoria: {cap_first(FLD_FIELDNAME)}
+{    endif}
+@ {nul2zero(ROW_POSITN) - line_cnt},{nul2zero(COL_POSITN)} \
+{  endif
+   if ELEMENT_TYPE == @BOX_ELEMENT then
+}
+@ {box_coordinates(k)}\
+{  endif}
+//
+{  case ELEMENT_TYPE of
+   @TEXT_ELEMENT:
+   // Certain control characters can cause dBASE problems ie, ASCII(13,26,0)
+   // so the form designer will either send them to us as a string if they are
+   // all the same character or as individual characters if they differ. We
+   // handle this by using the chr() function to "SAY" them in dBASE.
+}
+SAY \
+{     if asc(TEXT_ITEM) < 32 then
+        if len(TEXT_ITEM) == 1 then}
+CHR({asc(TEXT_ITEM)}) \
+{       else}
+REPLICATE(CHR({asc(TEXT_ITEM)}), {len(TEXT_ITEM)}) \
+{       endif
+      else
+         if substr(TEXT_ITEM,1,1) == "\"" then
+            // Double quote is being used on the design surface need to use
+            // brackets "[]" as delimiters
+            left_delimiter = "["
+            right_delimiter = "]"
+         endif
+         left_delimiter + TEXT_ITEM + right_delimiter} \
+{        left_delimiter = right_delimiter = "\""
+      endif
+      outcolor()}
+{  @Box_element:
+       outbox(BOX_TYPE, BOX_SPECIAL_CHAR)}
+{      outcolor()}
+{  @FLD_ELEMENT:
+      if !FLD_EDITABLE then; // its a SAY}
+SAY \
+{        if FLD_FIELDTYPE == calc then
+           // Loop thru expression in case it is longer than 237
+            foreach FLD_EXPRESSION fcursor in k
+               FLD_EXPRESSION}
+{           next}
+// Output a space after the Fld_expression and get ready for picture clause
+ \
+{        else // not a editable field
+            if FLD_FIELDTYPE == dbf then temp = "" else temp = "m->" endif
+               temp + cap_first(FLD_FIELDNAME)} \
+{        endif
+         if Ok_Template(k) then}
+PICTURE "{picture_for_say(k);}" \
+{        endif
+      else // it's a get}
+GET \
+{        if FLD_FIELDTYPE == dbf then temp = "" else temp = "m->" endif
+         temp + cap_first(FLD_FIELDNAME)} \
+{        if chr(FLD_VALUE_TYPE) == "M" && FLD_MEM_TYP then
+            if wnd_cnt < 20  then ++wnd_cnt endif
+            if Fld_mem_typ == 1}OPEN {endif}WINDOW wndow{wnd_cnt} \
+{        endif
+         if Ok_Template(k) then}
+PICTURE "{picture_for_get(k);}" \
+{        endif
+         if FLD_L_BOUND or FLD_U_BOUND then color_flg = 1;}
+;
+   RANGE {FLD_L_BOUND}{if FLD_U_BOUND then},{FLD_U_BOUND}{endif} \
+{        endif
+         if FLD_OK_COND then color_flg = 1;}
+;
+{           if at("POPUP", upper(ltrim(FLD_OK_COND))) == "2" and
+               ok_coordinates( k, 2, 1, bad_pick ) then
+               // A POPUP is desired for showing coded values, redo the
+               // VALID clause to call a UDF based on "U_" + FLD_FIELDNAME
+}
+   VALID {if is_required(FLD_OK_COND)}REQUIRED {endif}\
+{  get_udfname(FLD_FIELDNAME)}( {cap_first(FLD_FIELDNAME)} ) \
+{
+            else
+                if !(at("POPUP", upper(ltrim(FLD_OK_COND))) == "2") then
+}
+   VALID {FLD_OK_COND} \
+{
+                endif
+            endif
+
+            if FLD_REJ_MSG then}
+;
+   ERROR \
+{              if !at("IIF", upper(FLD_REJ_MSG))}"{endif}{FLD_REJ_MSG}\
+{              if !at("IIF", upper(FLD_REJ_MSG))}"{endif} \
+{           endif
+         endif // FLD_OK_COND
+         if FLD_ED_COND then color_flg = 1;}
+;
+   WHEN {FLD_ED_COND} \
+{
+         endif
+         if FLD_DEF_VAL then color_flg = 1;}
+;
+   DEFAULT {FLD_DEF_VAL} \
+{        endif
+         if FLD_HLP_MSG then color_flg = 1;}
+;
+   MESSAGE \
+{           if !at("IIF", upper(FLD_HLP_MSG))}"{endif}{FLD_HLP_MSG}\
+{           if !at("IIF", upper(FLD_HLP_MSG))}"{endif} \
+{        endif
+      endif // FLD_EDITABLE
+}
+{     outcolor()}
+{     color_flg = 0;
+   otherwise: goto getnext;
+   endcase
+}
+
+//Leave the above blank line, it forces a line feed!
+//-----------------
+// End of @ SAY GET
+//-----------------
+{  ++cnt;
+   getnext:
+ next k
+return;
+// eof - fmt_file_body()
+enddef
+
+//--------------------------------------------------------------
+define fmt_file_exit()
+}
+*-- C¢digo final del fichero de formato de pantalla -------------
+
+*-- SET STATUS estaba \
+{if dB_status then}
+ON cuando se entr¢ en el Dise¤ador de Pantallas.
+IF lc_status = "OFF" && Al entrar en este formato de pantalla status estaba off
+   SET STATUS OFF    && Restaura STATUS "OFF" al abandonar el programa
+{else}
+OFF cuando se entr¢ en el Dise¤ador de Pantallas.
+IF lc_status = "ON"  && Al entrar en este formato de pantalla, status estaba on
+   SET STATUS ON     && Restaura STATUS "ON" al abandonar el programa
+{endif}
+ENDIF
+{if carry_flg then}
+
+SET CARRY &lc_carry.
+{endif}
+SET CURSOR &lc_cursor.
+SET TALK &lc_talk.
+{if at("43", display_type()) then}
+SET DISPLAY TO &lc_display.      && Restaura el tama¤o de la pantalla
+{endif}
+{if wnd_names then}
+
+RELEASE WINDOWS {substr(wnd_names, 1, (len(wnd_names) - 1))}
+{endif}
+
+RELEASE {if carry_flg then}lc_carry,{endif}lc_talk,lc_fields,lc_status
+{    if is_help then}
+
+ON KEY LABEL F1
+{    endif
+     if is_popup or is_help then}
+ON KEY LABEL F2
+
+SET PROCEDURE TO (lc_proc)
+{    endif}
+*-- EOP: {filename(fmt_name)}FMT
+{return;
+// eof - fmt_file_exit()
+enddef
+
+//--------------------------------------------------------------
+define picture_for_get(c)
+     if c.FLD_PICFUN then}@{c.FLD_PICFUN}\
+{       if at("S", c.FLD_PICFUN) then}{c.FLD_PIC_SCROLL}{endif}\
+ {//leave this space}\
+{       endif
+     if at("M", c.FLD_PICFUN) then
+        c.FLD_PIC_CHOICE}\
+{    else
+        c.FLD_TEMPLATE}\
+{    endif
+ return;
+enddef
+
+//--------------------------------------------------------------
+define picture_for_say(c)
+     if c.FLD_PICFUN then}@{c.FLD_PICFUN}\
+{       if at("S", c.FLD_PICFUN) then}{c.FLD_PIC_SCROLL}{endif}\
+ {//leave this space}\
+{       endif
+     if !at("M", c.FLD_PICFUN) then
+        c.FLD_TEMPLATE}\
+{    endif
+ return;
+enddef
+
+//--------------------------------------------------------------
+define make_pop_code()
+// Create the Procedure File for POPUP's if required
+     if is_popup then
+          if !make_udf() then
+              return 0;
+          endif
+          udf_header()
+}
+FUNCTION Empty                && Determina si el argumento pasado es NULL
+PARAMETER x
+  mtype = TYPE("x")
+  DO CASE
+    CASE mtype = "C"
+      retval = (LEN(TRIM(x))=0)
+    CASE mtype$"NF"
+      retval = (x=0)
+    CASE mtype = "D"
+      retval = (" "$DTOC(x))
+  ENDCASE
+*-- EOP: empty
+RETURN (retval)
+
+{
+          line_cnt = 0
+          page_cnt = 1
+
+          foreach FLD_ELEMENT flds
+
+               at_pop = at("POPUP", upper(ltrim(FLD_OK_COND))) == "2" ? 1 : 0;
+
+               new_page(flds)
+               if at_pop then
+                    trow_positn = nul2zero(ROW_POSITN) - line_cnt
+                    tcol_positn = nul2zero(COL_POSITN)
+                    color = getcolor(FLD_DISPLAY, FLD_EDITABLE) // get color of element
+
+                    if !ok_coordinates(flds, 2, 0, "") then loop endif
+
+
+                    print("*"+replicate("-",78)+crlf);}
+FUNCTION {get_udfname(FLD_FIELDNAME)}
+  PARAMETER fld_name
+  PRIVATE ALL LIKE ??_*
+  PRIVATE esckey, fld_name, rtn_fld
+  ll_return = .F.
+
+{                   if !is_required(FLD_OK_COND) then}
+  IF empty(fld_name)                    && Campo no requerido cur.FLD_TEMPLATE
+     RETURN (.T.)                       && si es null
+  ENDIF
+
+{                    endif}
+  EscKey = 27                           && 27 representa la tecla ESC
+
+  lc_alias = ALIAS()                    && Almacena el  rea de trabajo actual
+  SELECT SELECT()
+  USE {get_file(FLD_OK_COND)} ORDER {get_key(FLD_OK_COND)} AGAIN
+
+
+  lc_exact = SET("EXACT")               && Almacena el valor de EXACT
+  SET EXACT ON
+
+{                   if chr(FLD_VALUE_TYPE) == "C" then}
+  fld_name = IIF( EMPTY( TRIM( fld_name)), fld_name, TRIM( fld_name))
+{                   endif}
+  SEEK fld_name
+
+  SET EXACT &lc_exact.              && Restaura el valor original de SET EXACT
+  IF .NOT. FOUND()
+
+      DEFINE POPUP {get_popname(FLD_OK_COND)} FROM \
+{         if trow_positn < max_pop_row then
+             trow_positn + 1},{tcol_positn} ;
+        TO {scrn_size-1},{tcol_positn + len(FLD_TEMPLATE) + 1} ;
+{         else
+             trow_positn - 11},{tcol_positn} ;
+        TO {trow_positn - 1},{tcol_positn + len(FLD_TEMPLATE) + 1} ;
+{         endif}
+        PROMPT FIELD {get_field(FLD_OK_COND)} ;
+        MESSAGE {select_msg1}
+
+      ON SELECTION POPUP {get_popname(FLD_OK_COND)} DEACTIVATE POPUP
+
+{                        if chr(FLD_VALUE_TYPE) == "C" then}
+      KEYBOARD TRIM(fld_name)
+{                   endif}
+      SAVE SCREEN TO temp
+{                   if is_shadow(FLD_OK_COND) and
+                       ok_coordinates( flds, 4, 1, bad_shadow ) then
+}
+      DO shadowg WITH {get_pop_shadow(FLD_TEMPLATE);}
+
+{                   endif
+}
+      ACTIVATE POPUP {get_popname(FLD_OK_COND)}
+
+      rtn_fld = PROMPT()                && Opci¢n seleccionada por el usuario
+
+      RELEASE POPUP {get_popname(FLD_OK_COND)}
+
+      RESTORE SCREEN FROM temp
+
+      IF LASTKEY() <> EscKey
+        @ {trow_positn},{tcol_positn} GET rtn_fld \
+{        if Ok_Template(flds) then}
+PICTURE "{picture_for_get(flds);}" \
+{           outcolor()}
+{        endif}
+
+        CLEAR GETS
+
+        REPLACE {cap_first(FLD_FILENAME)}->{cap_first(FLD_FIELDNAME)} WITH \
+{        if chr(FLD_VALUE_TYPE) == "C" then}
+rtn_fld
+{        else}
+VAL(rtn_fld)
+{        endif}
+
+        ll_return = .T.
+      ELSE
+        ll_return = .F.
+{
+                    if !is_required(FLD_OK_COND) then
+}
+        IF EMPTY(fld_name)              && Campo no obligatorio: se sale
+          ll_return = .T.
+        ENDIF
+
+{
+                    endif
+}
+      ENDIF
+
+  ELSE
+      ll_return = .T.
+  ENDIF
+
+  USE
+  SELECT (lc_alias)                     && Vuelve al fichero en edici¢n
+
+*-- EOP: {get_udfname(FLD_FIELDNAME)}
+RETURN (ll_return)
+
+{
+               endif
+          next flds
+          print("*"+replicate("-",78)+crlf);}
+
+{    endif
+     return;
+// eof - make_pop_code()
+enddef
+
+//--------------------------------------------------------------
+define make_help_code()
+//------------------------------------
+// Make procedures for the help system
+//------------------------------------
+if is_help then
+     // If the udf file has not already been created, make it.
+    if not udf_file then
+       if !make_udf() then
+           return 0;
+       endif
+       // Put up the UDF header
+       udf_header()
+    endif
+    // Make procedures for the help system
+    make_help()
+endif
+if is_help or is_popup then
+   // Make shadow procedures
+   make_shadow_procs()
+endif
+return;
+enddef
+
+//--------------------------------------------------------------
+define header()
+    // Print Header in program
+    print( replicate( "*",80) + crlf);}
+*-- Nombre.....: {filename(fmt_name)}FMT
+*-- Fecha......: {ltrim( substr( date(),1,8))}
+*-- Versi¢n....: dBASE IV Formatos {FRAME_VER}.1
+*-- Notas......: ­Los ficheros de formato usan "" como delimitadores!
+{   print( replicate( "*",80) + crlf);
+enddef
+
+//--------------------------------------------------------------
+define udf_header()
+    // Print Header in UDF program
+    print("*"+replicate("-",78)+crlf);}
+*-- Nombre..: {frame_path}u_{rtrim(substr(name,1,6))}.PRG
+*-- Fecha...: {ltrim(SUBSTR(date(),1,8))}
+*-- Versi¢n.: dBASE IV Procedimiento para formatos {Frame_ver}.1
+*-- Notas...: Procedim. para activar men£s de ventana al ser introducido un dato
+*-- ........: no VALIDo y/o para la ayuda sensible al contexto de {filename(fmt_name)}FMT
+{print("*"+replicate("-",78)+crlf);
+enddef
+
+//--------------------------------------------------------------
+define ok_template(cur)
+     if cur.FLD_TEMPLATE && !(chr(cur.FLD_VALUE_TYPE) == "D" ||
+                              chr(cur.FLD_VALUE_TYPE) == "M") then
+        return 1;
+     else
+        return 0;
+     endif
+enddef
+
+//--------------------------------------------------------------
+define ok_coordinates(cur,              // Current cursor
+                      xtra_width,       // Additional width to check ie, shadow
+                      want_message,     // Display message flag 0:No 1:Yes
+                      message)          // Message to display to user
+     // Check to see if coordinates of popup or shadow will fit on screen
+     // based on the dimensions of the current field
+     if nul2zero(cur.COL_POSITN) + len(cur.FLD_TEMPLATE) + xtra_width > 80 then
+        if want_message then
+           beep(2)                      // UDF in builtin.def
+           cls()
+           say_center(10,"Error en el Campo: " + cur.FLD_FIELDNAME)
+           say_center(12, message)
+           pause(any_key)
+        endif
+        return 0;
+     else
+        return 1;
+     endif
+enddef
+
+//--------------------------------------------------------------
+define screen_size()
+   // Test screen size if display > 2 screen is 43 lines
+   display = numset(_flgcolor)
+   if display > ega25 then
+       scrn_size = 39
+       max_pop_row = 36
+   else
+       max_pop_row = 18
+       scrn_size = 21
+   endif
+
+   // Test to see if status was off before going into form designer
+   dB_status = numset(_flgstatus)
+   if scrn_size == 21 and !db_status then
+      scrn_size = 24
+      max_pop_row = 21
+   endif
+   if scrn_size == 39 and !db_status then // status is off
+      scrn_size = 42
+      max_pop_row = 39
+   endif
+   return;
+enddef
+
+//--------------------------------------------------------------
+define display_type()
+    // Find out the display type we are working on
+    var temp;
+    case display of
+       mono:   temp = "MONO"
+       cga:    temp = "COLOR"
+       ega25:  temp = "EGA25"
+       mono43: temp = "MONO43"
+       ega43:  temp = "EGA43"
+     endcase
+     return temp;
+enddef
+
+//--------------------------------------------------------------
+define getcolor(f_display,         // Color of the current field
+                f_editable         // Field is SAY or GET
+               )
+ // Determines the color from f_display and f_editable (GET or SAY)
+ enum  Foreground  =   7,
+       Intensity   =   8,  // Color
+       Background  = 112,
+       MIntensity  = 256,
+       Reverse     = 512,  // Mono
+       Underline   =1024,
+       Blink       =2048,
+       default     =32768; // Screen set to default
+
+ var forgrnd, enhanced, backgrnd, blnk, underln, revrse, use_colors, incolor;
+ incolor=""
+
+ use_colors  = default & f_display
+ forgrnd  = Foreground & f_display
+ enhanced = (Intensity & f_display) || (MIntensity & f_display)
+ backgrnd = Background & f_display
+ blnk     = Blink  & f_display
+ underln  = Underline & f_display
+ revrse   = Reverse & f_display
+
+ if not use_colors then // Use system colors, no colors set in designer
+
+    if backgrnd then backgrnd = backgrnd/16 endif
+
+    if (display != mono and display != mono43) then
+       case forgrnd of
+        0: incolor = "n"
+        1: incolor = "b"
+        2: incolor = "g"
+        3: incolor = "bg"
+        4: incolor = "r"
+        5: incolor = "rb"
+        6: incolor = "gr"
+        7: incolor = "w"
+       endcase
+    else
+       incolor = "w"
+    endif
+
+    if revrse then
+       incolor = incolor + "i"
+    endif
+    if underln then
+       incolor = incolor + "u"
+    endif
+    if enhanced then
+       incolor = incolor + "+"
+    endif
+    if blnk then
+       incolor = incolor + "*"
+    endif
+
+    incolor = incolor + "/"
+
+    if (display != mono and display != mono43) then
+       case backgrnd of
+        0: incolor = incolor + "n"
+        1: incolor = incolor + "b"
+        2: incolor = incolor + "g"
+        3: incolor = incolor + "bg"
+        4: incolor = incolor + "r"
+        5: incolor = incolor + "rb"
+        6: incolor = incolor + "gr"
+        7: incolor = incolor + "w"
+       endcase
+    else
+       incolor = incolor + "n"
+    endif
+
+    if f_editable and incolor then
+       incolor = incolor + "," + incolor
+    endif
+
+ endif // use no colors
+ return alltrim(incolor);
+enddef
+
+//--------------------------------------------------------------
+define outbox(mbox,            // Border type
+              mchar            // Special character of border
+             )
+   // Output the of Box border and character if any
+   var result;
+   case mbox of
+      0: result = " " // single
+      1: result = " DOUBLE "
+      2: result = " CHR("+mchar+") "
+   endcase
+   return result;
+enddef
+
+//--------------------------------------------------------------
+define outcolor()
+  // Output the of color of the @ SAY GET or Box
+  var result;
+  result = "";
+  if len(color) > 0 then
+     if color_flg then
+        // If flag is set output a dBASE continuation ";"
+        result = ";" + crlf + space(3)
+     endif
+     result = result + "COLOR " + color + " "
+  endif
+  return result;
+enddef
+
+//--------------------------------------------------------------
+define window_def(cur)
+   // Build dBASE window command
+   var result;
+   result = "wndow" + wnd_cnt + " FROM " + Box_Coordinates(cur)
+   result = result + outbox(cur.BOX_TYPE, cur.BOX_SPECIAL_CHAR)
+   color = getcolor(cur.FLD_DISPLAY, cur.FLD_EDITABLE)
+   result = result + outcolor()
+   return result;
+enddef
+
+//--------------------------------------------------------------
+define box_coordinates(cur)             // Pass in foreach cursor
+   // Build box coordinates for a dBASE window command
+   var result, temp_page, line_cnt;
+   temp_page = page_cnt;
+
+   // Adjust box coordinates so that negative numbers are not generated
+   do while ( nul2zero(cur.BOX_TOP) - (scrn_size * temp_page) ) <= 1
+         temp_page = temp_page - 1
+   enddo
+   if page_cnt == 1 then
+        temp_page = 0
+   endif
+   if page_cnt == 2 then
+        temp_page = 1
+   endif
+   if !temp_page then
+      line_cnt = 0
+   else
+      line_cnt = (scrn_size * temp_page) + (1 * temp_page)
+   endif
+
+   result = nul2zero(cur.BOX_TOP) - line_cnt +","
+   result = result + nul2zero(cur.BOX_LEFT) + " TO "
+   temp = nul2zero(cur.BOX_TOP) + cur.BOX_HEIGHT - line_cnt - 1
+   if temp > scrn_size then temp = scrn_size endif
+   result = result + temp + "," + (nul2zero(cur.BOX_LEFT) + cur.BOX_WIDTH - 1)
+   return result;
+enddef
+
+//--------------------------------------------------------------
+define carry_flds()
+   // Build dBASE SET CARRY command
+   carry_len = carry_lent = 13
+   carry_first = 0
+   foreach FLD_ELEMENT flds
+      if FLD_CARRY then
+         carry_len = carry_len + len(FLD_FIELDNAME + ",")
+         carry_lent = carry_lent + len(FLD_FIELDNAME + ",")
+         if carry_lent > 1000 then
+            print(crlf + "SET CARRY TO ")
+            carry_len = carry_lent = 13
+         endif
+         if carry_len > 75 then print(";" + crlf + "  ")  carry_len = 2 endif
+         temp = cap_first(FLD_FIELDNAME)
+         if !carry_first then
+            print(temp)
+            carry_first = 1
+         else
+            print("," + temp)
+         endif
+      endif
+    next flds
+    print(" ADDITIVE");
+ return;
+enddef
+
+//--------------------------------------------------------------
+
+define make_fmt()
+   // Attempt to create program (fmt) file.
+   default_drv = strset(_defdrive)  // grab default drive from dBASE
+   fmt_name = FRAME_PATH + NAME     // Put path on to object name
+   if not fileok(fmt_name) then
+      if !default_drv then
+         fmt_name = NAME
+      else
+         fmt_name = default_drv + ":" + NAME
+      endif
+   endif
+   fmt_name = upper(fmt_name)
+   if not create(fmt_name+".FMT") then
+        pause(fileroot(fmt_name) +".FMT" + read_only + any_key)
+        return 0;
+     endif
+   return 1;
+enddef
+//--------------------------------------------------------------
+
+define make_udf()
+   // Attempt to create dBASE procedure (prg) file.
+   var udf_root_file_name;
+   udf_root_file_name =  frame_path + "u_" + rtrim(substr(name,1,6))
+   if not create( udf_root_file_name + ".PRG") then
+      pause(udf_root_file_name + ".PRG" + read_only + any_key)
+      return 0;
+   endif
+   // Force dBASE to recompile the .prg
+   fileerase(udf_root_file_name + ".DBO")
+   udf_file = 1 // Global flag to determine if UDF file was created
+   return 1;
+enddef
+
+//--------------------------------------------------------------
+define check_for_popups()
+// Check for "popup" string for this fmt file
+foreach FLD_ELEMENT flds
+    if at("POPUP", upper(ltrim(FLD_OK_COND))) == "2" then
+       is_popup = 1
+       exit
+    endif
+next flds
+return is_popup;
+enddef
+
+//--------------------------------------------------------------
+define check_for_help()
+   // Check for help support for this fmt file
+   // Looking for a .dBF with the same name as the .fmt file
+   hlp_name = frame_path + substr(fileroot(fmt_name), 1, 6) + "_H"
+
+   if fileexist(hlp_name + ".DBF") and fileexist(hlp_name + ".DBT") then
+      is_help = 1      // Global flag for help support
+   endif
+return is_help;
+enddef
+
+//--------------------------------------------------------------
+define new_page(cur)               // Cur: Current cursor
+   // Checks for a page break and adjusts line_cnt and page_cnt
+   if nul2zero(cur.ROW_POSITN) - line_cnt > scrn_size then
+      line_cnt = line_cnt + scrn_size + 1;
+      ++page_cnt;
+      return 1;
+   endif
+return 0;
+enddef
+
+//--------------------------------------------------------------
+define parse_line( before,         // Out: chars before the look_for string
+                   input,          // In:  line being parsed
+                   look_for        // In:  string searched for
+                 )                 // Rtn: chars after the look_for string
+// If the look_for sting is not found, the before sting will equal the
+// input string, and the returned value will be NUL
+     var location;
+
+     location = at(look_for, UPPER(input))
+     if location == 0 then
+          before = input
+          return ( "" );
+     endif
+
+     before = substr( input, 1, location-1)
+     return ( substr( input,
+                      location+len(look_for),
+                      len(input)
+                    )
+            );
+
+// end: parse_line()
+enddef
+
+//--------------------------------------------------------------
+// Parsing routines for pulling objects out of the VALID string
+// "POPUP" = "file->fld_name ORDER key_fld REQ"
+// 1234567890123456789012345678901234567890123
+//            1         2         3         4
+define get_file(valid_str)
+     var  s_arrow,            // String "->"
+          test,
+          s_equal,            // String "="
+          next_alpha,
+          at_alias,
+          s_before,           // String before the searched for item
+          r_target,           // Remainder of the target string after item
+          use_name;           // Return for file
+
+     s_arrow = "->"
+     s_equal = "="
+     r_target = parse_line( s_before, valid_str, s_equal )      // ' "file->...'
+     next_alpha = atalpha(r_target)                             // 3
+     at_alias = at(s_arrow, r_target)                           // 7
+     use_name = substr(r_target,next_alpha,at_alias-next_alpha) // 'file'
+
+     return cap_first(use_name);
+enddef
+
+//--------------------------------------------------------------
+define get_key(valid_str)
+     var  s_order,            // String "ORDER "
+          at_space,
+          s_before,           // String before the searched for item
+          r_target,           // Remainder of the target string after item
+          order_tag;          // Search TAG to ORDER BY
+
+     s_order = "ORDER "
+     r_target = parse_line( s_before, valid_str, s_order ) // 'key_fld REQ'
+     at_space = at(" ",r_target)
+     if at_space == 0 then
+          order_tag = substr(r_target, 1, len(r_target)-1) // 'key_fld"'
+     else
+          order_tag = substr(r_target, 1, at_space-1)
+     endif
+     return cap_first(order_tag);
+enddef
+
+//--------------------------------------------------------------
+define get_field(valid_str)
+     var  s_arrow,            // String "->"
+          at_space,
+          s_before,           // String before the searched for item
+          r_target,           // Remainder of the target string after item
+          fld_name;           // Field name to lookup in target file
+
+     s_arrow = "->"
+     r_target = parse_line( s_before,
+                            valid_str, s_arrow ) // 'fld_name ORDER...'
+     at_space = at(" ",r_target)
+
+     fld_name = ( at_space == 0 ? r_target : substr(r_target, 1, at_space-1) );
+
+     return cap_first(fld_name);
+enddef
+
+//--------------------------------------------------------------
+define get_popname(valid_str)
+     // Create popup name
+     return ( lower( "u_" + substr( get_field( valid_str),1,6) ) );
+enddef
+
+//--------------------------------------------------------------
+define get_pop_shadow(field_template)   // Pass in FLD_TEMPLATE to deter. shadow
+     if trow_positn < max_pop_row then
+        trow_positn + 1},{tcol_positn},{scrn_size-1},{tcol_positn+len(Field_template)+1}
+{    else
+        trow_positn - 11},{tcol_positn},{trow_positn - 1},{tcol_positn+len(Field_template)+1}
+{    endif
+     return;
+enddef
+
+//---------------------------------------------------------------
+define get_udfname(fld_str)
+     // Create UDF name
+     return cap_first( "u_" + substr( fld_str,1,6) );
+enddef
+
+//--------------------------------------------------------------
+define is_required(valid_str)
+     // Determines if the field is required before moving to the next field
+     return ( ( at(" REQ ",  upper(valid_str)) ? 1 : 0 ) or
+              ( at(" REQ\"", upper(valid_str)) ? 1 : 0 )
+            );
+enddef
+
+//--------------------------------------------------------------
+define is_shadow(valid_str)
+     // Determines if the user wants shadowing for popup
+     return ( ( at(" SHADOW ",  upper(valid_str)) ? 1 : 0 ) or
+              ( at(" SHADOW\"", upper(valid_str)) ? 1 : 0 )
+            );
+enddef
+
+//--------------------------------------------------------------
+define make_shadow_procs()
+     // Make the dBASE code for shadowing
+     print("*"+replicate("-",78)+crlf);
+}
+PROCEDURE Shadowg                    && Presenta un sombreado que crece
+  PARAMETER x1,y1,x2,y2
+  PRIVATE   x1,y1,x2,y2
+
+  x0 = x2+1
+  y0 = y2+2
+  dx = 1
+  dy = (y2-y1) / (x2-x1)
+  DO WHILE x0 <> x1 .OR. y0 <> y1+2
+     @ x0,y0 FILL TO x2+1,y2+2 COLOR n+/n
+     x0 = IIF(x0<>x1,x0 - dx,x0)
+     y0 = IIF(y0<>y1+2,y0 - dy,y0)
+     y0 = IIF(y0<y1+2,y1+2,y0)
+  ENDDO
+
+RETURN
+*-- EOP: shadowg
+{    return;
+enddef
+
+//--------------------------------------------------------------
+ define make_help()
+// Make the dBASE code for help
+}
+PROCEDURE Help
+{    lmarg(offset)}
+*-- Activa la ventana de AYUDA
+PARAMETER lc_var
+PRIVATE ALL LIKE ??_*
+SET CURSOR OFF
+
+*-- Selecciona el  rea de trabajo y abre Help dbf
+lc_area = ALIAS()
+SELECT SELECT()
+USE {fileroot(hlp_name)} ORDER fld_name NOUPDATE   && Abre HELP.dbf
+
+SEEK lc_var
+IF FOUND()                   && Si se encuentra lc_var, se muestra la Ayuda
+  ln_t = 5
+  ln_l = 6
+  ln_b = 15
+  ln_r = 74
+  ON KEY LABEL F3 DO Toggle
+  DEFINE WINDOW z_help FROM ln_t+1, ln_l+2 TO ln_b-1, ln_r-2 NONE
+  ON ERROR lc_error=error()
+  SAVE SCREEN TO zz_help
+
+  *-- Ventana de Help
+  DO shadowg WITH ln_t, ln_l, ln_b, ln_r
+  @ ln_t+1, ln_l+1 CLEAR TO ln_b-1, ln_r-1
+  @ ln_t, ln_l TO ln_b, ln_r DOUBLE
+
+  ln_memline = SET("MEMO")
+  SET MEMOWIDTH TO 65
+  IF MEMLINES(fld_help) > 9
+    @ ln_t+1,ln_r SAY CHR(24)
+    @ ln_b-1,ln_r SAY CHR(25)
+  ENDIF
+  lc_string = CHR(185)+ [ Ayuda sobre ] + TRIM(fld_headng) +[ ] + CHR(204)
+  lc_message = IIF(MEMLINES(fld_help) > 9, ;
+                  "{help_msg1 + help_msg2}", ;
+                  "{help_msg2}" ;
+                  )
+
+  @ ln_t,CENTER(lc_string,80) SAY lc_string
+  @ 0,0 GET fld_help OPEN WINDOW z_help MESSAGE lc_message
+  READ
+  SET MEMOWIDTH TO ln_memline
+  ON ERROR
+  ON KEY LABEL F3
+  RELEASE WINDOW z_help
+  RESTORE SCREEN FROM zz_help
+  RELEASE SCREEN zz_help
+ENDIF
+SET MESSAGE TO
+SET CURSOR ON
+USE                                       && Cierra el fichero de Ayuda
+SELECT (lc_area)                          && Vuelve al  rea de edici¢n
+{    lmarg(0)}
+RETURN
+*-- EOP: HELP
+
+{    print("*"+replicate("-",78)+crlf);}
+PROCEDURE Toggle
+{    lmarg(offset)}
+*-- Muestra la pantalla original y gestiona la l¡nea de mensajes
+SAVE SCREEN to Toggle
+RESTORE SCREEN FROM zz_help
+SET MESSAGE TO "Pulse una tecla..."
+mwait = INKEY(15)
+RESTORE SCREEN FROM Toggle
+RELEASE SCREEN Toggle
+SET MESSAGE TO "Desplazarse por Ayuda: Ctrl-Home   Salir: Ctrl-End    Ver Pantalla Original: F3"
+{     lmarg(0)}
+RETURN
+*-- EOP: Toggle
+
+{    print("*"+replicate("-",78)+crlf);}
+FUNCTION Center
+*-- UDF para centrar una serie de caracteres.
+*-- lc_string = Serie que centrar
+*-- ln_width = Ancho de la pantalla en la que se centra la serie
+*--
+*-- La expresi¢n @ 15,center(serie,80) SAY serie
+*-- centra la <serie> en una pantalla de 80 columnas
+PARAMETER lc_string, ln_width
+RETURN ((ln_width/2)-(LEN(lc_string)/2))
+{return;
+enddef
+// EOP FORM.COD
+}
+

@@ -1,0 +1,25 @@
+//
+//  Rl.rmk
+//
+//  Fichero make para RL, el programa de dise¤o de informes y etiquetas
+//  de CA-Clipper.
+//
+//  Copyright (c) 1990-1993, Computer Associates International, Inc.
+//  Todos los derechos reservados.
+//
+
+.prg.obj:
+    clipper $< /m /n
+
+.obj.exe:
+    set rtlinkcmd=/posi
+    rtlink $**, $@ ;
+
+
+rlfront.obj:    rlfront.prg
+rlback.obj:     rlback.prg
+rldialg.obj:    rldialg.prg
+
+rl.exe:         rlfront.obj  rlback.obj  rldialg.obj
+
+

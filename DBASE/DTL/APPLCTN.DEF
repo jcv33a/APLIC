@@ -1,0 +1,478 @@
+//---------------------------------------------------------------------------
+// APPLCTN.DEF   Application object(s) data selectors
+// Ashton-Tate (c) 1987, 1988, 1989
+//
+// Updated 11-30-89 KJN
+//
+// This include file contains all the selectors required for applications.
+// *** DO NOT CHANGE ANY OF THE NUMBERS BELOW ***
+//
+//---------------------------------------------------------------------------
+// NOTE:
+// Selectors listed in the following table which are shown to have
+// "Value: Number" will sometimes return the null string instead
+// of the numeric zero.  For logical compares, null is the same
+// as zero, however when emitting the value to the output file
+// the null string must be converted to a numeric zero explicitly.
+// A user defined function is used in the FORM.COD template program
+// called NUL2ZERO() for converting null strings to explicit numeric
+// zeros.
+//---------------------------------------------------------------------------
+{
+selectors
+#lstoff
+//
+// ELEMENT selectors (FOREACH loop elements)
+//
+ELEMENT      1000, // All elements types by row & column
+BOX_ELEMENT  1086, // Box element
+FLD_ELEMENT  1130, // Field element
+TEXT_ELEMENT 1085, // Text element
+TREE         0330, // Tree Element
+//
+// Selectors common to all elements
+//
+ELEMENT_TYPE        001, // Element types found in apps are:
+                         //     BOX_ELEMENT
+                         //     FLD_ELEMENT
+                         //     TEXT_ELEMENT
+ROW_POSITN          092, // Row number of Element
+                         // Menu Path: None - Value: Number
+COL_POSITN          093, // Column number of Element
+                         // Menu Path: None - Value: Number
+SYS_FLEN            053, // Element length in layout
+SYS_INAME           068, // reserved
+SYS_FMT             071, // reserved
+SYS_PAGE            090, // reserved
+SYS_ATRB            094, // reserved
+//
+// Text attribute selectors (FOREACH Text_element x .... NEXT)
+//
+TEXT_ITEM    0095, // Static text data
+                   // Menu Path: None - Value: String
+//
+// Frame level selectors - can be accessed at any time
+//
+APPL_AUTHR   0061, // Author (for program comments)
+                   // Menu Path: AE   - Value: String
+APPL_CAT     0051, // Application catalog
+                   // Menu Path: None - Value: String
+APPL_CPYRT   0062, // Copyright notice for internal program
+                   // Menu Path: AE   - Value: String
+APPL_DELIM   0225, // Delimiter for delimited types
+                   // Menu Path: AME  - Value: String
+APPL_TYPE    0049, // Type of main menu 0: bar, 1: popup, 2: batch
+APPL_MENU    0050, // Application main menu without extension
+                   // Menu Path: AA   - Value: String
+APPL_NDX     0057, // Index file to use with application
+                   // Menu Path: AMV  - Value: String
+APPL_ORDER   0177, // Index order for dbf or view at Application level
+                   // Menu Path: AMV  - Value: String
+APPL_VERSN   0063, // Dbase version for internal program doc
+                   // Menu Path: AE   - Value: String
+APPL_VIEW    0056, // Database or view for the application
+                   // Menu Path: AMV  - Value: String
+CLR_MESSAGES 0151, // Color of dBASE messages
+                   // Menu Path: AMD,VM,HM,FM,SM,PM - Value: String
+CLR_HGHLIGHT 0152, // Color of highlighted information
+                   // Menu Path: AMD,VM,HM,FM,SM,PM - Value: String
+CLR_TEXT     0067, // Unselected text color (says)
+                   // Menu Path: AMD,VM,HM,FM,SM,PM - Value: String
+CLR_HEADING  0069, // Color of headings (e.g. list heading)
+                   // Menu Path: AMD,VM,HM,FM,SM,PM - Value: String
+CLR_BOX      0065, // Color of box border
+                   // Menu Path: AMD,VM,HM,FM,SM,PM - Value: String
+CLR_INFO     0048, // Color of Information
+                   // Menu Path: AMD,VM,HM,FM,SM,PM - Value: String
+CLR_FIELDS   0066, // Selected text color (gets)
+                   // Menu Path: AMD,VM,HM,FM,SM,PM - Value: String
+MENU_AFTER   0232, // Menu after code
+                   // Menu Path: MEA,LEA,BEA - Value: String
+MENU_BEFORE  0231, // Menu before code
+                   // Menu Path: MEB,LEB,BEB - Value: String
+MENU_DESC    0041, // Menu description
+                   // Menu Path: MN,LN,BN - Value: String
+MENU_FILE    0143, // Full menu name from selected object
+                   // Menu Path: None - Value: String
+MENU_MAIN    0055, // Main menu for the application
+                   // Menu Path: AA   - Value: String
+MENU_NAME    0040, // Object name
+                   // Menu Path: MN,LN,BN - Value: String
+MENU_NDX     0043, // Index file to use with menu
+                   // Menu Path: MO,LO,BO - Value: String
+MENU_ORDER   0088, // Index order for dbf or view at menu level
+                   // Menu Path: MO,LO,BO - Value: String
+MENU_OVRIDE  0070, // Method of using Menu database information
+                   // Menu Path: MO,LO,BO - Value: 0=Appl. 1=Menu 2=What currently in use
+MENU_HELP    0230, // Menu help
+                   // Menu Path: MW,LW    - Value: String
+MENU_PRMPT   0058, // Message prompt for menu level
+                   // Menu Path: MN,LN    - Value: String
+MENU_TYPE    0181, // Object type
+                   // Menu Path: AA   - Value: 1=application 2=popup 3=file
+                   //              4=fields 5=values 6=N/A 7=bar 8=N/A 9=Batch
+MENU_VIEW    0042, // Database or view for the menu
+                   // Menu Path: MO,LO,BO - Value: String
+MNU_BORDER   0064, // Frame border style
+                   // Menu Path: MM,LM,AMD - Value: 0=Panel 1=Single
+                   //                               2=Double 3=None
+PICK_FIELD   0045, // Field specification for field list
+                   // Menu Path: LI - Value: String
+PICK_FILE    0044, // File specification for files list
+                   // Menu Path: LI - Value: String
+PICK_VALUE   0046, // Value specification for value list
+                   // Menu Path: LI - Value: String
+PLDWN_MENU   0052, // Pull down associated menus?
+                   // Menu Path: MA (BAR Only) - Value: 0=YES 1=NO
+QUICK_ATHR   0061, // Quick appliation author
+                   // Menu Path: AG  - Value: String
+QUICK_DBF    0056, // Quick application database
+                   // Menu Path: AG  - Value: String
+QUICK_FMT    0243, // Quick application format file
+                   // Menu Path: AG  - Value: String
+QUICK_FRM    0244, // Quick application report file
+                   // Menu Path: AG  - Value: String
+QUICK_HDNG   0247, // Quick application menu heading
+                   // Menu Path: AG  - Value: String
+QUICK_LBL    0245, // Quick application label file
+                   // Menu Path: AG  - Value: String
+QUICK_NDX    0057, // Quick application index file
+                   // Menu Path: AG  - Value: String
+QUICK_ORDR   0177, // Index order for dbf or view for Quick App.
+                   // Menu Path: AG  - Value: String
+SET_BELL     0080, // Setting For Bell
+                   // Menu Path: AME - Value:0=ON 1=OFF
+SET_BELLDR   0078, // Setting for Bell Duration
+                   // Menu Path: AME - Value: String
+SET_BELLFR   0077, // Setting for Bell Frequency
+                   // Menu Path: AME - Value: String
+SET_CARRY    0081, // Setting for carry
+                   // Menu Path: AME - Value:0=OFF 1=ON
+SET_CENTRY   0082, // Setting for century
+                   // Menu Path: AME - Value:0=OFF 1=ON
+SET_CONFRM   0083, // Setting for confirm
+                   // Menu Path: AME - Value:0=OFF 1=ON
+SET_DELCHR   0087, // Setting for escape
+                   // Menu Path: AME - Value: String
+SET_DELIM    0086, // Setting for delimiter
+                   // Menu Path: AME - Value:0=OFF 1=ON
+SET_ESCAPE   0084, // Setting for escape
+                   // Menu Path: AME - Value:0=ON 1=OFF
+SET_SAFETY   0222, // Setting for safety
+                   // Menu Path: AME - Value:0=ON 1=OFF
+//
+// Field attribute selectors (FOREACH Fld_element x .... NEXT)
+//
+ACT_SUMRY    0215, // Action summary description
+                   // Menu Path: None - Value: String
+
+APPND_FROM   0103, // File name to add records from
+                   // Menu Path: ICPA - Value: String
+APPND_TYPE   0104, // File type for add records from
+                   // Menu Path: ICPA - Values:0=DBF 1=DB2 2=FW2 3=RPD
+                   //             4=DELIMITED 5=ARRAY 6=SDF 7=DIF 8=SYLK 9=WKS
+BATCH_NAME   0106, // Batch process name for invoke batch process
+                   // Menu Path: BN,ICRE - Value: String
+BIN_FILE     0106, // Name of the Binary program
+                   // Menu Path: ICRL - Value: String
+BIN_PARMS    0107, // Parameters for assembler program
+                   // Menu Path: ICRL - Value: String
+BROW_APPD    0113, // Switch for NOAPPEND option in browse
+                   // Menu Path: ICB  - Value: 0=YES 1=NO
+BROW_CLEAR   0099, // Switch for NOCLEAR option in browse
+                   // Menu Path: ICB  - Value: 0=NO  1=YES
+BROW_COMPR   0098, // Switch for COMPRESS option in browse
+                   // Menu Path: ICB  - Value: 0=NO  1=YES
+BROW_DELE    0096, // Switch for NODELETE option in browse
+                   // Menu Path: ICB  - Value: 0=YES 1=NO
+BROW_EDIT    0224, // Switch for NOEDIT option in browse
+                   // Menu Path: ICB  - Value: 0=YES 1=NO
+BROW_FMT     0100, // Browse - format file for edit
+                   // Menu Path: ICB  - Value: String
+BROW_FOLLW   0115, // Switch for NOFOLLOW option in browse
+                   // Menu Path: ICB  - Value: 0=YES 1=NO
+BROW_FREZ    0112, // Field to FREEZE
+                   // Menu Path: ICB  - Value: String
+BROW_INIT    0223, // Switch for NOINIT option in browse
+                   // Menu Path: ICB  - Value: 0=NO  1=YES
+BROW_LOCK    0110, // Fields to lock onscreen
+                   // Menu Path: ICB  - Value: String
+BROW_MENU    0114, // Switch for NOMENU option in browse
+                   // Menu Path: ICB  - Value: 0=YES 1=NO
+BROW_WIDTH   0111, // Column width for browse
+                   // Menu Path: ICB  - Value: String
+COPY_DELIM   0225, // Delimiter for delimited types
+                   // Menu Path: ICPC - Value: String
+COPY_RECRD   0103, // File name for copy action
+                   // Menu Path: ICPC - Value: String
+COPY_TYPE    0104, // File type for copy to
+                   // Menu Path: ICPC - Values:0=DBF 1=DB2 2=FW2 3=RPD
+                   //             4=DELIMITED 5=ARRAY 6=SDF 7=DIF 8=SYLK 9=WKS
+DISP_DEST    0170, // Output destination for display
+                   // Menu Path: ICDD - Value: 0=Printer 1=Disk 2=Screen 3=Ask
+DISP_OFF     0150, // Turn record number display off?
+                   // Menu Path: ICDD - Value: 0=YES 1=NO
+DISP_PAUSE   0148, // Pause when page is full?
+                   // Menu Path: ICDD - Value: 0=YES 1=NO
+DISP_SIGN    0054, // Display sign-on banner?
+                   // Menu Path: AD   - Value: 0=NO  1=YES
+DOS_FILE     0106, // Program name for DOS call
+                   // Menu Path: ICRR - Value: String
+DOS_PARM     0107, // Parameters for DOS program call
+                   // Menu Path: ICRR - Value: String
+EDIT_APPD    0113, // Switch for NOAPPEND option in edit
+                   // Menu Path: ICE  - Value: 0=YES 1=NO
+EDIT_CLEAR   0099, // Switch for NOCLEAR option in edit
+                   // Menu Path: ICDD - Value: 0=NO  1=YES
+EDIT_DELE    0096, // Switch for NODELETE option in edit
+                   // Menu Path: ICDD - Value: 0=YES 1=NO
+EDIT_EDIT    0224, // Switch for NOEDIT option in edit
+                   // Menu Path: ICDD - Value: 0=YES 1=NO
+EDIT_FMT     0100, // Format file name for EDIT
+                   // Menu Path: ICDD - Value: String
+EDIT_FOLLW   0115, // Switch for NOFOLLOW option in edit
+                   // Menu Path: ICDD - Value: 0=YES 1=NO
+EDIT_INIT    0223, // Switch for NOINIT option in edit
+                   // Menu Path: ICDD - Value: 0=NO  1=YES
+EDIT_MENU    0114, // Switch for NOMENU option in edit
+                   // Menu Path: ICDD - Value: 0=YES 1=NO
+EDIT_MODE    0248, // Mode for form edit (append,edit)
+                   // Menu Path: ICDD - Value: 0=Append 1=Edit
+EXPRT_FILE   0103, // TO FILE For EXPORT
+                   // Menu Path: ICPE - Value: String
+EXPRT_TYPE   0172, // Type of file for export
+                   // Menu Path: ICPE - Value: 0=PFS 1=DB2 2=FW2 3=RPD
+FIELD_LIST   0250, // Fieldlist for display/list
+                   // Menu Path: ICDD,ICE,ICB,ICPE,ICPC - Value: String
+FILE_FROM    0103, // From file for file to file copy
+                   // Menu Path: ICPF - Value: String
+FILE_TO      0129, // To file for file copy operation
+                   // Menu Path: ICPF - Value: String
+FLD_LENGTH   0053, // Field length of current element
+                   // Menu Path: None - Value: String
+FLD_PICTUR   0101, // Display of current menu item
+                   // Menu Path: None - Value: String
+FLTER_COND   0254, // Filter expression for REPORT Form
+                   // Menu Path: ICB,ICE,ICDL,ICDD,ICDR - Value: String
+FOR_EXPR     0252, // FOR expression for record unmark
+                   // Menu Path: ICPC,ICPS,ICPM,ICPU,ICPP,ICPE,ICDR,ICDL,ICDD,
+                   // ICE,IP  - Value: String
+FRM_DEST     0170, // Output destination for report
+                   // Menu Path: ICDR - Value: 0=Printer 1=Disk 2=Screen 3=Ask
+FRM_EJECT    0169, // Page skip for report
+                   // Menu Path: ICDR - Value: 0=Skip to New Page 1=No eject
+FRM_FILE     0103, // Report FORM name
+                   // Menu Path: ICDR - Value: String
+FRM_HEADNG   0167, // HEADING for report
+                   // Menu Path: ICDR - Value: String
+FRM_PLAIN    0171, // Heading format (PLAIN clause)
+                   // Menu Path: ICDR - Value: 0=Plan 1=Include date and page
+FRM_SUMMRY   0168, // Report format (SUMMARY clause)
+                   // Menu Path: ICDR - Value: 0=Full detail 1=Summary only
+GEN_TEMPLT   0089, // Current template for generation
+                   // Menu Path: GS   - Value: String
+GOTO_RECO    0162, // GOTO command
+                   // Menu Path: IP   - Value: String
+IMPRT_FILE   0103, // From file for import
+                   // Menu Path: ICPI - Value: String
+IMPRT_TYPE   0228, // Type of file for import
+                   // Menu Path: ICPI - Value: 0=PFS 1=DB2 2=RPD 3=FW2 4=WK1
+INLINE_DO    0240, // Inline do code
+                   // Menu Path: ICRI - Value: String
+ITEM_AFTER   0237, // Menu after code
+                   // Menu Path: IEA  - Value: String
+ITEM_BEFOR   0236, // Item before code
+                   // Menu Path: IEB  - Value: String
+ITEM_HELP    0235, // Item help
+                   // Menu Path: IEW  - Value: String
+ITEM_NDX     0132, // Index file to use with view or database
+                   // Menu Path: IO   - Value: String
+ITEM_ORDER   0178, // Index order for dbf or view at item level
+                   // Menu Path: IO   - Value: String
+ITEM_OVRIDE  0108, // Method of using Item database information
+                   // Menu Path: IO   - Value: 0=Menu  1=Item  2=What currently in use
+ITEM_PRMPT   0059, // Item level message prompt
+                   // Menu Path: IA   - Value: String
+ITEM_VIEW    0131, // View or database file for this item
+                   // Menu Path: IO   - Value: String
+ITEMSKIPIF   0047, // Skip if for item
+                   // Menu Path: IB   - Value: String
+LBL_DEST     0170, // Output destination for report
+                   // Menu Path: ICDL - Value: 0=Printer 1=Disk 2=Screen 3=Ask
+LBL_FILE     0103, // Label form name
+                   // Menu Path: ICDL - Value: String
+LBL_SAMPLE   0144, // Print sample label first
+                   // Menu Path: ICDL - Value: 0=YES 1=NO
+LOCATE_FOR   0164, // For expression for LOCATE command
+                   // Menu Path: IP   - Value: String
+LOCATE_SCP   0163, // Scope for LOCATE command
+                   // Menu Path: IP   - Value: String
+LOCATE_WHL   0165, // While for LOCATE
+                   // Menu Path: IP   - Value: String
+MACRO_NAME   0173, // Macro name for play back macro action
+                   // Menu Path: ICRP - Value: String
+MENU_ACT     0234, // Menu action type indicator
+                   // Menu Path: None - Value: 0=Text (no Action) 1=Open menu
+                   //   2=Browse 3=Use form 4=Report 5=Labels 6=Display/List
+                   //   7=Add records 8=Copy record 9=Substitute fields values
+                   //  10=Mark records 11=Ummark reco 12=Discard reco
+                   //  13=Generate index 14=Reindex 15=Sort 16=Import file
+                   //  17=Export file 18=File Copy 19=Do Prg 20=Insert code
+                   //  21=Run DOS program 22=Load/Call binary file 23=Return
+                   //  to calling prg 24=Quit to DOS 25=Batch Process 26=Macro
+NDX_DESCND   0216, // Index in descending order?
+                   // Menu Path: ICPG - Value: 0=NO  1=YES
+NDX_FILE     0136, // INDEX file for generat index
+                   // Menu Path: ICPG - Value: String
+NDX_KEY      0137, // KEY expression for generate index
+                   // Menu Path: ICPG - Value: String
+NDX_ORDER    0229, // Index file for set sequence
+                   // Menu Path: IR   - Value: String
+NDX_TAG      0218, // TAG for generat index
+                   // Menu Path: ICPG - Value: String
+NDX_TAGIN    0219, // MDX file name for TAG (generate index)
+                   // Menu Path: ICPG - Value: String
+NDX_UNIQUE   0138, // UNIQUE index?
+                   // Menu Path: ICPG - Value: String
+OPEN_MENU    0159, // Menu name for open menu action
+                   // Menu Path: ICO,AA - Value: String
+OPEN_TYPE    0079, // Type of menu to open
+                   // Menu Path: ICO  - Value: 0=Bar 1=Popup 2=File 3=Struc
+                   //                          4=Values
+POSTN_MENU   0160, // Display positioning menu when system is
+                   // Menu Path: IP   - Value: 0=NO 1=YES
+PRG_FILE     0106, // DBASE program name
+                   // Menu Path: ICRD - Value: String
+PRG_PARMS    0107, // Parameters for dBASE call
+                   // Menu Path: ICRD - Value: String
+REPL_ADDTV1  0121, // Switch for ADDITIVE option in replace field 1
+                   // Menu Path: ICPS - Value: 0=NO 1=YES
+REPL_ADDTV2  0122, // Switch for ADDITIVE option in replace field 2
+                   // Menu Path: ICPS - Value: 0=NO 1=YES
+REPL_ADDTV3  0123, // Switch for ADDITIVE option in replace field 3
+                   // Menu Path: ICPS - Value: 0=NO 1=YES
+REPL_ADDTV4  0124, // Switch for ADDITIVE option in replace field 4
+                   // Menu Path: ICPS - Value: 0=NO 1=YES
+REPL_ADDTV5  0125, // Switch for ADDITIVE option in replace field 5
+                   // Menu Path: ICPS - Value: 0=NO 1=YES
+REPL_FLD1    0213, // Field 1
+                   // Menu Path: ICPS - Value: String
+REPL_FLD2    0200, // Field 2
+                   // Menu Path: ICPS - Value: String
+REPL_FLD3    0202, // Field 3
+                   // Menu Path: ICPS - Value: String
+REPL_FLD4    0204, // Field 4
+                   // Menu Path: ICPS - Value: String
+REPL_FLD5    0206, // Field 5
+                   // Menu Path: ICPS - Value: String
+REPL_WITH1   0214, // Value 1
+                   // Menu Path: ICPS - Value: String
+REPL_WITH2   0201, // Value 2
+                   // Menu Path: ICPS - Value: String
+REPL_WITH3   0203, // Value 3
+                   // Menu Path: ICPS - Value: String
+REPL_WITH4   0205, // Value 4
+                   // Menu Path: ICPS - Value: String
+REPL_WITH5   0207, // Value 5
+                   // Menu Path: ICPS - Value: String
+RUN_DRIVE    0074, // Runtime drive assignment
+                   // Menu Path: AME  - Value: String
+RUN_PATH     0075, // Runtime search path
+                   // Menu Path: AME  - Value: String
+SCOPE        0251, // Scope expression for unmark
+                   // Menu Path: ICPC,ICPS,ICPM,ICPU,ICPP,ICPE,ICDR,ICDL,ICDD,
+                   // ICE,IP  - Value: String
+SEEK_COND    0161, // Seek command
+                   // Menu Path: IP   - Value: String
+SORTFIELD1   0213, // Sort field 1
+                   // Menu Path: ICPP - Value: String
+SORTFIELD2   0200, // Sort field 2
+                   // Menu Path: ICPP - Value: String
+SORTFIELD3   0202, // Sort field 3
+                   // Menu Path: ICPP - Value: String
+SORTFIELD4   0204, // Sort field 4
+                   // Menu Path: ICPP - Value: String
+SORTFIELD5   0206, // Sort field 5
+                   // Menu Path: ICPP - Value: String
+SORT_CASE1   0182, // Ignore or use case?
+                   // Menu Path: ICPP - Value: 0=Ignore case 1=Use case
+SORT_CASE2   0185, // Ignore or use case?
+                   // Menu Path: ICPP - Value: 0=Ignore case 1=Use case
+SORT_CASE3   0188, // Ignore or use case?
+                   // Menu Path: ICPP - Value: 0=Ignore case 1=Use case
+SORT_CASE4   0191, // Ignore or use case?
+                   // Menu Path: ICPP - Value: 0=Ignore case 1=Use case
+SORT_CASE5   0194, // Ignore or use case?
+                   // Menu Path: ICPP - Value: 0=Ignore case 1=Use case
+SORT_FILE    0103, // Sort to file
+                   // Menu Path: ICPP - Value: String
+SORT_ORD1    0195, // Ascending/Descending
+                   // Menu Path: ICPP - Value: 0=Ascending 1=Descending
+SORT_ORD2    0184, // Ascending/Descending
+                   // Menu Path: ICPP - Value: 0=Ascending 1=Descending
+SORT_ORD3    0187, // Ascending/Descending
+                   // Menu Path: ICPP - Value: 0=Ascending 1=Descending
+SORT_ORD4    0190, // Ascending/Descending
+                   // Menu Path: ICPP - Value: 0=Ascending 1=Descending
+SORT_ORD5    0193, // Ascending/Descending
+                   // Menu Path: ICPP - Value: 0=Ascending 1=Descending
+WHILE_EXP    0253, // While expression
+                   // Menu Path: ICPC,ICPS,ICPM,ICPU,ICPP,ICPE,ICDR,ICDL,ICDD,
+                   // ICE,IP  - Value: String
+WNDOW_BORD   0133, // Border type for window
+                   // Menu Path: ID   - Value: 0=Single 1=Double 2=Panel
+                   //                          3=Custom 4=None
+WNDOW_CHAR   0134, // Border character for custom window border
+                   // Menu Path: ID   - Value: String
+WNDOW_CLRS   0174, // Colors for window
+                   // Menu Path: ID   - Value: String
+WNDOW_NAME   0226, // Name of window edit, browse, etc. in actions
+                   // Menu Path: ID   - Value: String
+WNDOW_X1     0135, // Upper left row coordinate for window
+                   // Menu Path: ID   - Value: String
+WNDOW_X2     0146, // Lower right row coodinate for window
+                   // Menu Path: ID   - Value: String
+WNDOW_Y1     0145, // Upper left column coordinate for window
+                   // Menu Path: ID   - Value: String
+WNDOW_Y2     0147, // Lower right column coordinate for window
+                   // Menu Path: ID   - Value: String
+#lston
+;
+// Values returned by Menu_act
+ enum textno=0, //  0) Text (no action)
+      open,     //  1) Open a menu
+      brow,     //  2) Browse
+      edit,     //  3) Use form
+      rept,     //  4) Report
+      labl,     //  5) Labels
+      disp,     //  6) Display/List
+      appd,     //  7) Add records
+      rcopy,    //  8) Copy records
+      repl,     //  9) Substitute values
+      dele,     // 10) Mark records for deletion
+      reca,     // 11) Unmark records
+      pack,     // 12) Discard marked records
+      indx,     // 13) Generate index
+      rndx,     // 14) Reindex
+      sort,     // 15) Sort
+      impt,     // 16) Import foreign files
+      expt,     // 17) Export   ''     ''
+      fcopy,    // 18) File copy
+      dodB,     // 19) Do dBASE program
+      indB,     // 20) Insert dBASE code
+      xdos,     // 21) Run DOS program
+      call,     // 22) Load/call binary file
+      retu,     // 23) Return to calling program
+      quit,     // 24) Quit to DOS
+      batch,    // 25) Batch process
+      plmac     // 26) Play back macro
+;
+//
+// Enum string constants for international translation
+//
+enum app_class    = "Por favor sit£ese en la aplicaci¢n e inicie de nuevo la generaci¢n. ",
+     no_main_menu = "Men£ principal no encontrado en la definici¢n de la aplicaci¢n",
+ ;
+//
+}
+

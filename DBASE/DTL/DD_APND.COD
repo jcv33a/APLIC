@@ -1,0 +1,30 @@
+//
+// Module Name: DD_APND.COD - current (selector name): Menu_Act = 7
+// Selectors used : Appnd_from, Appnd_type, For_Expr
+// Description: DOC. include file for the APPEND option.
+// Syntax     : APPEND FROM <filename> [FOR <condition>]
+//                     [TYPE <file type>]
+//                     [DELIMITED [WITH BLANK/<delimiter>]]
+//
+A¤adir registros desde {if Appnd_type == 5}la matriz{else}el fichero{endif} {lower(Appnd_from)}
+{if For_Expr || Appnd_type then}
+{endofpage();}
+Opciones del mandato:
+{ if For_Expr then} FOR {For_Expr}{endif}
+{ if Appnd_type && Appnd_type != 5 then} TYPE {endif}\
+{  case Appnd_type of}
+{  0: // DBF}
+{  1:}dBASEII
+{  2:}FW2
+{  3:}RPD
+{  4:}DELIMITED {if Appl_Delim}WITH {Appl_Delim}{endif}
+{  5: // ARRAY}
+{  6:}SDF
+{  7:}DIF
+{  8:}SYLK
+{  9:}WKS
+{  endcase}
+// end of if Appnd_type
+{endif // if For_Expr}
+// EOP DD_APND.COD
+

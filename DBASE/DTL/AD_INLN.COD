@@ -1,0 +1,13 @@
+//
+// Module Name: AD_INLN.COD - Menu_Act = 20
+// Selectors  : Inline_Do
+// Description: Embed dBASE code
+//
+*-- Desc: Mandatos DO embebidos
+{foreach Inline_Do j in k}
+{  Inline_Do}
+
+{next j;}
+//
+// EOP AD_INLN.COD
+

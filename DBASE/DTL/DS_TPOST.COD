@@ -1,0 +1,26 @@
+//
+// Module Name: DS_TPOST.COD
+// Current incident (selector name):
+// Selectors used : Postn_Menu, Seek_Cond, Goto_Reco, Locate_for, Locate_whl
+// Description: Record positioning (Ask at runtime)
+//
+{if not Postn_Menu then}
+{ if Seek_Cond || Goto_Reco || Locate_Scp then}
+Posicionar el puntero de registro por: \
+{   if Seek_Cond} SEEK {Seek_Cond}
+{   endif}
+{   if Goto_Reco} GOTO {Goto_Reco}
+{   endif}
+{   if Locate_Scp then}
+ LOCATE\
+{     if Locate_for} FOR {Locate_for}{endif}\
+{     if Locate_whl} WHILE {Locate_whl}{endif}
+{   endif}
+//  end Locate_Scp
+{  endif // end Seek_Cond || Goto_Reco}
+{else}
+Posicionar el puntero de registro por: Procedimiento de posicionamiento
+{endif}
+{endofpage();}
+// EOP DS_TPOST.COD
+

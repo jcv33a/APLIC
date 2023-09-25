@@ -1,0 +1,44 @@
+//
+// Module Name: DD_BROW.COD - current (selector name): Menu_Act = 2
+// Selectors used : Brow_Frez, Brow_Lock, Brow_Width, Brow_Follw, Brow_Dele
+//            : Brow_Appd, Brow_Menu, Brow_Init, Brow_Edit, Brow_Compr
+//            : Brow_FMT, Flter_Cond, Item_View, Field_List
+//            : Wndow_Name
+// Description: DOC. include file for the BROWSE option.
+// Syntax     : BROWSE [FIELDS <field list>] [LOCK <expN>]
+//                     [WIDTH <expN>] [FREEZE <field>] [NOFOLLOW]
+//                     [NOAPPEND] [NOMENU]
+//
+Hojear fichero
+{if Field_list || Brow_Lock || Brow_Width || Brow_Frez || Brow_Appd || Brow_Menu
+ || Brow_Follw || Brow_Init || Brow_Dele || Brow_Edit || Brow_Compr ||
+ Brow_Clear || Brow_Fmt || Wndow_Name then}
+{endofpage();}
+Opciones del mandato:
+{ if Field_list} FIELDS {Field_list}{endif}\
+{ if Brow_Lock} LOCK {Brow_Lock}{endif}\
+{ if Brow_Width} WIDTH {Brow_Width}{endif}\
+{ if Brow_Frez} FREEZE {Brow_Frez}{endif}\
+{ if Brow_Appd == 1} NOAPPEND {endif}\
+{ if Brow_Menu == 1} NOMENU {endif}\
+{ if Brow_Follw == 1} NOFOLLOW {endif}\
+{ if Brow_Init == 1} NOINIT {endif}\
+{ if Brow_Dele == 1} NODELETE {endif}\
+{ if Brow_Edit == 1} NOEDIT {endif}\
+{ if Brow_Compr == 1} COMPRESS {endif}\
+{ if Brow_Clear == 1} NOCLEAR {endif}
+{ if Brow_Fmt then} FORMAT{endif}\
+{ if Wndow_Name then} WINDOW {Wndow_Name}{endif}
+{endif}
+{endofpage();}
+{if Brow_FMT}Fichero de formato: {lower(Brow_FMT)}.fmt
+{endif}
+{endofpage();}
+{if Flter_Cond}
+Filtro: {Flter_Cond}
+{endif}
+{endofpage();}
+{include "ds_order.cod"}
+{include "ds_tpost.cod"}
+// EOP DD_BROW.COD
+

@@ -1,0 +1,35 @@
+//
+// Module Name: DD_REPL.COD - currently (selector name): Menu_Act = 9
+// Selectors used : Scope, For_Expr, While_Exp, Repl_fld*, Repl_with*, Repl_Addtv
+// Description: DOC. include file for the REPLACE option.
+// Syntax     :  REPLACE [<scope>] <field> WITH <expression>
+//                   [,<field2> WITH <expression>...]
+//                   [FOR <condition>] [WHILE <condition>]
+//
+Sustituir registros del fichero {Sort_File}
+{endofpage();}
+Opciones del mandato:
+{if Repl_fld1} Campos {Repl_fld1}{if Repl_with1} WITH {Repl_with1}{endif}\
+{if Repl_Addtv1} ADDITIVE {endif}\
+{endif}
+{if Repl_fld2}, {Repl_fld2}{if Repl_with2} WITH {Repl_with2}{endif}\
+{if Repl_Addtv2} ADDITIVE {endif}\
+{endif}
+{if Repl_fld3}, {Repl_fld3}{if Repl_with3} WITH {Repl_with3}{endif}\
+{if Repl_Addtv3} ADDITIVE {endif}\
+{endif}
+{endofpage();}
+{if Repl_fld4}, {Repl_fld4}{if Repl_with4} WITH {Repl_with4}{endif}\
+{if Repl_Addtv4} ADDITIVE {endif}
+{endif}
+{if Repl_fld5}, {Repl_fld5}{if Repl_with5} WITH {Repl_with5}{endif}\
+{if Repl_Addtv5} ADDITIVE {endif}\
+{endif}
+
+{endofpage();}
+{if Scope} SCOPE {upper(Scope)}{endif}\
+{if While_Exp} WHILE {While_Exp}{endif}\
+{if For_Expr} FOR {For_Expr}{endif}
+{endofpage();}
+// EOP DD_REPL.COD
+

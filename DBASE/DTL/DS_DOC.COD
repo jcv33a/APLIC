@@ -1,0 +1,449 @@
+//
+// Module Name: DS_DOC.COD
+// Description: Document template for dBASE IV 1.0
+// Notes      : Stand alone file to produce Application documentation
+//              compile and use separately
+//
+
+Plantilla para la documentaci¢n de Aplicaciones
+-----------------------------------------------
+Versi¢n 1.0
+Ashton-Tate (c) 1987, 1988
+
+{
+ include "applctn.def"  // Applicaton Selectors
+ include "builtin.def"  // Builtin Functions
+
+//--------------------------
+// Declare global variables.
+//--------------------------
+var ask_user,   // Variable to get input from user.
+    barcount,   // Counter for printing bar menus.
+    cnt,        // Counter variable
+    crlf,       // Line feed character.
+    global_View,// View from application object.
+    global_NDX, // Index string from application object.
+    global_Ord, // Order string from application object.
+    graph_prt,  // Logical variable (0,1) to determine what type of box to draw.
+    line,       // Variable to grab image from Screen()
+    linecnt,    // Line counter
+    mdoc,       // Variable to store name of application object.
+    mspace, mspace2, // Space variables for graphics box dump
+    org_appl,   // Store application frame name if we started on one.
+    pagecnt,    // Page count.
+    print_head, // Logical variable (0,1) to test printing of heading.
+    forflag, barflag,// Logical Variables for graphics box dump
+    scrn_size,  // Size of screen we are generating on
+    display,    // Type of display
+    default_drv,// dBASE default drive
+    temp_strng, // Variable to temporary string
+    temp_strng2;// Variable to temporary string
+//------------------------------------------------
+// Assign default values to some of the variables.
+//------------------------------------------------
+temp_strng = temp_strng2 = ask_user = "";
+global_View = Appl_View;  // Set global application dbf/view
+global_NDX  = Appl_NDX;   // Set global application ndx
+global_Ord  = Appl_Order; // Set global application Order
+crlf = chr(10);           // Store Linefeed chr(10) to variable
+pagecnt = 1;              // Set page count to 1
+display=numset(_flgcolor);
+// Test screen size if display > 2 screen is 43 lines
+if display > ega25 then scrn_size = 43 else scrn_size = 25 endif;
+
+default_drv = strset(_defdrive);
+if filedrive(menu_name) or !default_drv then
+   mdoc = alltrim(menu_name);
+else
+   mdoc = default_drv + ":" + alltrim(menu_name);
+endif
+mdoc = upper(mdoc);
+
+//-------------------------------------------------------
+// Check to see if documentation file is already on disk.
+//-------------------------------------------------------
+if fileexist(mdoc+".DOC") and numset(_safety) then // dBASE safety on
+   do while not at(upper(ask_user),"SN")
+     ask_user = ASKUSER("El fichero de documentaci¢n "+mdoc+".DOC ya existe...¨Sustituir? (S/N) ","N",1);
+   enddo
+   if upper(ask_user) == "N" then
+     pause(gen_request + any_key);
+     goto NoGen;
+   endif
+endif
+//-------------------------------------------------------
+// Ask user if he has a IBM graphics compatible printer
+//  graph_prt = 0 means no graphics, 1 means use graphics
+//-------------------------------------------------------
+ask_user="";
+do while not at(upper(ask_user),"SN")
+  ask_user = ASKUSER("¨Tiene una impresora gr fica compatible con IBM? (S/N) ","N",1);
+enddo
+if upper(ask_user) == "N" then graph_prt=0; else graph_prt=1; endif
+//-----------------
+// Open output file
+//-----------------
+if not create(mdoc+".DOC") then // File was read-only
+    pause(fileroot(mdoc)+".DOC" + read_only + any_key);
+    goto nogen;
+endif
+}
+//------------------------------------------------
+// Print page number and author information
+//------------------------------------------------
+P gina: {str(pagecnt)}  Fecha: {ltrim(substr(date(),1,8))}
+
+
+Documentaci¢n de la Aplicaci¢n: {fileroot(mdoc)}.PRG
+
+{if Appl_Authr then}
+Nombre del autor : {Appl_Authr}
+{endif}
+{if Appl_Cpyrt then}
+Derechos de autor: {Appl_Cpyrt}
+{endif}
+{if Appl_versn then}
+Versi¢n de dBASE : {Appl_versn}
+{endif}
+
+//------------------------------------
+// Start processing application object
+//------------------------------------
+{if Menu_Type == app then}
+
+Visualizar pantalla de presentaci¢n: {if Disp_Sign}S¡{else}No{endif}
+{  org_appl=Menu_Name+".APP";
+   if Disp_Sign then
+     print(crlf);
+     scrndump();
+   endif
+}
+
+Men£ principal {if Disp_Sign then}despu‚s de la presentaci¢n{endif}: {upper(Menu_Main)}
+
+{  endofpage();}
+Entorno de la Aplicaci¢n:
+-------------------------
+  Bell         {if Set_Bell}OFF{else}ON {endif}\
+{  if Set_BellFR and Set_BellDr then}
+  Frecuencia {Set_BellFR} Duraci¢n {Set_BellDr}
+{  else print(crlf);
+   endif}
+  Carry        {if Set_Carry}ON{else}OFF{endif}
+  Century      {if Set_Centry}ON{else}OFF{endif}
+  Confirm      {if Set_Confrm}ON{else}OFF{endif}
+  Delimiters   {if Set_Delim}ON   Car cter {Set_DelChr}{else}OFF{endif}
+  Display Size {scrn_size} l¡neas
+  Drive        {if run_drive then}{upper(Run_Drive)}:{endif}
+  Escape       {if Set_Escape}OFF{else}ON{endif}
+  Path         {upper(Run_Path)}
+  Safety       {if Set_Safety}OFF{else}ON{endif}
+
+{  endofpage();}
+Colores iniciales:
+------------------
+// Call udf color() to get the all the different colors from the object.
+ Atributos de color:
+   Texto          : {color(Clr_Text)}
+   T¡tulos        : {color(Clr_Heading)}
+   Selecci¢n      : {color(Clr_Hghlight)}
+{  endofpage();}
+   Bordes         : {color(Clr_Box)}
+   Mensajes       : {color(Clr_Messages)}
+   Informaci¢n    : {color(Clr_Info)}
+   Campos         : {color(Clr_Fields)}
+
+{  endofpage();}
+// If user filled in application view
+{  if Appl_View then}
+Base de Datos/Vista : {Appl_View}
+{  endif}
+{  if Appl_NDX then endofpage();}
+Fichero(s) de ¡ndice: {Appl_NDX}
+{  endif}
+{  if Appl_Order then endofpage();}
+Indice maestro: {Appl_Order}
+{  endif}
+
+{  endofpage();
+   print(replicate("=",79)+crlf);
+   if not FILEEXIST(Menu_Main) then
+      pause(no_main_menu + any_key);
+      return 8; // resource file not found
+   endif
+   newframe(Menu_Main);
+ endif // if Menu_Type == app}
+
+Definiciones de Men£s/Listas:
+{print(replicate("-",29)+crlf);}
+//------------------------------------------------------------------------
+// This foreach TREE loop will start a menu tree walk of all objects
+//  referenced by the application.  This is the Main loop of any template
+//  that processes all menu objects.
+//------------------------------------------------------------------------
+{foreach TREE menu
+   pageject();  // A new menu is next
+   ++pagecnt;
+   print(crlf + "P gina: " + str(pagecnt) + "  Fecha: " +
+         ltrim(substr(date(),1,8)) + crlf+crlf);
+   temp_strng ="Informe de ";
+   case Menu_Type of
+   case popup:temp_strng = temp_strng + "Men£ de ventana: ";
+   case bar:  temp_strng = temp_strng + "Men£ de l¡nea: ";
+   case btch: temp_strng = ""; temp_strng = temp_strng +
+              "Resumen de acciones del Proceso Secuencial: ";
+   endcase
+   temp_strng = temp_strng + upper(Menu_Name);
+   print(temp_strng+crlf);
+   print(replicate("-",len(temp_strng))+crlf);}
+
+{  scrndump(); // a user defined function to print a object on the screen}
+
+{  endofpage();}
+Asignaciones para {upper(Menu_Name)}:
+{print(replicate("-", len(Menu_Name+":") + 18)+crlf);}
+
+{  lmarg(2);}
+{  if Menu_desc then}
+Descripci¢n: {Menu_desc}
+{  endif}
+{  if Menu_Prmpt then}
+Texto para la l¡nea de mensajes del Men£/Lista: {Menu_Prmpt}
+{  endif}
+
+//
+// We use the inheritance paradigm for opening dbf/views.  If the dbf/view
+// does not change from one object to another or from action to action we don't
+// want to keep opening them.
+//
+{  if menu_ovride == 1 then}
+//   if there is data in menu_view and that data does not equal the global_view
+//   have dBASE open the new database.
+{    if Menu_View and Menu_View != global_View then endofpage();}
+Base de Datos/Vista : {Menu_View}
+{    endif}
+{    if Menu_NDX and Menu_NDX != global_NDX then endofpage();}
+Fichero(s) de ¡ndice: {Menu_NDX}
+{    endif}
+{    if Menu_Order and Menu_Order != global_Ord then endofpage();}
+Indice maestro: {Menu_Order}
+{    endif}
+
+{  endif}
+{  if menu_ovride == 2 then}
+Usa la base de datos/vista y fichero(s) de ¡ndice activos en ejecuci¢n.
+
+{  endif}
+{  lmarg(0);}
+{  endofpage();}
+Colores para Men£/Lista:
+------------------------
+{  endofpage();}
+ Atributos de color:
+   Texto          : {color(Clr_Text)}
+   T¡tulos        : {color(Clr_Heading)}
+   Selecci¢n      : {color(Clr_Hghlight)}
+   Bordes         : {color(Clr_Box)}
+   Mensajes       : {color(Clr_Messages)}
+   Informaci¢n    : {color(Clr_Info)}
+   Campos         : {color(Clr_Fields)}
+
+{  endofpage();
+  // See if menu_type is a Popup or Bar menu
+   if Menu_Type == popup or Menu_Type == bar then
+
+     temp_strng = "Texto de ayuda definido para el Men£/Lista "+upper(Menu_Name)+":";
+     temp_strng2 = replicate("-",len(Menu_Name)+44);
+     // Call udf get_text to print Help for object
+     get_frame(@menu_help,temp_strng, temp_strng2);
+
+     temp_strng = "C¢digo dBASE anterior al Men£/Lista "+upper(Menu_Name)+":";
+     temp_strng2 = replicate("-",len(Menu_Name)+37);
+     get_frame(@menu_before,temp_strng, temp_strng2);
+
+     temp_strng = "C¢digo dBASE posterior al Men£/Lista "+upper(Menu_Name)+":";
+     get_frame(@menu_after,temp_strng, temp_strng2);
+
+     print(crlf);
+  endif
+
+  lmarg(0); temp_strng = "";
+  if Menu_Type == popup or Menu_Type == bar then
+     temp_strng ="Acciones de los elementos del Men£ " + upper(Menu_Name) + ":";
+  endif
+  if Menu_Type == f_pick or Menu_Type == s_pick or Menu_Type == v_pick then
+     // Below is a another way to do the previous lines test
+     // if at(alltrim(str(Menu_Type)),"345") then
+     temp_strng = "Especificaciones para la lista " + upper(Menu_Name) + ":";
+  endif
+  if Menu_Type == btch then
+     temp_strng ="Acciones del Proceso Secuencial "+upper(Menu_Name)+":";
+  endif
+  if len(temp_strng) > 0 then
+     print(temp_strng + crlf);
+     print(replicate("-",len(temp_strng))+crlf);
+  endif
+}
+//
+{  if Menu_Type == f_pick then}
+Lista de ficheros
+-----------------
+  Especificaci¢n(es) de fichero: {upper(Pick_File)}
+
+{  endif}
+{  if Menu_Type == s_pick then}
+Lista de estructura
+-------------------
+  Especificaci¢n(es) de campo: {upper(Pick_Field)}
+
+{  endif}
+{  if Menu_Type == v_pick then}
+Lista de contenidos
+-------------------
+ Campo para listar contenidos: {upper(Pick_Value)}
+
+{  endif}
+{  endofpage();}
+{
+   barcount = 1;
+   //-------------------------------------------------------------------------
+   // Loop through each bar in the menu - each bar is a field in the generator
+   //-------------------------------------------------------------------------
+   foreach Fld_Element flds in menu
+     lmarg(1);
+     if at(alltrim(str(Menu_Type)),"279") then // Popup, Bar or Batch Menu
+       if Menu_Type == btch then // Batch object
+         temp_strng ="Acci¢n secuencial: " + alltrim(str(barcount))
+       else
+         // Bar or Popup object
+          temp_strng ="Elemento: "+alltrim(str(barcount))
+       endif
+      print(temp_strng + crlf);
+     endif
+     lmarg(2);
+}
+{    endofpage();}
+Texto : {ltrim(Fld_Pictur)}
+{    endofpage();}
+Acci¢n: \
+{    case Menu_Act of}
+{    case textno:}S¢lo texto para esta opci¢n - SIN ACCION
+{    case  open:}
+// Output type of menu/picklist to open
+Abrir \
+{         case Open_Type of}
+{           case 0:}Men£ de l¡nea \
+{           case 1:}Men£ de ventana \
+{           case 2:}Lista de ficheros \
+{           case 3:}Lista de estructura \
+{           case 4:}Lista de contenidos \
+{         endcase}
+llamado/a: {Open_Menu}
+{    case  brow: include "dd_brow.cod";
+     case  edit: include "dd_edit.cod";
+     case  rept: include "dd_rept.cod";
+     case  labl: include "dd_labl.cod";
+     case  disp: include "dd_list.cod";
+     case  appd: include "dd_apnd.cod";
+     case rcopy: include "dd_copy.cod";
+     case  repl: include "dd_repl.cod";
+     case  dele: include "dd_dele.cod";
+     case  reca: include "dd_recl.cod";
+     case  pack: include "dd_pack.cod";
+     case  indx:}Nuevo fichero de ¡ndice {NDX_File}
+        Clave de ¡ndice:
+        {NDX_KEY} \
+{              if NDX_tag}TAG {NDX_tag} OF {NDX_tagIn}{endif} \
+{              if NDX_Unique then} UNIQUE{endif} \
+{              if NDX_Descnd}DESCENDING{endif}
+{    case  rndx:}Reindexar la base de datos activa:
+{    case  sort:include "dd_sort.cod";
+     case  impt:include "dd_impt.cod";
+     case  expt:include "dd_expt.cod";
+     case fcopy:include "dd_fcopy.cod";
+     case  dodB:}
+Ejecutar el programa dBASE: DO {PRG_File}{if PRG_Parms} WITH {PRG_Parms endif}
+{    case  indB:}
+Insertar el c¢digo dBASE siguiente:
+-------------------------------------------
+
+{                db_inlin();}
+{    case  xdos:}
+Ejecutar el programa DOS - {DOS_File}{if DOS_Parm} {DOS_Parm}{endif}
+{    case  Call:}
+Llamar al programa binario - {Bin_File}.bin {if Bin_Parms}WITH {Bin_Parms}{endif}
+{    case  retu:}Volver al programa anterior
+{    case  quit:}Salir al DOS
+{    case batch:}Ejecutar el proceso secuencial: {fileroot(upper(Batch_Name))}
+{    case plmac:}Ejecutar la macro: {Macro_Name}
+{    endcase}
+{    endofpage();}
+{    if ItemSkipIf then}
+Condici¢n para saltar este elemento: {ItemSkipIf}
+{    endif
+ endofpage();
+ include "ds_tpost.cod"
+ include "ds_order.cod"
+ endofpage();
+ if Wndow_Name}
+Window {Wndow_Name} FROM {nul2zero(Wndow_X1)},{nul2zero(Wndow_Y1)} TO \
+{nul2zero(Wndow_X2)},{nul2zero(Wndow_Y2)} \
+{ case Wndow_Bord of}{0:}Single{1:}Double{2:}Panel{3:}"{Wndow_Char}"{4:}None{endcase}
+{endif}
+{    if Item_Prmpt then}
+Texto para la l¡nea de mensajes del elemento: {Item_Prmpt}
+{    endif}
+//
+//   See if the user wants the Item view
+{    if item_ovride == 1 then}
+//     See if menu level and item level dbf/view are different
+{      if Item_View and Item_View != Menu_View then endofpage();}
+Nueva Base de Datos/Vista: {Item_View}
+{      endif}
+{      if Item_NDX and Item_NDX != Menu_NDX then endofpage();}
+Nuevo(s) fichero(s) de ¡ndice: {Item_NDX}
+{      endif}
+{      if Item_Order and Item_Order != Menu_Order then endofpage();}
+Nuevo ¡ndice maestro: {Item_Order}
+{      endif}
+{    endif}
+{    if item_ovride == 2 then}
+Usa la base de datos/vista y fichero(s) de ¡ndice activos en ejecuci¢n.
+{    endif}
+//------------------------------------------------------------------
+// Next four functions are user defined see ds_udf.cod
+//------------------------------------------------------------------
+{    endofpage();  // Check for end of page
+
+     temp_strng = "Texto de ayuda definido para este elemento:";
+     temp_strng2 = replicate("-",43);
+     get_item(@item_help,temp_strng, temp_strng2, flds);
+     temp_strng = "C¢digo dBASE anterior al elemento:";
+     temp_strng2 = replicate("-",34);
+     get_item(@Item_Befor,temp_strng, temp_strng2, flds);
+     temp_strng = "C¢digo dBASE posterior al elemento:";
+     temp_strng2 = replicate("-",35);
+     get_item(@Item_After,temp_strng, temp_strng2, flds);
+
+     lmarg(0);
+     print(replicate("-",80)+crlf+crlf);
+     barcount = barcount + 1;
+     endofpage();
+   next flds;    // end of foreach Fld_Element
+ next menu; // end of fortree loop
+}
+
+Fin de la documentaci¢n de la Aplicaci¢n
+{pause(gen_complete + any_key);
+// Jump label for no generation.
+ NoGen:
+ return 0;
+//
+// ------------------------------
+// User defined functions follow.
+// ------------------------------
+//
+include "ds_udf.cod";
+}
+// EOP DS_DOC.COD
+

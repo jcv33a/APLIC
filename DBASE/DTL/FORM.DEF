@@ -1,0 +1,148 @@
+//---------------------------------------------------------------------------
+// FORM.DEF      NPI form object data selectors
+// Ashton-Tate (c) 1987, 1988
+//
+// Updated 9-21-88 KJN
+//
+// This include file contains all the selectors required for forms.
+// *** DO NOT CHANGE ANY OF THE NUMBERS BELOW ***
+//
+//---------------------------------------------------------------------------
+// NOTE:
+// Selectors listed in the following table which are shown to have
+// "Value: Number" will sometimes return the null string instead
+// of the numeric zero.  For logical compares, null is the same
+// as zero, however when emitting the value to the output file
+// the null string must be converted to a numeric zero explicitly.
+// A user defined function is used in the FORM.COD template program
+// called NUL2ZERO() for converting null strings to explicit numeric
+// zeros.
+//---------------------------------------------------------------------------
+{
+selectors
+#lstoff
+//
+// ELEMENT selectors (FOREACH loop elements)
+//
+ELEMENT            1000, // All elements types by row & column
+BOX_ELEMENT        1086, // Box element
+FLD_ELEMENT        1130, // Field element
+TEXT_ELEMENT       1085, // Text element
+//
+// Selectors common to all elements
+//
+ELEMENT_TYPE        001, // Element types found in forms are:
+                         //     BOX_ELEMENT
+                         //     FLD_ELEMENT
+                         //     TEXT_ELEMENT
+                         // Menu Path: None
+ROW_POSITN          225, // Row number of Element
+                         // Menu Path: None - Value: Number
+COL_POSITN          093, // Column number of Element
+                         // Menu Path: None - Value: Number
+SYS_FLEN            053, // Element length in layout
+SYS_INAME           068, // reserved
+SYS_FMT             071, // reserved
+SYS_PAGE            090, // reserved
+SYS_ROW             092, // reserved
+SYS_ATRB            094, // reserved
+//
+// Frame level selectors - can be accessed at any time
+//
+NAME                040, // Name of NPI form object
+                         // Menu Path: None - Value: String
+FRAME_CLASS         181, // Object type (called MENU_TYPE in application.def)
+                         // Menu Path: None - Value:11=form, 12=label, 13=report
+FRAME_VER           150, // Version #
+                         // Menu Path: None - Value: Number
+FRAME_FILE_TYPE     151, // File type of object
+                         // Menu Path: None - Value: Number
+FRAME_PATH          042, // Path of object
+                         // Menu Path: None - Value: String
+FRAME_NUM_OF_FIELDS 153, // Number of fields
+                         // Menu Path: None - Value: Number
+//
+// Text attribute selectors (FOREACH Text_element x .... NEXT)
+//
+TEXT_ITEM           095, // Static text data
+                         // Menu Path: None - Value: String
+//
+// Field attribute selectors (FOREACH Fld_element x .... NEXT)
+//
+FLD_FILENAME        060, // File name (Alias) of current field
+                         // Menu Path: None - Value: String
+FLD_FIELDNAME       061, // Field name of Element
+                         // Menu Path: None - Value: String
+FLD_FIELDTYPE       063, // Where the data coming from
+                         // Menu Path: None - Value: 0:dBF field 1:calc'ed
+                         //                    2:sum 3:predefined 4:memory var
+FLD_VALUE_TYPE      064, // Field data type in dBF
+                         // Menu Path: None - Value: 67:char 68:date 70:float
+                         //                      76:logical 77:memo 78:numeric
+                         //  Try chr(fld_value_type) return C:char D:date etc.
+FLD_LENGTH          065, // Length of field in dBF
+                         // Menu Path: None - Value: Number
+FLD_DECIMALS        066, // Number of decimal positions for numeric data
+                         // Menu Path: None - Value: Number
+FLD_TEMPLATE        074, // Picture template
+                         // Menu Path: FMT - Value: String
+FLD_PICFUN          075, // Picture functions
+                         // Menu Path: FMP - Value: String
+FLD_PIC_CHOICE      180, // Picture function sting for enumerated (M) picture
+                         // Menu Path: FMP - Value: String
+FLD_PIC_SCROLL      183, // Picture function scroll with for (S) picture
+                         // Menu Path: FMP - Value: String
+FLD_DESCRIPT        076, // Calc & sum description
+                         // Menu Path: FMD - Value: String
+FLD_EXPRESSION      077, // Calculated field expression
+                         // Menu Path: FME - Value: String
+FLD_L_BOUND         079, // Lower field range bound
+                         // Menu Path: FMES - Value: String
+FLD_U_BOUND         080, // Upper field range bound
+                         // Menu Path: FMEL - Value: String
+FLD_DEF_VAL         081, // Default field value
+                         // Menu Path: FMED - Value: String
+FLD_ED_COND         082, // Edit if condition
+                         // Menu Path: FMEE - Value: String
+FLD_OK_COND         083, // Satisfy condition
+                         // Menu Path: FMEA - Value: String
+FLD_REJ_MSG         084, // Reject message
+                         // Menu Path: FMEU - Value: String
+FLD_HLP_MSG         099, // Help message
+                         // Menu Path: FMEM - Value: String
+FLD_MEM_TYP         170, // Memo window type
+                         // Menu Path: FMED - Value: 1:Open 2:Marker
+FLD_EDITABLE        087, // Say or Get data
+                         // Menu Path: FMED - Value: 0:say 1:get
+FLD_CARRY           088, // Carry value forward
+                         // Menu Path: FMEC - Value: 0:no 1:yes
+FLD_DISPLAY         171, // Field display
+                         // Menu Path: WD - Value: number See udf() at
+                         //    bottom of form.cod for values
+//
+// Box Attribute Selectors (FOREACH Box_element x .... NEXT)
+//
+BOX_TYPE            160, // 0:single 1:double 2:special
+                         // Menu Path: LB - Value: 0:single 1:double 2:special
+BOX_SPECIAL_CHAR    161, // Box character
+                         // Menu Path: LBU - Value: Number
+BOX_LEFT            162, // Left column for box
+                         // Menu Path: None - Value: Number
+BOX_TOP             163, // Top row of box
+                         // Menu Path: None - Value: Number
+BOX_WIDTH           164, // Box width in columns
+                         // Menu Path: None - Value: Number
+BOX_HEIGHT          165, // Box height in rows
+                         // Menu Path: None - Value: Number
+#lston
+;
+//
+// Values returned by Fld_Fieldtype
+//
+enum dbf = 0,    // Field from a database
+     calc,       // Calculated expression
+     sum,        // Summary ie. Average, Count, etc.
+     predef,     // Predefined ie. Date, Page, etc.
+     memvar;     // Memvar reference
+}
+

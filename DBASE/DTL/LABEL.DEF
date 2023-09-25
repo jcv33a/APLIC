@@ -1,0 +1,164 @@
+//---------------------------------------------------------------------------
+// LABEL.DEF     NPI label object data selectors
+// Ashton-Tate (c) 1987, 1988
+//
+// Updated 9-21-88 KJN
+//
+// This include file contains all the selectors required for labels.
+// *** DO NOT CHANGE ANY OF THE NUMBERS BELOW ***
+//
+//---------------------------------------------------------------------------
+// NOTE:
+// Selectors listed in the following table which are shown to have
+// "Value: Number" will sometimes return the null string instead
+// of the numeric zero.  For logical compares, null is the same
+// as zero, however when emitting the value to the output file
+// the null string must be converted to a numeric zero explicitly.
+// A user defined function is used in the FORM.COD template program
+// called NUL2ZERO() for converting null strings to explicit numeric
+// zeros.
+//---------------------------------------------------------------------------
+{
+selectors
+#lstoff
+//
+// ELEMENT selectors (FOREACH loop elements)
+//
+ELEMENT            1000, // All elements types by row & column
+BAND_ELEMENT       1102, // Band element (always the first element)
+FLD_ELEMENT        1130, // Field element
+TEXT_ELEMENT       1085, // Text element
+//
+// Selectors common to all elements
+//
+ELEMENT_TYPE        001, // Element types found in labels are:
+                         //     BAND_ELEMENT
+                         //     FLD_ELEMENT
+                         //     TEXT_ELEMENT
+ROW_POSITN          225, // Row number of Element
+                         // Menu Path: None - Value: Number
+COL_POSITN          093, // Column number of Element
+                         // Menu Path: None - Value: Number
+SYS_FLEN            053, // Element length in layout
+SYS_INAME           068, // reserved
+SYS_FMT             071, // reserved
+SYS_PAGE            090, // reserved
+SYS_ROW             092, // reserved
+SYS_ATRB            094, // reserved
+//
+// Frame level selectors - can be accessed at any time
+//
+NAME                040, // Name of NPI label object
+                         // Menu Path: None - Value: String
+FRAME_CLASS         181, // Object type (called MENU_TYPE in application.def)
+                         // Menu Path: None - Value:11=form, 12=label, 13=report
+FRAME_VER           150, // Version #
+                         // Menu Path: None - Value: Number
+FRAME_FILE_TYPE     151, // File type of object
+                         // Menu Path: None - Value: Number
+FRAME_PATH          042, // Path of object
+                         // Menu Path: None - Value: String
+FRAME_NUM_OF_FIELDS 153, // Number of fields
+                         // Menu Path: None - Value: Number
+LABEL_TALL          170, // Label height
+LABEL_WIDE          182, // Label width
+LABEL_LMARG         172, // Label left margin
+LABEL_VSPACE        173, // Label vertical spacing
+LABEL_HSPACE        174, // Label horizontal spacing
+LABEL_NUP           175, // Labels across page - number up
+dBASE_III_PLUS      215, // Is this a 3+ report
+                         // Menu Path: None - Value: 0:No 1:Yes
+PRINT_FORM          216, // Print form name
+                         // Menu Path: PU   - Value: String
+PRINT_DESTINATION   217, // Where to send output
+                         // Menu Path: PDW  - Value: 0: Printer 1:Dos file
+PRINT_DOS_FILE      218, // Name of DOS file
+                         // Menu Path: PDN  - Value: String
+PRINT_DRIVER        219, // Name of Printer driver
+                         // Menu Path: PDP  - Value: String
+PRINT_TO_SCREEN     220, // Echo outpu to screen
+                         // Menu Path: PDE  - Value: Numeric
+PRINT_PITCH         221, // Text Pitch
+                         // Menu Path: PCT  - Value: 0:Default 1:Pica 2:Elite
+                         //                          3:Condensed
+PRINT_QUALITY       222, // Quality Print
+                         // Menu Path: PCQ  - Value: 0:Default 1:Yes 2:No
+PRINT_NEW_PAGE      223, // When to goto New page
+                         // Menu Path: PCN  - Value: 0:Before 1:Both 2:None
+                         //                          3:After
+PRINT_PAUSE         224, // Wait between pages
+                         // Menu Path: PCW  - Value: 0:No 1:Yess
+PRINT_ADVANCE       226, // Advance page using
+                         // Menu Path: PCA  - Value: 0:Form Feeds 1:Line Feeds
+PRINT_START_CODES   227, // Starting control codes
+                         // Menu Path: PCS  - Value: String
+PRINT_END_CODES     228, // Ending control codes
+                         // Menu Path: PCE  - Value: String
+PRINT_START_PAGE    229, // Begin on page
+                         // Menu Path: POB  - Value: String
+PRINT_END_PAGE      230, // End on page
+                         // Menu Path: POB  - Value: String
+PRINT_FIRST_PAGE    231, // First page number
+                         // Menu Path: POE  - Value: String
+PRINT_COPIES        232, // Number of copies
+                         // Menu Path: PON  - Value: String
+PRINT_PAGE_LENGTH   233, // Length of page
+                         // Menu Path: PPL  - Value: String
+PRINT_LEFT_OFFSET   234, // Offeset from left
+                         // Menu Path: PPO  - Value: String
+PRINT_LINE_SPACING  235, // Spacing of lines
+                         // Menu Path: PPL  - Value: 0:Single 1:Double 2:Triple
+//
+// Text attribute selectors (FOREACH Text_element x .... NEXT)
+//
+TEXT_ITEM           095, // Static text data
+//
+// Field attribute selectors (FLD_ELEMENT)
+//
+FLD_FILENAME        060, // Name of file this field is in
+                         // Menu Path: None - Value: String
+FLD_FIELDNAME       061, // Field name
+                         // Menu Path: None - Value: String
+FLD_FIELDTYPE       063, // Where the data is coming from
+                         // Menu Path: None - Value: 0:dBF field 1:calc'ed
+                         //                    2:sum 3:predefined 4:memory var
+FLD_VALUE_TYPE      064, // Field data type in dBF
+                         // Menu Path: None - Value: 67:char 68:date 70:float
+                         //                      76:logical 77:memo 78:numeric
+                         //  Try chr(fld_value_type) return C:char D:date etc.
+FLD_LENGTH          065, // Length of field
+                         // Menu Path: None - Value: Number
+FLD_DECIMALS        066, // Number of decimal positions
+                         // Menu Path: None - Value: Number
+FLD_REPWIDTH        067, // width of template in label
+FLD_PREDEFINE       070, // Predef fld 0:date 1:time 2:recno 3:pageno
+FLD_TEMPLATE        074, // Picture template
+                         // Menu Path: FMT - Value: String
+FLD_PICFUN          075, // Picture functions
+                         // Menu Path: FMP - Value: String
+FLD_DESCRIPT        076, // Calc & sum description
+                         // Menu Path: FMD - Value: String
+FLD_EXPRESSION      077, // Calc expression
+                         // Menu Path: FME - Value: String
+FLD_STYLE           096, // Field style
+#lston
+;
+//
+// Values returned by Fld_Style
+//
+enum User_Font  =   31,
+     Soft_space =  128,
+     Bold       =  256,
+     Italic     =  512,
+     Underline  = 1024,
+     Superscript= 2048,
+     Subscript  = 4096;
+//
+// Values returned by Fld_Fieldtype
+//
+enum  Tabl_data=0,   // Table field from a database
+      Calc_data,     // Calculated expression
+      Summ_data,     // Summary ie. Average, Count, etc.
+      Pred_data;     // Predefined ie. Date, Page, etc.
+}
+

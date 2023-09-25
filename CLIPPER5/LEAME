@@ -1,0 +1,573 @@
+========================================================================
+   ­Bienvenido a CA-Clipper Versi¢n 5.2!
+   
+   Copyright (c) 1993, Computer Associates International, Inc.
+   Todos los derechos reservados.
+   
+   Este fichero, LEAME, contiene informaci¢n sobre aspectos no 
+   mencionados en la documentaci¢n impresa o en l¡nea. Tambi‚n 
+   contiene correcciones de errores de la documentaci¢n impresa.
+   
+========================================================================
+1. Contenido
+   
+   En este fichero de documentaci¢n se abarcan los temas siguientes:
+   
+    1.  Contenido
+    2.  Instalaci¢n
+    3.  Documentaci¢n en l¡nea
+    4.  Controladores
+    5.  Manejo de Errores
+    6.  Nuevos Mensajes de Error
+    7.  Utilidades
+    8.  Programas de Ejemplo
+    9.  Memoria
+   10.  Compatibilidad
+   11.  Erratas
+   12.  Referencia T‚cnica
+   13.  Copyright
+
+========================================================================
+2. Instalaci¢n
+   
+   El programa de instalaci¢n interactiva, INSTALL.EXE, copia los
+   ficheros de CA-Clipper 5.2 en los directorios y subdirectorios
+   apropiados de su disco duro. El procedimiento de instalaci¢n est 
+   documentado en el cap¡tulo 2 del manual de Conceptos B sicos,
+   pero esta secci¢n contiene informaci¢n adicional que puede ser
+   necesaria para una correcta instalaci¢n de su CA-Clipper 5.2.
+   
+   Importante: El directorio de instalaci¢n por efecto de su 
+   CA-Clipper 5.2 es \CLIPPER5. Si tuviera una previa versi¢n de
+   CA-Clipper ya instalada en este directorio, modifique el 
+   directorio por defecto sugerido por el programa de instalaci¢n
+   o se sobrescribir  la versi¢n anterior de CA-Clipper.
+   
+   ---------------------------------------------------------------------
+   2.1  Argumentos de la L¡nea de Mandato
+   
+   La tabla siguiente muestra los argumentos de la l¡nea de mandato
+   aplicables a INSTALL.EXE
+   
+   Argumentos de la l¡nea de mandato para INSTALL.EXE 
+   -----------------------------------------------------------
+   
+   Argumento      Descripci¢n
+   -----------------------------------------------------------
+   
+   /NOSWAP        No permite el intercambio a EMS o disco
+   /BW            Visualizaci¢n monocrom tica (para Laptops)
+   /MONO          Visualizaci¢n monocrom tica
+   -----------------------------------------------------------
+   
+   ---------------------------------------------------------------------
+   2.2  Estructura de Directorios por Defecto
+   
+   La estructura de directorios de CA-Clipper 5.2 creada por el
+   programa de instalaci¢n es la siguiente:
+   
+   \CLIPPER5        Directorio principal de CA-Clipper 5.2
+      \BIN             Ficheros ejecutables (.EXE y .COM), 
+                       batch (.BAT) y de ayuda (.HLP).
+      \INCLUDE         Ficheros de cabecera (.CH y .H).
+      \LIB             Ficheros de biblioteca (.LIB)
+      \PLL             Ficheros de biblioteca preenlazada (.PLL, 
+                       .PLT y .LNK).
+      \OBJ             Ficheros objeto (.OBJ).
+      \SOURCE          Directorio principal de ficheros fuente (.prg).
+         \DBU             Fuentes de la Utilidad de Base de Datos.
+         \PE              Fuentes del Editor de Programas.
+         \RL              Fuentes de la Utilidad de Informes y Etiquetas.
+         \SYS             Fuentes de ciertos sistemas de ejecuci¢n
+                          (Sistema Get, Sistema Error, parte del sistema
+                          de ejecuci¢n de Report y Label Form y el
+                          fichero Rddsys.prg).
+         \SAMPLE          Fuentes de programas de ejemplo.
+   \NG              Los ficheros de La Gu¡a de CA-Clipper.
+   
+   ---------------------------------------------------------------------
+   2.3  Modificaci¢n de las Variables de Entorno
+   
+   Para el correcto funcionamiento de CA-Clipper 5.2 se debe establecer
+   el valor de ciertas variables de entorno  (PATH, LIB, INCLUDE). Si
+   eligi¢ modificar su AUTOEXEC.BAT durante el proceso de instalaci¢n,
+   la configuraci¢n ya se encontrar  actualizada. En otro caso, los
+   valores apropiados se habr n guardado en un fichero llamado 
+   AUTOEXEC.NEW, ubicado en el disco ra¡z de la unidad de arranque.
+   En cualquier caso, es importante que su fichero AUTOEXEC.BAT 
+   contenga esos valores para un correcto funcionamiento de
+   CA-Clipper 5.2. Los valores necesarios son los siguientes:
+   
+   1. La variable PATH debe incluir el directorio que contenga los
+      ficheros ejecutables de CA-Clipper 5.2 (por ejemplo,
+      C:\CLIP52\BIN)
+      
+   2. La variable LIB debe incluir el directorio que contenga los
+      ficheros de biblioteca de CA-Clipper 5.2 (por ejemplo,
+      C:\CLIP52\LIB)
+
+   3. La variable INCLUDE debe incluir el directorio que contenga los
+      ficheros de cabecera de CA-Clipper 5.2 (por ejemplo,
+      C:\CLIP52\INCLUDE)
+
+   4. La variable PLL debe incluir el directorio que contenga los
+      ficheros de biblioteca preenlazados de CA-Clipper 5.2 (por 
+      ejemplo, C:\CLIP52\PLL)
+      
+   As¡ pues, debe establecer:
+   
+   SET PATH=C:\CLIPPER5\BIN;%PATH%
+   SET LIB=C:\CLIPPER5\LIB
+   SET INCLUDE=C:\CLIPPER5\INCLUDE
+   SET PLL=C:\CLIPPER5\PLL
+   
+   Tambi‚n puede desear establecer otras variable de entorno. Para
+   tener una relaci¢n de las variables usadas y soportadas por
+   CA-Clipper 5.2, consulte el cap¡tulo 10 del manual de Consulta
+   R pida. Si desea m s informaci¢n sobre la configuraci¢n y uso del
+   entorno de desarrollo de CA-Clipper, consulte la Gu¡a de Programaci¢n
+   y Utilidades. Si desea informaci¢n general del entorno del DOS y
+   sus variables, consulte su manual del DOS.
+   
+   El programa de instalaci¢n modifica su CONFIG.SYS:
+   
+   FILES=25
+   BUFFERS=15
+   
+   Si ha escogido no modificar su CONFIG.SYS durante el proceso de
+   instalaci¢n, se crear  un fichero llamado CONFIG.NEW en el 
+   directorio ra¡z de la unidad de arranque, que contendr  las
+   modificaciones sugeridas.
+   
+========================================================================
+3. Documentaci¢n en L¡nea
+   
+   La documentaci¢n en l¡nea consiste en el Norton Instant Access
+   Engine (NG.EXE) y las siguientes bases de datos de documentaci¢n:
+   
+   C52SG01B.NG   La Gu¡a de CA-Clipper
+                 (Referencia del Lenguaje CA-Clipper y Tablas)
+   C52SG02B.NG   Mensajes de Error
+                 (Errores del Compilador, del Enlazador y de RMAKE, 
+                  errores en tiempo de ejecuci¢n y errores del DOS)
+   C52SG03B.NG   Referencia T‚cnica (no incluida)
+                 (Disponible a trav‚s de una oferta suplementaria de 
+                 Computer Associates. Para su solicitud, rellene la
+                 tarjeta incluida en el paquete con tal fin y 
+                 rem¡tala a Computer Associates)
+   C52SG04B.NG   Utilidades y Variables de Entorno
+                 (Documentaci¢n de Referencia de las Utilidades:
+                 Compilador, Enlazador, RMAKE, PE, DBU, RL y CLD.
+                 Documentaci¢n de las variables de entorno del DOS).
+   C52SG05B.NG   Notas de Versi¢n
+                 (Informaci¢n espec¡fica de la versi¢n y lista de 
+                 cambios)
+   C52SG06B.NG   Programas de Ejemplo
+                 (Referencia de los programas de ejemplo)
+   C52SG07B.NG   Documentaci¢n de los Controladores de CA-Clipper
+                 (Documentaci¢n en l¡nea completa tanto de los
+                 Controladores de Base de Datos Sustituibles como
+                 de los Controladores de Terminal Alternativos).
+   
+   Todas estas bases de datos de documentaci¢n y el Instant Access
+   Engine est n instalados en el directorio \NG situado en el mismo
+   nivel que el directorio en el que se ha instalado CA-Clipper.
+   
+========================================================================
+4. Controladores.
+   
+   CA-Clipper 5.2 incluye nuevos controladores de base de datos
+   sustituibles (RDDs) as¡ como mejoras en la funcionalidad en
+   los controladores DBFNTX (controlador por defecto) y DBFNDX.
+   Los controladores de base de datos incluidos son DBFNTX (¡ndices
+   de CA-Clipper), DBFNDX (¡ndices compatibles con dBASE III),
+   DBFMDX (¡ndices m£ltiples compatibles con dBASE IV), DBFCDX
+   (¡ndices compatibles con FoxPro) y DBPX (compatibilidad con
+   tablas Paradox).
+   
+   La documentaci¢n de CA-Clipper 5.2 incluye una Gu¡a de 
+   Controladores que describe los RDD, su nuevo y mejorado conjunto
+   de mandatos y los controladores de terminal alternativos.
+   
+   Observaci¢n: La documentaci¢n en l¡nea del controlador DBFNTX
+   contiene "nueva" informaci¢n acerca del esquema de bloqueo 
+   opcional del controlador DBFNTX. Aseg£rese de consultar esta 
+   secci¢n si usa el controlador DBFNTX.
+   
+   ---------------------------------------------------------------------
+   4.1  Instrucciones para el Uso de los Controladores de Terminal
+        Alternativos.
+   
+   El fichero GT.OBJ ubicado en el directorio \CLIPPER5\OBJ debe 
+   usarse con los controladores de Terminal Alternativos PCBIOS y
+   ANSITERM. Este fichero OBJ sustituye al contenido en CLIPPER.LIB.
+   El hecho de no incluirlo durante el enlace puede provocar 
+   anomal¡as en la visualizaci¢n y que la m quina se bloquee.
+   
+   Nota: GT.OBJ no soporta el argumento de desplazamiento horizontal
+   de la funci¢n SCROLL () ni _gtDispBegin (), _gtDispEnd () o
+   _gtDispCount ().
+   
+   ---------------------------------------------------------------------
+   4.2  Instrucciones de Uso para las Nantucket Tools II
+
+   El fichero CT2PATCH.OBJ ubicado en el directorio \CLIPPER5\OBJ
+   a¤ade la compatibilidad de CA-Clipper 5.2 con las Tools II. 
+   Debe usarse siempre en las aplicaciones de CA-Clipper 5.2 que
+   usen las Tools II. No es necesario para usuarios que no posean
+   las Tools II.
+   El fichero CTUS.OBJ ubicado en el directorio \CLIPPER5\OBJ
+   sustituye al fichero NT2US50.OBJ de las Tools II. Use CTUS.OBJ
+   en las aplicaciones de CA-Clipper 5.2 que usen las Tools II y
+   NT2US50.OBJ. No es necesario para usuarios que no posean las
+   Tools II.
+    
+   ---------------------------------------------------------------------
+   4.3  Inoperabilidad de los Controladores de Base de Datos.
+   
+   Cuando se usen los mandatos APPEND FROM y COPY TO en formato
+   DELIMITED o SDF, s¢lo se soportar n los tipos permitidos por
+   CA-Clipper. Los controladores que soporten tipos de datos
+   "extendidos" s¢lo podr n ejecutar COPY TO o APPEND FROM en
+   formato DELIMITED o SDF, usando bases de datos que contengan
+   s¢lo tipos de datos v lidos en CA-Clipper. 
+   
+   ---------------------------------------------------------------------
+   4.4  Addenda al Cap¡tulo de Referencia de Controladores.
+
+   Los mandatos y funciones que abren ¡ndices se comportan de forma
+   diferente a la documentada cuando se usan ¡ndices MDX o CDX. En
+   estos ¡ndices multitag, el orden de control no se asigna 
+   directamente al primer tag del ¡ndice, sino que se establece el
+   orden de control cero u orden natural. As¡ pues, se debe establecer
+   manualmente el orden de control antes de realizar cualquier acci¢n
+   que represente o implique un acceso a un ¡ndice. Los mandatos y 
+   funciones afectados son: SET INDEX, DBSETINDEX () y ORDLISTADD ().
+
+   ---------------------------------------------------------------------
+   4.5  Nota del Controlador DBFCDX
+   
+   Cl usulas EVAL y EVERY en el mandato INDEX ON
+   
+   La cl usula EVAL funciona de forma diferente en el controlador
+   DBFCDX que en los dem s RDD. El bloque de c¢digo se eval£a al
+   principio y al final de cada proceso de indexaci¢n as¡ como para
+   cada registro (como en los dem s RDD). Al principio del proceso
+   de indexaci¢n, tanto BOF () como EOF () devuelven .T.. Al final 
+   del proceso de indexaci¢n, s¢lo EOF () devuelve .T..
+   
+   ---------------------------------------------------------------------
+   4.6.1  Notas del Controlador DBPX
+   
+   Creaci¢n de Indices Secundarios
+
+   El controlador DBPX crea autom ticamente dos ficheros ¡ndice del
+   mismo nombre que la tabla donde quiera que se creen ¡ndices.
+   Estos ficheros tienen las extensiones .X?? y .Y??, siendo ??
+   la posici¢n ordinal del campo clave.
+   
+   Ejemplo:
+   
+      USE Cliente                // Contiene los campos Apellido
+                                 // y Telefono
+      
+      INDEX ON Apellido TO Temp1 // Crea CLIENTE.X01 y  
+                                 //      CLIENTE.Y01.
+                                 // El nombre "Temp1" se ignora
+      
+      INDEX ON Telefono TO Temp2 // Crea CLIENTE.X02 y  
+                                 //      CLIENTE.Y02
+                                 // El nombre "Temp2" se ignora 
+      
+   ---------------------------------------------------------------------
+   4.6.2  Apertura de Indices Secundarios
+   
+   Dado que todos los ¡ndices secundarios toman tambi‚n el nombre de 
+   la tabla, se abren y acceden por el nombre de su campo clave.
+   
+   Ejemplo:
+   
+      // Siguiendo el ejemplo de 4.6.1:
+      
+      SET INDEX TO Apellido           // Se abre el ¡ndice usando el
+                                      // nombre del campo clave y no
+                                      // "Temp1"
+      
+      SET INDEX TO Apellido, Telefono // Se abren los ¡ndices por los
+                                      // nombres de sus campos clave
+      
+      ORDSETFOCUS("Telefono")         // Se establece "Telefono" como
+                                      // orden de control.
+      
+========================================================================
+5. Manejo de Errores
+   
+   ---------------------------------------------------------------------
+   5.1  (b) LOCKERRHAN
+   
+   Si un programa termina anormalmalmente o si ‚ste se cancela
+   con Alt-C, CA-Clipper 5.2 muestra la pila de llamadas
+   de las funciones activas en el momento de la terminaci¢n. Los
+   programadores acostrumbrados a esta informaci¢n apreciar n 
+   una nueva entrada en la pila de llamadas: (b) LOCKERRHAN.
+   Esta entrada representa un manejador de errores especial que se
+   instala de forma autom tica como INIT procedure. Esto es del todo
+   normal. Adem s, posibles manejadores de error incluidos en
+   librer¡as de terceros se mostrar n del mismo modo.
+   
+========================================================================
+6. Nuevos Mensajes de Error
+   
+   ---------------------------------------------------------------------
+   6.1  DBFCDX/1050  Create error
+   
+   Explicaci¢n:  Se ha excedido el n£mero m ximo de ¢rdenes por
+   contenedor de ¢rdenes. El n£mero de ¢rdenes que un contenedor
+   puede englobar es variable y depende del controlador. Consulte
+   la Gu¡a de Controladores.
+   
+   Acci¢n:  Debe crearse un nuevo contenedor de ¢rdenes (fichero ¡ndice)
+   
+   ---------------------------------------------------------------------
+   6.2  DBFMDX/1028  Create error
+   
+   Explicaci¢n:  Se ha excedido el n£mero m ximo de ¢rdenes por
+   contenedor de ¢rdenes. El n£mero de ¢rdenes que un contenedor
+   puede englobar es variable y depende del controlador. Consulte
+   la Gu¡a de Controladores.
+   
+   Acci¢n:  Debe crearse un nuevo contenedor de ¢rdenes (fichero ¡ndice)
+   
+   ---------------------------------------------------------------------
+   6.3  DBPX/306  Create error
+   
+   Explicaci¢n:  Memoria insuficiente para realizar una operaci¢n,
+   como puede ser la ordenaci¢n. 
+   
+   Acci¢n:  Deje disponible m s memoria convencional. Esto puede
+   conseguirse descargando programas residentes, usando un gestor
+   de memoria 386, etc. Aseg£rese de que todo c¢digo en C o en 
+   ensamblador use memoria virtual cuando requiera memoria din mica.
+   La memoria solicitada usando funciones del gestor de memoria fija
+   (_xalloc () y _xgrab ()) reduce la cantidad de memoria convencional 
+   disponible. Libere esta memoria cuanto antes mejor.
+   
+   ---------------------------------------------------------------------
+   6.4  DBPX/503  Create error
+   
+   Explicaci¢n:  Se encontr¢ un error al crear, leer o escribir
+   una tabla de datos, un bloqueo de fichero o un fichero temporal.
+   
+   Acci¢n:  Aseg£rese de que dispone de suficiente espacio libre 
+   en disco y de que tiene entradas de directorio disponibles.
+   Si el fichero ya existe, compruebe que su atributo no sea de
+   s¢lo lectura. En entorno de red, verifique que la aplicaci¢n o
+   el usuario tienen los derechos necesarios para crear el fichero. 
+   
+   Consulte tambi‚n:  El mandato INDEX y el cap¡tulo Programaci¢n 
+   en Red de la Gu¡a de Programaci¢n y Utilidades.
+   
+========================================================================
+7. Utilidades
+   
+   ---------------------------------------------------------------------
+   7.1  Prestaciones de red de la utilidad DBU.
+   
+   La utilidad de ejemplo DBU se ha actualizado para permitir el uso
+   compartido de bases de datos. Por defecto, DBU abre ahora las bases
+   de datos en modo compartido y bloquea autom ticamente los registros
+   cuando pretende escribir los datos.
+   
+   Adem s, siempre que una base de datos deba abrirse en modo exclusivo
+   (para crear un ¡ndice, modificar la estructura, purgarla, etc) DBU
+   vuelve a abrir el fichero en modo exclusivo. Si la apertura en modo 
+   exclusivo falla, DBU le deja con el fichero abierto en modo compartido
+   para que pueda continuar la sesi¢n de trabajo.
+   
+   Todas estas operaciones se realizan de modo transparente. Si ocurriera 
+   un error, ‚ste se comunica al usuario pero la recuperaci¢n es autom tica.
+   En la tabla de visualizaci¢n (Browse), los cambios realizados por otro
+   usuario se reflejan autom ticamente en su pantalla.
+   
+========================================================================
+8. Programas de Ejemplo
+   
+   ---------------------------------------------------------------------
+   8.1  SAMPLES.LIB
+   
+   En el directorio \CLIPPER5\LIB se halla una nueva biblioteca que
+   se llama SAMPLES.LIB. Esta biblioteca contiene la mayor parte de
+   los programas de ejemplo en formato compilado y listo para usar.
+   Para usar cualquiera de las rutinas de ejemplo, basta con incluir
+   SAMPLES.LIB en su l¡nea de enlace de la siguiente manera:
+   
+     RTLINK FI <SusFicherosOBJ> LIB SAMPLES
+   
+========================================================================
+9. Memoria
+   
+   9.1  Memoria Libre y Tama¤o de Carga
+   
+   La Memoria Libre es la cantidad de memoria disponible para ejecutar
+   aplicaciones. Puede ver la cantidad de memoria disponible usando el
+   mandato MEM del DOS 5.0 o el mandato CHKDSK en versiones anteriores.
+   
+   El Tama¤o de Carga es la cantidad de memoria usada por la aplicaci¢n
+   cuando es cargada en memoria por el DOS. .RTLink visualiza este
+   valor (en Kbytes) al final de cada sesi¢n de enlace.
+   
+   Las aplicaciones requieren una cantidad de memoria m s all  de su
+   Tama¤o de Carga para poder almacenar datos. El tama¤o aproximado
+   de memoria para ejecutar una aplicaci¢n es de:
+   
+                          M¡nimo:    120K m s que el Tama¤o de Carga
+                        Deseable:    160K m s que el Tama¤o de Carga
+   
+   ---------------------------------------------------------------------
+   9.2  Uso de la Memoria Fija
+   
+   Para reducir los requerimientos de memoria de su aplicaci¢n, debe
+   convertir sus m¢dulos en C y Ensamblador para que hagan uso de 
+   Memoria Virtual en lugar de usar Memoria Fija. El fichero de cabecera 
+   VM.API se suministra actualmente con tal prop¢sito, aunque la 
+   documentaci¢n asociada estar  disponible con posterioridad (aseg£rese
+   de enviar la tarjeta de solicitud a Computer Associates)
+   
+   ---------------------------------------------------------------------
+   9.3  Servicios de Fichero de CA-Clipper
+
+   Puede reducir el tama¤o de carga de una aplicaci¢n en CA-Clipper
+   usando los servicios de fichero incorporados en el propio CA-Clipper
+   en lugar de los de MicroSoft. El fichero de cabecera FILESYS.API 
+   se suministra actualmente con tal prop¢sito, aunque la documentaci¢n
+   asociada estar  disponible con posterioridad (aseg£rese de enviar la
+   tarjeta de solicitud a Computer Associates)
+   
+========================================================================
+10. Compatibilidad
+   
+   ---------------------------------------------------------------------
+   Compiler Kit for dBASE IV
+   
+   La versi¢n 1.10 de CA-Clipper/dBase IV Compiler Kit no es compatible
+   con CA-Clipper 5.2. S¢lo puede usarse la versi¢n 1.5 de Compiler Kit
+   con CA-Clipper 5.2.
+   
+========================================================================
+11. Erratas
+   
+   11.1  Gu¡a de Programaci¢n y Utilidades
+   
+   ---------------------------------------------------------------------
+   11.1.1.  P gina 11-3,  el modificador /S de RMAKE
+   
+   El modificador /S de RMAKE ya no se soporta.
+   
+   ---------------------------------------------------------------------
+   11.2.  Manual de Consulta R pida
+   
+   ---------------------------------------------------------------------
+   11.2.1.  P gina 7-7,  El modificador /S de RMAKE
+   
+   El modificador  /S de RMAKE ya no se soporta.
+   
+   ---------------------------------------------------------------------
+   11.2.2.  P gina 8-1,  el modificador [/E] de PE
+   
+   PE no soporta modificadores. S¢lo acepta el nombre del fichero como
+   par metro.
+   
+   ---------------------------------------------------------------------
+   11.2.3.  P gina 8-1,  el par metro /e de DBU
+   
+   El par metro /e es opcional y no distingue may£sculas y min£sculas.
+   
+   ---------------------------------------------------------------------
+   11.3.  Gu¡a de Controladores de CA-Clipper
+   
+   ---------------------------------------------------------------------
+   11.3.1.  P gina 2-3,  RDDSYS.PRG
+   
+   La primera l¡nea de c¢digo en RDDSYS.PRG (#include "rddsys.ch") debe
+   omitirse.
+   
+   ---------------------------------------------------------------------
+   11.3.2.  P gina 3-31,  ORDCREATE()
+   
+   En la sintaxis de la funci¢n ORDCREATE (), el bloque de c¢digo no
+   es opcional, sino obligatorio. La sintaxis deber¡a ser:
+   
+      ORDCREATE( <cNomContOrdenes>,[<cNomOrden>],
+         <cExpClave>, <bExpClave>, [<lUnico>]) --> NIL
+      
+   ---------------------------------------------------------------------
+   11.3.3  P gina 8-6,  Indices Primarios
+   
+   Para clarificar la documentaci¢n referente a la creaci¢n de tablas
+   de violaci¢n de clave: Una tabla de violaci¢n de clave (KEYVIOL.DB)
+   se crea s¢lo en el mandato APPEND FROM, cuando el fichero fuente
+   es una tabla (.db) y el fichero destino es un fichero (.db) con
+   clave.
+   
+   ---------------------------------------------------------------------
+   11.3.4  P gina 8-8,  Indices Temporales
+   
+   Esta versi¢n del controlador DBPX no soporta ¡ndices temporales
+   (o parciales)
+   
+   ---------------------------------------------------------------------
+   11.3.5  P gina 8-7,  Indices Secundarios
+   
+   Al contrario de lo indicado en la documentaci¢n, los ¡ndices
+   secundarios se mantienen tal y como se mantiene un ¡ndice DBFNTX
+   normal.
+   
+   ---------------------------------------------------------------------
+   11.3.6  P gina 8-8,  Contrase¤as y Seguridad
+   
+   El controlador Paradox actual, al contrario de lo indicado en la 
+   documentaci¢n, no soporta contrase¤as ni seguridad.
+   
+   A diferencia de lo indicado, se pueden tener m s de 24 tablas
+   Paradox abiertas a la vez. El n£mero de ficheros se determina por 
+   la memoria disponible. Pueden abrirse hasta 15 ¡ndices secundarios
+   en cada  rea de trabajo.
+   
+========================================================================
+12. Manual de Referencia T‚cnica
+   
+   El Manual de Referencia T‚cnica que incluye las API (Interfaces 
+   de Programaci¢n Avanzada) para el Sistema Extendido, el Gestor de
+   Memoria Fija, el Gestor de Memoria Virtual, los Controladores de
+   Base de Datos Sustituibles y otras, estar  disponible a trav‚s de
+   una oferta especial de Computer Associates. Para realizar su 
+   pedido rellene la tarjeta de solicitud y rem¡tala a
+   
+                    C.A. Computer Associates S.A.
+                        Carabela La Ni¤a, 12
+                         08017 - BARCELONA
+                        Tel. (93) 227 81 00
+   
+========================================================================
+13. Copyright
+   
+   El programa de instalaci¢n usado para instalar CA-Clipper 5.2,
+   INSTALL, ha sido proporcionado bajo licencia por Knowledge
+   Dynamics Corp, y est  protegido por las leyes de copyright a
+   nivel mundial. INSTALL se incluye con el £nico prop¢sito de
+   instalar CA-Clipper 5.2. Computer Associates ha introducido
+   modificaciones en el software proporcionado por Knowledge
+   Dynamics Corps y, por tanto, las prestaciones y el comportamiento
+   del programa INSTALL incluido en CA-Clipper 5.2 pueden no
+   ajustarse exactamente al programa INSTALL suministrado por
+   Knowledge Dynamics Corp. Computer Associates es responsable
+   exclusivo del soporte de CA-Clipper 5.2, incluyendo el soporte
+   durante la fase de instalaci¢n. Knowledge Dynamics Corp no
+   se vincula en ning£n caso con el soporte t‚cnico de
+   CA-Clipper 5.2.
+   
+   Todos los nombres que aqu¡ se mencionan son marcas registradas
+   de sus respectivas compa¤¡as.
+   
+
+                              *  *  *

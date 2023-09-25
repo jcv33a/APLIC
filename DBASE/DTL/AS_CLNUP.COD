@@ -1,0 +1,17 @@
+//
+PROCEDURE Cleanup
+*-- comprueba a d¢nde se ha enviado el informe y restaura los valores iniciales
+DO CASE
+CASE gc_dev='CON'
+   ? "  Pulse cualquier tecla para continuar..."
+   xx=INKEY(0)
+CASE gc_dev='PRN'
+   SET PRINT OFF
+   SET PRINTER TO
+CASE gc_dev='TXT'
+   CLOSE ALTERNATE
+ENDCASE
+gc_dev='CON'
+RETURN
+// EOP AS_CLNUP.COD
+

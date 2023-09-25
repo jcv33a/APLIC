@@ -1,0 +1,45 @@
+//
+// Module Name: AD_BROW.COD - Menu_Act = 2
+// Selectors  : Brow_Frez, Brow_Lock, Brow_Width, Brow_Follw, Brow_Dele
+//            : Brow_Appd, Brow_Menu, Brow_Init, Brow_Edit, Brow_Compr
+//            : Brow_FMT, Brow_Clear, Flter_Cond, Item_View, Field_List
+// Description: This module is included to issue the dBASE BROWSE command
+// Syntax     : BROWSE [FIELDS <field name list>] [LOCK <expN>]
+//                  [WIDTH <expN>] [FREEZE <field name>]
+//                  [NOFOLLOW] [NOAPPEND] [NOMENU] [NOCLEAR]
+//                  [NOINIT] [NODELETE] [NOEDIT] [COMPRESS]
+//                  [WINDOW <window name>] [FORMAT]
+//
+{if Flter_Cond then}
+SET FILTER TO {Flter_Cond}
+GOTO TOP
+{endif}
+{ if Brow_FMT then}
+SET FORMAT TO {lower(Brow_FMT)}
+{endif}
+//
+*-- Desc: Hojear el fichero - {Item_View}
+BROWSE \
+{ if Field_list}FIELDS {lower(Field_list)} {endif}\
+{ if Brow_Lock}LOCK {Brow_Lock} {endif}\
+{ if Brow_Width}WIDTH {Brow_Width} {endif}\
+{ if Brow_Frez}FREEZE {Brow_Frez} {endif}\
+{ if Brow_Follw == 1}NOFOLLOW {endif}\
+{ if Brow_Init == 1}NOINIT {endif}\
+{ if Brow_Menu == 1}NOMENU {endif}\
+{ if Brow_Appd == 1}NOAPPEND {endif}\
+{ if Brow_Dele == 1}NODELETE {endif}\
+{ if Brow_Edit == 1}NOEDIT {endif}\
+{ if Brow_Compr == 1}COMPRESS {endif}\
+{ if Brow_Clear == 1}NOCLEAR {endif}\
+{ if Brow_FMT}FORMAT {endif}\
+
+{if Flter_Cond then}
+SET FILTER TO
+{endif}
+{ if Brow_FMT}
+SET FORMAT TO
+{endif}
+//
+// EOP AD_BROW.COD
+

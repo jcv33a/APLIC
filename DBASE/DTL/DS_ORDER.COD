@@ -1,0 +1,11 @@
+//
+// Module Name: DS_ORDER.COD
+// Current incident (selector name): 
+// Selectors used : NDX_Order
+// Description: Used to build a set order command
+//
+{if NDX_Order then}
+Set Order To {NDX_Order}
+{endif}
+{endofpage();}
+// EOP DS_ORDER.COD

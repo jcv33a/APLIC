@@ -1,0 +1,384 @@
+//---------------------------------------------------------------------------
+// BUILTIN.DEF  Template builtin function selectors
+// Ashton-Tate (c) 1987, 1988, 1989, 1990
+//
+// Updated 3-14-90 KJN
+// Added common UDF's to bottom of builtin.def
+//
+// --------------------------------------------------------------
+// Builtin Functions 
+// --------------------------------------------------------------
+// This set of selectors designate builtin functions which should
+// appear in templates as <selector>([parm][,parm]...)
+// They must be included in every template.
+//
+// *** DO NOT CHANGE ANY OF THE NUMBERS BELOW ***
+//
+//---------------------------------------------------------------------------
+{
+selectors
+#lstoff
+//
+// Note: <filename> could also be <expC>
+//
+ALLTRIM    340, // Trim leading and trailing blanks
+                // Syntax: ALLTRIM(<expC>)
+APPEND     324, // Append to an existing output file  
+                // Syntax: APPEND(<filename>)
+ASC        301, // Ascii value of first char of string
+                // Syntax: ASC(<expC>)
+ASKUSER    344, // Prompt user for keyboard input
+                // Syntax: ASKUSER(<expC>,<expC>,<expN>)
+AT         302, // Substring search
+                // Syntax: AT(<expC>,<expC>)
+ATALPHA    303, // Locate first nonblank alpha numeric
+                // Syntax: ATALPHA(<expC>)
+ATOMC      332, // Get sublist data from cursor 
+                // Syntax: ATOMC(<cursor>,<expN>)
+BACKSLASH  321, // Literal backslash
+                // Syntax: BACKSLASH()
+BREAKPOINT 378, // Break during gen to allow user to change trace level
+                // Works in stand alone dGEN.exe
+                // Syntax: BREAKPOINT(<expC>)
+CGET       368, // Input string
+                // Syntax: CGET()
+CHR        304, // Return one char string from ascii value
+                // Syntax: CHR(<expN>)
+CLS        367, // Clear the screen
+                // Syntax: CLS()
+COL1       352, // Left column of object frame
+                // Syntax: COL1()
+COL2       353, // Right column of object frame
+                // Syntax: COL2()
+COPY       325, // Copy text file to output stream
+                // Syntax: COPY(<filename>)
+COUNTC     355, // Cursor's incremental count
+                // Syntax: COUNTC(<cursor>)
+CPUT       366, // Put string to console at current location
+                // Syntax: CPUT(<expC>)
+CREATE     323, // Create an output file
+                // Syntax: CREATE(<filename>)
+CURLINE    338, // Current printed line
+                // Syntax: CURLINE()
+CURSOR_POS 365, // Set cursor position on the screen (row,col)
+                // Syntax: CURSOR_POS(<expN>,<expN>)
+DATE       333, // Get system date and time
+                // Syntax: DATE()
+DEBUG      377, // Debug switch - takes values from 0 to 4
+                // 0=Line number only to 4=full debug trace
+                // Works in stand alone dGEN.exe
+                // Syntax: DEBUG(<expN>)
+EOC        329, // Check for cursor off end of foreach loop
+                // Syntax: EOC(<cursor>)
+EXEC       369, // Execute a DOS program
+                // Syntax: EXEC(<filename>)
+FILEDATE   360, // Return file date as num
+                // Syntax: FILEDATE(<filename>)
+FILEDRIVE  309, // Return drive:  
+                // Syntax: FILEDRIVE(<filename>)
+FILEERASE  379, // Erase a dos file
+                // Syntax: FILEERASE(<filename>)
+FILEEXIST  343, // Test for file existence
+                // Syntax: FILEEXIST(<filename>)
+FILEFIND   382, // Return full specification of the found file
+                // Syntax: FILEFIND(<filename>,<search flag list>)
+                // A=unambiguous SYSTEM file name
+                // 1=unambiguous NORMAL file name
+                // 2=Current DOS drive/directory
+                // 3=DOS path, 4=dBASE SET PATH, 5=dBASE home drive/directory
+                // 6=DEFAULT drive/directory, 7=SQLHOME drive/directory
+FILENAME   307, // Return file root.extension
+                // Syntax: FILENAME(<filename>)
+FILEOK     345, // Test for file name validity
+                // Syntax: FILEOK(<filename>)
+FILEPATH   308, // Return file path
+                // Syntax: FILEPATH(<filename>)
+FILEROOT   306, // Return file name root
+                // Syntax: FILEROOT(<filename>)
+FILETYPE   305, // Return file extension
+                // Syntax: FILETYPE(<filename>)
+FILESIZE   362, // Return file size as num
+                // Syntax: FILESIZE(<filename>)
+GETENV     359, // Returns a environment variable from DOS
+                // Syntax: GETENV(<expC>)
+IIDC       357, // Return internal selector number of item at cursor
+                // Syntax: IIDC(<cursor>)
+LEN        310, // String length
+                // Syntax: LEN(<expC> or <expN>)
+LMARG      336, // Left margin column 
+                // Syntax: LMARG(<expN>)
+LOWER      318, // Convert to lower case
+                // Syntax: LOWER(<expC>)
+LTRIM      311, // Trim leading blanks
+                // Syntax: LTRIM(<expC>)
+MAKEC      326, // Create a cursor
+                // Syntax: MAKEC(<expN>[,<cursor>])
+MAX        313, // Return max of two numbers
+                // Syntax: MAX(<expN>,<expN>)
+MIN        314, // Return min of two numbers
+                // Syntax: MIN(<expN>,<expN>)
+NEWFRAME   348, // Change to a different object
+                // application object
+                // Syntax: NEWFRAME(<expC>)
+NEXTC      328, // Advance a cursor
+                // Syntax: NEXTC(<cursor>)
+NMSG       381, // Output a message on the dbase navigation line 23
+                // Syntax: NMSG(<expC>)
+NUMSET	   363, // Get dbase number setting 
+                // Syntax: NUMSET(<expN>)
+PAGEJECT   347, // Inserts a chr(12) and resets curline() to 0
+                // Syntax: PAGEJECT()
+PAGEL      337, // Printed lines per output page 
+                // Syntax: PAGEL(<expN>)
+PATHEXIST  370, // Test existence of a dos directory
+                // Syntax: PATHEXIST(<expC>)
+PAUSE      334, // Output a breakpoint message and pause (line 24)
+                // Syntax: PAUSE(<expC>)
+PMSG       380, // Output a message on the dbase message line 24
+                // Syntax: PMSG(<expC>)
+POKE       349, // Unformatted print
+                // Could use this to make dbase file headers, macro files
+                // Syntax: POKE(<expC> [,<expC>,....])
+PRINT      322, // Print argument list
+                // Syntax: PRINT(<expC>)
+REPLICATE  342, // Make a string of a given character
+                // Syntax: REPLICATE(<expC>)
+ROW1       350, // Top row of object frame
+                // Syntax: ROW1()
+ROW2       351, // Bottom row of object frame
+                // Syntax: ROW2()
+RTRIM      312, // Trim trailing blanks
+                // Syntax: RTRIM(<expC>)
+SCREEN     335, // Get a line of the screen 
+                // Syntax: SCREEN(<expN>)
+SETC       327, // Set new cursor location
+                // Syntax: SETC(<cursor>,<expN>)
+SPACE      341, // Make a string of spaces
+                // Syntax: SPACE(<expC>)
+STR        315, // Convert number to string
+                // Syntax: STR(<expN>)
+STRSET     364, // Get dbase string setting
+                // Syntax: STRSET(<expC>)
+SUBSTR     316, // Extract a substring
+                // Syntax: SUBSTR(<expC>,<expN>,<expN>)
+TABTO      339, // Tab over to given column
+                // Syntax: TABTO(<expN>)
+TEXTCLOSE  372, // Close text input stream
+                // Syntax: TEXTCLOSE()
+TEXTGETC   373, // Get character from text input stream
+                // Syntax: TEXTGETC()
+TEXTGETL   374, // Get line from text input stream
+                // Syntax: TEXTGETL()
+TEXTGPOS   375, // Get file position from text input stream
+                // Syntax: TEXTGPOS()
+TEXTOPEN   371, // Open text input stream
+                // Syntax: TEXTOPEN(<filename>)
+TEXTSPOS   376, // Set file Position of text input stream
+                // Syntax: TEXTSPOS(<expN>)
+TYPEC      356, // Return type of item at current cursor
+                // Syntax: TYPEC(<cursor>)
+UPPER      317, // Convert to upper case
+                // Syntax: UPPER(<expC>)
+VAL        319, // Convert string to number
+                // Syntax: VAL(<expC>)
+VALC       358, // Return value of item at current cursor
+                // Syntax: VALC(<cursor>)
+VERSION    320, // Return version number of apgen
+                // Syntax: VERSION()
+NAMETOKEN  384, // Returns: a<0 validate, =0 count, >0 fetch
+                // Syntax: NAMETOKEN(string,action) a<0 validate, =0 count, >0 fetch
+IMPORT     385, // Imports a dBASE object and outputs a BNL object
+                // Syntax: IMPORT(infile,outfile,1|2|3|4)  1=qbe, 2=upd, 3=dbf, 4=cat
+//
+// End of Builtin functions
+//--------------------------------------------------------------
+//
+// Aggregate selectors  (e.g. foreach dosfile k in "*.doc" ... next k)
+//
+ATTRIBUTE  1002, // All attribute values in an element or frame
+DOSFILE     331, // Dos file list element
+#lston
+;
+}
+{
+//--------------------------------------------------------------
+// Enum Statements for dBASE IV internal Settings
+// Use with functions numset() & strset()
+//
+// For convience this enum declaration has been placed in this 
+// file, since they can be used in all design objects
+//--------------------------------------------------------------
+// Enum for numset()
+// Note: FSE = Full Screen Edit
+//
+enum _device_file = 0,  //  0 File handle for SET DEVICE TO <filename> 
+     _blocksize ,       //  1 Number of 512-byte pages in DBT 	
+     _flgalter ,        //  2 Output routed to alt. file		
+     _flgbell  ,        //  3 Bell 0:off 1:on
+     _flgcarry ,        //  4 Carry 0:off 1:on
+     _flgcent  ,        //  5 Use 4-digit years			
+     _flgclock ,        //  6 Clock 0:off 1:on
+     _flgcnfrm ,        //  7 Confirm 0:off 1:on
+     _flgcolor ,        //  8 Color set flag 0=b/w 1=cga 2=ega24 4=mono43
+                        //                  6=ega43  3 & 5=N/A
+     _flgconsole,       //  9 Console 0:off 1:on
+     _flgcrypt ,        // 10 File encryption 0:off 1:on
+     _flgcursgn,        // 11 Currency symbol display 0:left 1:right 
+     _flgdebug ,        // 12 Route STEP, ECHO to printer 0:off 1:on
+     _flgdelete,        // 13 Deleted records vanish 0:off 1:on
+     _flgdelim ,        // 14 Delimiters 0:off 1:on
+     _flgdesign,        // 15 Design mode 0:off 1:on
+     _flgdev ,	        // 16 Always compile file 0:off 1:on
+     _flgdohist,        // 17 Do History 0:off 1:on
+     _flgecho  ,        // 18 Echo 0:off 1:on
+     _flgesc   ,        // 19 Escape 0:off 1:on
+     _flgexact ,        // 20 Exact 0:off 1:on
+     _flgexcl  ,        // 21 Exclusive 0:off 1:on
+     _flgfield ,        // 22 fields 0:off 1:on
+     _flgfixed ,        // 23 Fixed point 0:off 1:on
+     _flgflush ,        // 24 Autosave 0:off 1:on
+     _flghead  ,        // 25 Headings on DISPLAY, SUM, etc. 0:off 1:on
+     _flghelp  ,        // 26 Offer help on error 0:off 1:on
+     _flghist  ,        // 27 History 0:off 1:on
+     _flginstruct,      // 28 Instruct 0:off 1:on
+     _flginten ,        // 29 High intensity 0:off 1:on
+     _flgmenu  ,        // 30 Put menus up in FSE 0:off 1:on
+     _flgnear  ,        // 31 Stay at next record if SEEK/FIND fail 0:off 1:on
+     _flgprint ,        // 32 Route output to printer		
+     _flgscore ,        // 33 FALSE:  screen doesn't use line 0	
+     _flgscprt ,        // 34 0:@'s to screen 1:  @'s routed to printer		
+     _flgshare ,        // 35 Allow shared access to databases	
+     _flgspace ,        // 36 Set space ON/off (for print engine). 
+     _flgsql,	        // 37 0: dBASE mode 1: SQL mode  	
+     _flgsqlcode,       // 38 1: executing SQL generated cmds   
+     _flgstatus,        // 39 Status 0:off 1:on
+     _flgstep,          // 40 Single-step DO files 0:off 1:on
+     _flgtalk ,         // 41 Talk 0:off 1:on
+     _flgtitle,         // 42 Titles 0:off 1:on
+     _flgtrap,	        // 43 Trap 0:off 1:on
+     _flguniq,          // 44 Indices 0:Non-unique 1: Unique keys
+     _flgautolk,        // 45 Automatic lock flag for network 0:off 1:on
+     _flgrefresh,       // 46 The refresh count Returns: Number
+     _memowidth,        // 47 Displayed width of memo fields Returns: Number
+     _mindec,           // 48 Minimum (or fixed) # decimals Returns: Number
+     _odometer,         // 49 Interval odometer is updated Returns: Number
+     _safety,           // 50 Safety 0:off 1:on
+     _setmrgn,          // 51 Printer left margin Returns: Number
+     _reprocess,        // 52 Reprocess count Returns: Number
+     _nbuffers,         // 53 Maximum number of I/O buffers Returns: Number
+     _lenYNOF           // 54 Default max of YES/NO/ON/OFF 
+;
+//
+// Enum for strset()
+// Note: FSE = Full Screen Edit
+//
+enum _getdelim = 0,     //  0 FSE l,r delimiters		
+     _disp_currency,    //  1 Current FSE currency string 
+     _def_currency,     //  2 Default FSE currency string 
+     _lang_type,        //  3 Language type designator string
+     _wordproc,	        //  4 Program used for memo fields
+     _tedit,	        //  5 Program used for MODIFY COMMAND 
+     _dotprompt,        //  6 Dot prompt string 
+     _sqlprompt,        //  7 Sql prompt string 
+     _sql_dir,	        //  8 Path for SQL system files 
+     _sql_database,     //  9 Name of SQL system database 
+     _font_file,        // 10 Name of font file 
+     _defdrive,	        // 11 DBASE default drive
+     _disp_period,      // 12 Current display decimal point 
+     _disp_comma,       // 13 Current FSE separator 
+     _def_period,       // 14 Default display decimal point 
+     _def_comma         // 15 Default FSE separator 
+;
+//
+// Enum for Monitor types
+// Values returned by numset(_flgcolor)
+ enum mono = 0, 
+      cga,
+      ega25,
+      mono43 = 4,
+      ega43  = 6
+;
+//
+// Values returned by Object Class
+//
+ enum app    = 1,  // 1) Application object
+      popup,       // 2) Popup object
+      f_pick,      // 3) File picklist object
+      s_pick,      // 4) Fields picklist object
+      v_pick,      // 5) Values picklist object
+      bar = 7,     // 7) Horizontal Bar object
+                   // 6,8 N/A
+      btch   = 9   // 9) Batch object
+      form     = 11,
+      label    = 12,
+      report   = 13,
+      table_dbf= 20,
+      update   = 21,
+      query    = 22,
+      catalog  = 23  
+;
+//
+// Values returned Textgetl() or Textgetc() at End of file
+//
+enum eof = -1;
+//
+// Enum string constants for international translation
+//
+enum any_key = "Pulse una tecla...",
+     read_only = " no puede abrirse: debe de ser de s¢lo lectura. "
+     gen_request  = "Generaci¢n cancelada.  ",
+     gen_complete = "Generaci¢n finalizada.  "
+;                  
+//
+// Generic User Defined functions follow
+
+define say_center(mrow, mstring)
+   // mrow = Row to put string
+   // mstring = Text to display to Row position
+   enum width_of_screen = 80;
+   var mcol;
+   mcol = ( width_of_screen / 2) - ( len( mstring)/2)
+   cursor_pos( mrow, mcol )
+   cput(mstring)
+enddef
+
+define say(mrow, mcol, mstring)
+   // mrow = Row to put string
+   // mcol = Column to put string
+   // mstring = Text to display to Row position
+   cursor_pos( mrow, mcol )
+   cput( mstring )
+enddef
+
+define abs(value)
+   // Absolute value of a number
+   // value = Number to convert to absolute value
+   if value < 0 then
+     value = val( substr( str( value ), 2))
+   endif
+   return value;
+enddef
+
+define beep(value)
+   // Simulate a bell
+   // value = Number of times to beep
+   var cnt;
+   cnt = 1
+   do while cnt <= value
+      cput( chr(7) )
+      cnt = cnt + 1
+   enddo
+   return;
+enddef
+
+define cap_first(string)                
+   // Takes and returns a string with first letter capped
+   return upper( substr( string,1,1)) + lower( substr( string,2))
+enddef
+
+define nul2zero(numbr)
+   // if number is nul and we are expecting a zero - convert the nul to 0
+   return (numbr ? numbr : 0);
+enddef
+}
+

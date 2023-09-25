@@ -1,0 +1,679 @@
+//
+// Module name: Quickapp.cod
+// Description: Quick application template for dBASE IV
+//
+
+Plantilla para Aplicaciones B sicas
+-----------------------------------
+Versi¢n 1.1.3
+Ashton-Tate (c) 1987, 1988, 1989, 1990
+
+{
+ include "applctn.def"  // Applicaton selectors
+ include "builtin.def"  // Builtin Functions
+
+ // Check menu type
+ if MENU_TYPE != app then
+   pause(app_class)
+   goto NoGen;
+ endif
+ //
+ // Enum string constants for international translation
+ //
+ enum pack_dbf1 = "ELIMINANDO los registros marcados para borrado de la base de datos ",
+      pack_dbf2 = "",
+      set_msg1  = "A¤adiendo registros al fichero ",
+      set_msg2  = "Editando el fichero ",
+      set_msg3  = "Hojeando el fichero ",
+      set_msg4  = "Elija una opci¢n para localizar un registro o <ESC> para opci¢n por omisi¢n",
+      set_msg5  = "Imprimiendo informe ",
+      set_msg6  = "Imprimiendo etiquetas",
+      quick_bar1= " A¤adir Informaci¢n", quick_msg1 = "A¤adir registros a la base de datos ",
+      quick_bar2= " Modificar Informaci¢n", quick_msg2 = "Editar los registros de la base de datos ",
+      quick_bar3= " Visualizar Informaci¢n", quick_msg3 = "Hojear la base de datos ",
+      quick_bar4= " Borrar Registros ", quick_msg4 = "Eliminar los registros marcados para borrado de la base de datos ",
+      quick_bar5= " Imprimir Informe", quick_msg5 = "Imprimir con el formato de informe ",
+      quick_bar6= " Etiquetas de Correo", quick_msg6 = "Imprimir con el formato de etiquetas ",
+      quick_bar7= " Reindexar Base de Datos ", quick_msg7 = "Reindexar la base de datos ",
+      quick_bar8= " Salir de ", quick_msg8 = "Salir del programa a dBASE",
+      prntchk_bar1= " Enviar a...",
+      prntchk_bar3= " Pantalla ", prntchk_msg3= "Pantalla solamente" ,
+      prntchk_bar4= " Impresora ", prntchk_msg4= "Impresora LPT1:",
+      prntchk_bar5= " Muestra ", prntchk_msg5= "Impresora LPT1: Etiqueta de muestra",
+      prntchk_bar6= " Salir", prntchk_msg6= "Volver al Men£ Principal",
+      reindex_dbf = "Reindexando la base de datos ",
+      ready_printer = "    Prepare su impresora o",
+      press_esc = "    pulse ESC para cancelar",
+      error_occured = "[Error ocurrido en la l¡nea ]+LTRIM(STR(LINE())) +[ del procedimiento ]+Program()",
+ ;
+ //
+ // End string constants for international translation
+ //
+ // Declare variables
+ var quickapp, barcnt, rptchoice, lblchoice, ndxchoice, file, crlf, x, color,
+     ask_user, strng, author, copyright, dbVersion, default_drv, temp,
+     scrn_size, display // Type of display
+ ;
+
+ // Grab default drive from dBASE
+ // See bottom of Builtin.def for numset & strset enum's
+ default_drv = strset(_defdrive);
+
+ if filedrive(menu_name) or !default_drv then
+   quickapp = alltrim(menu_name);
+ else
+   quickapp = default_drv + ":" + alltrim(menu_name);
+ endif
+ quickapp = upper(quickapp);
+
+ // Assign default values to some of the variables
+ barcnt = 4;
+ crlf = chr(10);
+ author = Appl_Authr;
+ copyright = Appl_cpyrt;
+ dbVersion = Appl_Versn;
+ display = numset(_flgcolor);
+ if display > ega25 then scrn_size = 39 else scrn_size = 21 endif
+ scrn_size = scrn_size + 3
+
+ // Check to see if file exists and safety is on
+ if fileexist(quickapp+".PRG") and numset(_safety) then
+   do while not at(upper(ask_user),"SN")
+      ask_user = askuser("La aplicaci¢n "+quickapp+".prg ya existe...¨Sustituir?  (S/N) ","N",1);
+   enddo
+   if upper(ask_user) == "N" then
+     pause(gen_request + any_key)
+     goto NoGen;
+   endif
+ endif
+//
+//----------------------------------
+//Create Quickapp main program
+//----------------------------------
+//
+ if not create(quickapp+".PRG") then
+    pause(fileroot(quickapp)+".PRG" + read_only + any_key)
+    goto nogen;
+ endif
+
+ print(replicate("*",80)+crlf);
+}
+* Programa.......: {quickapp}
+{include "as_headr.cod";}
+* Notas..........:
+{print(replicate("*",80)+crlf);}
+
+SET CONSOLE OFF
+IF TYPE("gn_apgen") = "U" && No llamado desde otro programa del Gen. de Aplicac.
+   CLEAR ALL
+   CLEAR WINDOW
+   CLOSE DATABASE
+   gn_apgen = 1
+ELSE
+   gn_apgen = gn_apgen + 1
+   PRIVATE gc_bell, gc_carry, gc_clock, gc_century, gc_confirm, gc_deli,;
+           gc_escape, gc_safety, gc_status, gc_score, gc_talk, gc_color,;
+           gc_proc
+ENDIF
+
+*-- Ventana para mensajes de error
+DEFINE WINDOW Pause FROM 15,00 TO 19,79 DOUBLE
+ON ERROR DO PAUSE WITH {error_occured}
+ON KEY LABEL F1 DO quickhlp
+
+*-- Almacenamiento en variables de los SETs iniciales
+gc_bell   =SET("BELL")
+gc_carry  =SET("CARRY")
+gc_clock  =SET("CLOCK")
+gc_century=SET("CENTURY")
+gc_color  =SET("ATTRIBUTE")
+gc_confirm=SET("CONFIRM")
+gc_cursor =SET("CURSOR")
+gc_deli   =SET("DELIMITERS")
+gc_escape =SET("ESCAPE")
+gc_proc   =SET("PROCEDURE")
+gc_safety =SET("SAFETY")
+gc_status =SET("STATUS")
+gc_score  =SET("SCOREBOARD")
+gc_talk   =SET("TALK")
+
+SET CLOCK OFF
+SET COLOR TO
+CLEAR
+SET CONSOLE ON
+
+*-- Variables de entorno para la aplicaci¢n
+SET BELL {if Set_Bell then}OFF{else}ON{endif}
+{if Set_BellFr and Set_BellDr then}
+SET BELL TO {Set_BellFr},{Set_BellDr}
+{endif}
+SET CARRY {if Set_Carry then}ON{else}OFF{endif}
+SET CENTURY {if Set_Centry then}ON{else}OFF{endif}
+SET CONFIRM {if Set_Confrm then}ON{else}OFF{endif}
+SET CURSOR OFF
+SET DELIMITERS TO \
+{if not AT(CHR(34),Set_DelChr) then}"{Set_DelChr}"
+{  goto deliok;
+ endif
+ if not AT("'",Set_DelChr) then}'{Set_DelChr}'
+{  goto deliok;
+ endif
+ if not AT("[",Set_DelChr) or not AT("]",Set_DelChr) then}[{Set_DelChr}]
+{  goto deliok;
+ endif
+}
+""
+{deliok:}
+SET DELIMITER {if Set_Delim then}ON{else}OFF{endif}
+SET ESCAPE {if Set_Escape then}OFF{else}ON{endif}
+SET SAFETY {if Set_Safety then}OFF{else}ON{endif}
+SET SCOREBOARD OFF
+SET STATUS OFF
+SET TALK OFF
+//
+{if Run_Drive then}
+SET DEFAULT TO {UPPER(Run_Drive)}:
+{endif}
+{if Run_Path then}
+SET PATH TO {Run_Path}
+{endif}
+
+*-- Inicializaci¢n de las variables globales
+gn_barv  = 0{tabto(25)}&& Inicializa la variable de la barra de men£
+gn_error = 0{tabto(25)}&& Variable para almacenar el n£mero de error()
+gn_send  = 0{tabto(25)}&& Variable de retorno del men£ de ventana
+gc_brdr  = "2"{tabto(25)}&& Estilo del borde del men£ - Ver Procedimiento
+lc_heading = "{if quick_hdng then
+  alltrim(Quick_Hdng)
+else
+  fileroot(Upper(quickapp))
+endif}" && Cabecera del men£
+
+gl_color = ISCOLOR()
+{if Disp_Sign then}
+// Display Signon Banner
+SET ESCAPE OFF
+
+*-- Pantala de presentaci¢n
+tmpcolor = IIF(gl_color,"{color(Clr_box)}", "W+/N")
+@ {row1()},{col1()} TO {row2()},{col2()} \
+{   case Mnu_Border of}
+{   0: // Panel}
+PANEL \
+{   1: // Single}
+ \
+{   2: // Double}
+DOUBLE \
+{   endcase}
+COLOR &tmpcolor.
+{   foreach text_element}
+@ {row1()+Row_Positn},{col1()+Col_Positn} SAY "{Text_Item}"
+{   next}
+IF gl_color
+   @ {row1()+1},{col1()+1} FILL TO {row2()-1},{col2()-1} COLOR {color(Clr_Messages)}
+ENDIF
+@ IIF("43" $ SET("DISPLAY"),42,24),30 \
+SAY "Pulse una tecla ..." COLOR {color(Clr_Messages)}
+ln_inkey = INKEY(500)
+CLEAR
+
+{endif}
+SET ESCAPE {if Set_Escape then}OFF{else}ON{endif}
+SET STATUS ON
+
+*-- Establecimiento de los colores
+IF gl_color
+   SET COLOR OF NORMAL TO {color(Clr_Text)}
+   SET COLOR OF MESSAGES TO {color(Clr_Messages)}
+   SET COLOR OF TITLES TO {color(Clr_Heading)}
+   SET COLOR OF HIGHLIGHT TO {color(Clr_Hghlight)}
+   SET COLOR OF BOX TO {color(Clr_Box)}
+   SET COLOR OF INFORMATION TO {color(Clr_Info)}
+   SET COLOR OF FIELDS TO {color(Clr_Fields)}
+ENDIF
+//
+
+{dBFOpen(Quick_DBF, Quick_NDX, Quick_Ordr);}
+
+*-- Definici¢n del men£ de ventana principal de Quickapp
+SET BORDER TO DOUBLE
+DEFINE POPUP quick FROM 7,27
+DEFINE BAR 1 OF quick PROMPT "{quick_bar1}" MESSAGE "{quick_msg1 + Quick_DBF}"
+DEFINE BAR 2 OF quick PROMPT "{quick_bar2}" MESSAGE "{quick_msg2 + Quick_DBF}"
+DEFINE BAR 3 OF quick PROMPT "{quick_bar3}" MESSAGE "{quick_msg3 + Quick_DBF}"
+DEFINE BAR 4 OF quick PROMPT "{quick_bar4}" MESSAGE "{quick_msg4 + Quick_DBF}"
+{ if Quick_FRM then barcnt=barcnt+1; rptchoice=barcnt;}
+DEFINE BAR {barcnt} OF quick PROMPT "{quick_bar5}" MESSAGE "{quick_msg5 + Quick_FRM}"
+{ endif
+  if Quick_LBL then barcnt=barcnt+1; lblchoice=barcnt;}
+DEFINE BAR {barcnt} OF quick PROMPT "{quick_bar6}" MESSAGE "{quick_msg6 + Quick_LBL}"
+{ endif
+  if Quick_NDX or Quick_Ordr then barcnt=barcnt+1; ndxchoice=barcnt;}
+DEFINE BAR {barcnt} OF quick PROMPT "{quick_bar7}" MESSAGE "{quick_msg7 + Quick_DBF}"
+{ endif
+  barcnt=barcnt+1;
+ strng=fileroot(quickapp);
+ strng=upper(substr(strng,1,1))+lower(substr(strng,2,7));}
+DEFINE BAR {barcnt} OF quick PROMPT "{quick_bar8 + strng}" MESSAGE "{quick_msg8}"
+ON SELECTION POPUP quick DO Action WITH BAR()
+
+{if Quick_LBL or Quick_FRM then}
+*-- Definici¢n del men£ de ventana para el direccionamiento de la impresi¢n
+DEFINE POPUP prntchk FROM 10,55
+DEFINE BAR 1 OF prntchk PROMPT "{prntchk_bar1}" SKIP
+DEFINE BAR 2 OF prntchk PROMPT REPLICATE(CHR(196),14) SKIP
+DEFINE BAR 3 OF prntchk PROMPT "{prntchk_bar3}" MESSAGE "{prntchk_msg3}"
+DEFINE BAR 4 OF prntchk PROMPT "{prntchk_bar4}" MESSAGE "{prntchk_msg4}"
+DEFINE BAR 5 OF prntchk PROMPT "{prntchk_bar5}" MESSAGE "{prntchk_msg5}" \
+ SKIP{if Quick_LBL} FOR gn_barv <> {lblchoice}{endif}
+DEFINE BAR 6 OF prntchk PROMPT "{prntchk_bar6}" MESSAGE "{prntchk_msg6}"
+ON SELECTION POPUP prntchk DO get_sele
+{endif}
+
+*-- Ventana para cubrir el  rea de trabajo al editar, a¤adir, etc.
+DEFINE WINDOW work FROM 0,0 TO 21,79 NONE
+
+*-- Ventana para el  rea bajo la cabecera y para mostrar informes/etiquetas
+DEFINE WINDOW desktop FROM 4,0 TO 21,79 NONE
+
+DEFINE WINDOW printemp FROM 10,25 TO 15,56
+
+*-- Presenta la cabecera centrada en la pantalla.
+DO menubox WITH lc_heading
+
+*-- Muestra el men£ sin que parpadee si se pulsan las teclas del cursor o ESC
+SHOW POPUP quick
+SAVE SCREEN TO quick
+*-- Muestra el men£ de Quickapp centrado en la pantalla
+DO WHILE gn_barv <> {barcnt} && Evita salir de men£ con teclas del cursor o ESC
+  ACTIVATE POPUP quick
+ENDDO
+
+* Restauraci¢n de las variables de entorno lo mejor que se puede
+?? COLOR(gc_color)                       && Ver la UDF Color m s adelante
+SET BELL &gc_bell.
+SET CARRY &gc_carry.
+SET CLOCK TO
+SET CLOCK &gc_clock.
+SET CENTURY &gc_century.
+SET CONFIRM &gc_confirm.
+SET CURSOR &gc_cursor.
+SET DELIMITERS &gc_deli.
+SET ESCAPE &gc_escape.
+SET FORMAT TO
+SET PROCEDURE TO (gc_proc)
+SET STATUS &gc_status.
+SET SAFETY &gc_safety.
+SET SCORE  &gc_score.
+SET TALK   &gc_talk.
+
+IF gn_apgen = 1 && No llamado desde otro programa del Genenerador de Aplicaciones
+   CLEAR WINDOW
+   CLEAR POPUP
+   CLEAR ALL
+   CLOSE DATABASE
+ELSE
+   RELEASE WINDOWS work, desktop
+   RELEASE SCREEN quick
+   RELEASE POPUP quick
+   gn_apgen = gn_apgen - 1
+ENDIF
+ON ERROR
+ON KEY LABEL F1
+RETURN
+* EOP: {Quickapp}.PRG
+
+//
+//-------------------------------------------------------------------------
+//  Create Quickapp procedure file
+//  Since the dBASE compiler does not care that their are procedures in the
+//  same file as the program we tack the procedures onto the bottom.
+//-------------------------------------------------------------------------
+//
+{print(replicate("*",80)+crlf);}
+* Procedimientos.: {quickapp}.Prc
+{include "as_headr.cod";}
+* Notas..........:
+{print(replicate("*",80)+crlf);}
+
+*-- Ejemplo de fichero de Procedimientos que muestra la potencia de ‚stos.
+*-- Menubox crea un recuadro de cabecera de men£ con el encabezamiento centrado
+{include "as_menub.cod";}
+
+PROCEDURE get_sele
+*-- Acepta la selecci¢n del usuario y almacena BAR en una variable
+gn_send = BAR()  && Variable para direccionamiento de la impresi¢n
+DEACTIVATE POPUP
+RETURN
+
+PROCEDURE Action
+PARAMETERS bar
+*-- Acepta la selecci¢n del usuario y almacena BAR en una variable
+gn_barv = bar
+SET MESSAGE TO
+IF LTRIM( STR( gn_barv)) $ "123"
+   SET CURSOR ON
+{if Quick_FMT then}
+   *--Utiliza el formato de pantalla {Quick_FMT} para editar/a¤adir/hojear datos
+   SET FORMAT TO {Quick_FMT}
+{endif}
+ENDIF
+DO CASE
+   CASE gn_barv = 1
+      *-- A¤adir informaci¢n
+      SET MESSAGE TO '{set_msg1 + Quick_DBF}'
+      APPEND
+   CASE gn_barv = 2
+      *-- Cambiar informaci¢n
+      SET MESSAGE TO '{set_msg2 + Quick_DBF}'
+      EDIT
+   CASE gn_barv = 3
+      *-- Hojear informaci¢n
+      SET MESSAGE TO '{set_msg3 + Quick_DBF}'
+      BROWSE {if Quick_FMT then}FORMAT {endif}
+   CASE gn_barv = 4
+      *-- Borrar informaci¢n (Ejecuta PACK sobre el fichero {lower(Quick_DBF)})
+      ACTIVATE WINDOW desktop
+      @ 2,0 SAY "{pack_dbf1 + Quick_DBF + pack_dbf2}"
+      @ 3,0
+      SET TALK ON
+      PACK
+      GO TOP
+      ?
+      WAIT
+      SET TALK OFF
+      DEACTIVATE WINDOW desktop
+{  if Quick_FRM}
+   CASE gn_barv = {rptchoice}
+      *-- Emplea el fichero de formato de informe {lower(Quick_FRM)}
+      SET MESSAGE TO '{set_msg4}'
+      ACTIVATE WINDOW work
+      gn_recno = RECNO()
+      DO position
+      DEACTIVATE WINDOW work
+      lc_toprnt = IIF(gn_recno <> recno(),'REST ','')
+      STORE 0 TO gn_send, gn_pkey
+      ACTIVATE POPUP prntchk
+      IF gn_send = 4
+         lc_toprnt = 'TO PRINT'
+         ON ERROR DO prntrtry
+      ENDIF
+      IF .NOT. gn_send = 6
+         SET MESSAGE TO '{set_msg5 + Quick_FRM}'
+         ACTIVATE WINDOW desktop
+         SET ESCAPE ON
+         REPORT FORM {Quick_FRM} &lc_toprnt.
+         IF gn_pkey <> 27
+            WAIT
+         ENDIF
+         SET ESCAPE {if Set_Escape then}OFF{else}ON{endif}
+         DEACTIVATE WINDOW desktop
+      ENDIF
+      GOTO gn_recno
+      ON ERROR DO PAUSE WITH {error_occured}
+{  endif
+   if Quick_LBL}
+   CASE gn_barv = {lblchoice}
+      *-- Emplea el fichero de formato de etiqueta {lower(Quick_LBL)}
+      SET MESSAGE TO '{set_msg4}'
+      ACTIVATE WINDOW work
+      gn_recno = RECNO()
+      DO position
+      DEACTIVATE WINDOW work
+      STORE 0 TO gn_send, gn_pkey
+      lc_toprnt = IIF(gn_recno <> recno(),'REST ','')
+      ACTIVATE POPUP prntchk
+      DO CASE
+       CASE gn_send = 4
+         lc_toprnt = 'TO PRINT'
+       CASE gn_send = 5
+         lc_toprnt = 'TO PRINT SAMPLE'
+      ENDCASE
+      IF .NOT. gn_send = 6
+         SET MESSAGE TO '{set_msg6}'
+         ACTIVATE WINDOW desktop
+         SET ESCAPE ON
+         ON ERROR DO prntrtry
+         LABEL FORM {Quick_LBL} &lc_toprnt.
+         IF gn_pkey <> 27
+            WAIT
+         ENDIF
+         SET ESCAPE {if Set_Escape then}OFF{else}ON{endif}
+         DEACTIVATE WINDOW desktop
+      ENDIF
+      GOTO gn_recno
+      ON ERROR DO PAUSE WITH {error_occured}
+{  endif
+   if Quick_NDX or Quick_Ordr}
+   CASE gn_barv = {ndxchoice}
+      *-- Reindexa {lower(Quick_DBF)}
+      ACTIVATE WINDOW desktop
+      @ 3,0 SAY "{reindex_dbf + Quick_DBF + "..."}"
+      @ 4,0
+      SET TALK ON
+      REINDEX
+      GO TOP
+      ?
+      WAIT
+      SET TALK OFF
+      DEACTIVATE WINDOW desktop
+{  endif}
+   CASE gn_barv = {barcnt}
+      DEACTIVATE POPUP
+ENDCASE
+SET MESSAGE TO
+SET CURSOR OFF
+{if Quick_FMT then}
+IF gc_status = "OFF"
+   SET STATUS ON
+ENDIF
+SET FORMAT TO
+{endif}
+RESTORE SCREEN FROM quick
+RETURN
+
+{include "as_pause.cod"}
+
+PROCEDURE quickhlp
+*--  Para incluir un sistema de ayuda para la aplicaci¢n b sica suprima los *
+*--  de las l¡neas siguientes y escriba sus @ say de ayuda dentro de los CASE
+*ACTIVATE WINDOW desktop
+*CLEAR
+DO CASE
+{for temp = 1 to barcnt}
+  CASE BAR() = {temp}
+{next}
+ENDCASE
+*WAIT
+*DEACTIVATE WINDOW desktop
+RETURN
+
+{if Quick_LBL or Quick_FRM then
+  include "as_posit.cod";}
+
+PROCEDURE prntrtry
+PRIVATE lc_escape
+lc_escape = SET("ESCAPE")
+IF .NOT. PRINTSTATUS()
+   IF lc_escape = "ON"
+      SET ESCAPE OFF
+   ENDIF
+   gn_pkey = 0
+   ACTIVATE WINDOW printemp
+   @ 1,0 SAY "{ready_printer}"
+   @ 2,0 SAY "{press_esc}"
+   DO WHILE ( .NOT. PRINTSTATUS()) .AND. gn_pkey <> 27
+      gn_pkey = INKEY()
+   ENDDO
+   DEACTIVATE WINDOW printemp
+   SET ESCAPE &lc_escape.
+   IF gn_pkey <> 27
+      RETRY
+   ENDIF
+ENDIF
+RETURN
+{ endif}
+
+FUNCTION Color
+*-----------------------------------------------------------------------------
+* Formato:
+* COLOR( <expC> )
+*  <expC> = NORMAL, HIGHLIGHT, MESSAGES, TITLES, BOX, INFORMATION, FIELDS, COLOR
+*        o una serie de caracteres que contenga todos los colores
+*  Versi¢n: dBASE 1.1
+*
+* La funci¢n COLOR() o bien devuelve los colores que devolver¡a
+* SET("attribute"), o bien establece los colores contenidos en la serie
+* pasada como par metro.
+* Si <expC> es una serie que contiene todos los colores, COLOR() devuelve un
+* NULL. Si no, devuelve los atributos de color actuales del grupo requerido
+*
+* Ve se tambi‚n: SET("attribute")
+*-----------------------------------------------------------------------------
+PARAMETERS set_color
+PRIVATE color_num, color_str, cnt
+
+set_color = UPPER(set_color)
+IF set_color = "COLOR"
+  *- Devuelve s¢lo los colores del est ndar, el realzado y el marco
+  RETURN SUBSTR(SET("attr"),1, AT(" &", SET("attr")))
+ENDIF
+
+*- Declara la serie en que se desglosan las opciones de color de SET("attr")
+PRIVATE color_
+DECLARE color_[8]
+*- Determina si el usuario esta recuperando o almacenando los colores
+IF " &" $ set_color
+  color_str = ","+set_color+","            && Recuperar los atributos de color
+ELSE
+  color_str = ","+SET("ATTRIBUTE")+","     && Almacenar los atributos de color
+ENDIF
+
+*-- Rellena la serie con los atributos de color individuales
+color_str = STUFF(color_str, AT(" &", color_str), 4, ",")
+cnt = 1
+DO WHILE cnt <= 8
+  color_str = SUBSTR(color_str, AT(",", color_str ) +1 )
+  color_[cnt] = SUBSTR(color_str, 1, AT(",", color_str ) - 1)
+  cnt = cnt + 1
+ENDDO
+
+IF " &" $ set_color
+  *-- Restaura los atributos de color
+  SET COLOR TO ,,&color_[3].                     && Color del borde
+  SET COLOR OF NORMAL TO &color_[1].
+  SET COLOR OF HIGHLIGHT TO &color_[2].
+  SET COLOR OF MESSAGES TO &color_[4].
+  SET COLOR OF TITLES TO &color_[5].
+  SET COLOR OF BOX TO &color_[6].
+  SET COLOR OF INFORMATION TO &color_[7].
+  SET COLOR OF FIELDS TO &color_[8].
+ELSE
+  *-- Devuelve los atributos de color del grupo requerido
+  DO CASE
+  CASE set_color $ "NORMAL"
+    color_num =  1
+  CASE set_color $ "HIGHLIGHT"
+    color_num =  2
+  CASE set_color $ "BORDER"
+    color_num =  3
+  CASE set_color $ "MESSAGES"
+    color_num =  4
+  CASE set_color $ "TITLES"
+    color_num =  5
+  CASE set_color $ "BOX"
+    color_num =  6
+  CASE set_color $ "INFORMATION"
+    color_num =  7
+  CASE set_color $ "FIELDS"
+    color_num =  8
+  OTHERWISE
+    set_color = " &"
+  ENDCASE
+ENDIF
+RETURN IIF(" &" $ set_color, "", color_[color_num])
+* EOF: {quickapp}.PRG
+{pause(gen_complete + any_key);
+ fileerase(quickapp+".DBO");
+ NoGen:
+ return 0;
+//
+//-------------------------------
+// End of quickapp
+// User defined functions include
+//-------------------------------
+//
+ define dbfOpen(mdbf,mndx,mord)
+   if at(upper(filetype(mdbf)), ".QBE,.QBO,.VUE") then}
+SET VIEW TO {mdbf}
+{    if mndx then}
+SET INDEX TO {mndx}
+{    endif
+     if mord then}
+SET ORDER TO {mord}
+{    endif
+   else}
+USE {mdbf} {if mndx then}INDEX {mndx}{endif}
+{    if mord then}
+SET ORDER TO {mord}
+{    endif
+   endif
+  return;
+ enddef
+
+ define color(getcolor);
+ //
+ // This udf is used for processing colors from the apgen.
+ //  The foreground and background colors are stored in one byte.
+ //  The formulas below show how to get the foreground and background color
+ //  out of the variable passed in.
+ //
+ var blink, forground, background, enhanced, incolor;
+ //
+ forground = background = enhanced = 0;
+ //
+ if getcolor != 255 then          // N/N in apgen (black on black)
+   blink = getcolor >> 7          // high order bit set?
+   if blink then
+      getcolor = getcolor - 128   // Shift high order bit back
+   endif
+   background = getcolor >> 4
+   forground  = getcolor - (background << 4)
+   //
+   if forground > 7 then
+      enhanced = 1
+      forground = forground - 8
+   endif
+ endif
+ // Set your dBASE manual for an explanation of the colors below
+ case forground of
+  0: incolor = "n"
+  1: incolor = "b"
+  2: incolor = "g"
+  3: incolor = "bg"
+  4: incolor = "r"
+  5: incolor = "rb"
+  6: incolor = "gr"
+  7: incolor = "w"
+ endcase
+ if blink then incolor = incolor + "*" endif
+ if enhanced then
+   incolor = incolor + "+/"
+ else
+   incolor = incolor + "/"
+ endif
+ case background of
+  0: incolor = incolor + "n"
+  1: incolor = incolor + "b"
+  2: incolor = incolor + "g"
+  3: incolor = incolor + "bg"
+  4: incolor = incolor + "r"
+  5: incolor = incolor + "rb"
+  6: incolor = incolor + "gr"
+  7: incolor = incolor + "w"
+ endcase
+ return incolor;
+enddef
+}
+// EOP QUICKAPP.COD
+

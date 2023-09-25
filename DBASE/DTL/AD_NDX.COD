@@ -1,0 +1,33 @@
+//
+// Module Name: AD_NDX.COD - Menu_Act = 13
+// Selectors  : NDX_KEY, NDX_File, NDX_Unique, NDX_Descnd, NDX_Tag, NDX_TagIn
+// Description: Create a new index file.
+// Syntax     : INDEX ON <expKEY> TO <expFN>
+//                 / [[TAG <expTN>] [OF <expFN>]]
+//                 [UNIQUE] [DISTINCT] [DESCENDING]
+//
+lc_say = 'Indexando '+dbf()+' por {NDX_KEY}'
+DO info_box WITH lc_say
+{if !Set_Safety then //safety on}
+lc_safety = SET("SAFETY")
+SET SAFETY OFF
+{endif}
+SET TALK ON
+//
+INDEX ON {NDX_KEY} \
+{if NDX_Tag}
+TAG {NDX_Tag} OF {NDX_TagIn} \
+{else}
+TO {NDX_File} \
+{endif}
+{if NDX_Unique}UNIQUE{endif} \
+{if NDX_Descnd}DESCENDING{endif}
+
+//
+SET TALK OFF
+{if !Set_Safety then //safety on}
+SET SAFETY &lc_safety.
+{endif}
+//
+// EOP AD_NDX.COD
+

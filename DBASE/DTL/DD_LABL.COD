@@ -1,0 +1,29 @@
+//
+// Module Name: DD_LABL.COD - current (selector name): Menu_Act = 5
+// Selectors used : LBL_File, Scope, For_Expr, While_Exp, LBL_Sample, LBL_Dest
+//            : Flter_Cond
+// Description: DOC. include file for LABEL option.
+// Syntax     : LABEL FORM <label file>/? [<scope>] [SAMPLE]
+//                  [FOR <condition>] [WHILE <condition>]
+//                  [TO PRINT] [TO FILE <file>]
+//
+Imprimir etiquetas {LBL_File}.lbl
+{if Scope || For_Expr || While_Exp || !LBL_Sample then}
+{endofpage();}
+Opciones del mandato:
+{ if Scope} SCOPE {upper(Scope)}{endif}\
+{ if For_Expr} FOR {For_Expr}{endif}\
+{ if While_Exp} WHILE {While_Exp}{endif}\
+{ if !LBL_Sample} SAMPLE {endif}
+{endif}
+{endofpage();}
+Destino de impresi¢n: \
+{if not FRM_Dest}Enviar a la impresora por omisi¢n{endif}\
+{if FRM_Dest == 1}Enviar al fichero {FRM_File}.txt{endif}\
+{if FRM_Dest == 2}Pantalla{endif}\
+{if FRM_Dest == 3}Preguntar al usuario en tiempo de ejecuci¢n{endif}
+{if Flter_Cond}Filtro: {Flter_Cond}
+{endif}
+{endofpage();}
+// EOP DD_LABL.COD
+

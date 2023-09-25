@@ -1,0 +1,10 @@
+//
+// Module Name: AD_XDOS.COD - Menu_Act = 21
+// Selectors  : DOS_File, DOS_Parm
+// Description: to issue the dBASE RUN command
+// Syntax     : RUN <DOS command> [<parameters>]
+//
+RUN {DOS_File}{if DOS_Parm} {DOS_Parm}{endif}
+//
+// EOP AD_XDOS.COD
+

@@ -1,0 +1,44 @@
+//
+// Module Name: DD_EDIT.COD
+// current (selector name): Menu_Act = 3
+// Selectors used : Edit_Frez, Edit_Lock, Edit_Width, Edit_Follw, Edit_Dele
+//            : Edit_Appd, Edit_Menu, Edit_Init, Edit_Edit, Edit_Compr
+//            : Edit_FMT, Edit_Key
+//            : Flter_Cond,Item_View, Field_List, For_Expr, While_Exp, Scope
+//            : Wndow_Name
+// Description: DOC. include file for the EDIT/APPEND option.
+// Syntax     : EDIT [<scope>] [FIELDS <list>]
+//                   [WHILE <condition>] [FOR <condition>]
+//
+{if not Edit_Mode then}
+APPEND
+{else}
+EDIT
+{ if Scope || Field_list || For_Expr || While_Exp || Edit_Follw || Edit_Appd ||
+  Edit_Menu || Edit_Init || Edit_Dele || Edit_Edit ||  Edit_Clear ||
+  Wndow_Name then}
+{endofpage();}
+Opciones del mandato:
+{  if Scope} SCOPE {upper(Scope)}{endif}\
+{  if Field_list} FIELDS {Field_list}{endif}\
+{  if For_Expr} FOR {For_Expr}{endif}\
+{  if While_Exp} WHILE {While_Exp}{endif}\
+{  if Edit_Follw == 1} NOFOLLOW {endif}\
+{  if Edit_Appd == 1} NOAPPEND {endif}\
+{  if Edit_Menu == 1} NOMENU {endif}\
+{  if Edit_Init == 1} NOINIT {endif}\
+{  if Edit_Dele == 1} NODELETE {endif}\
+{  if Edit_Edit == 1} NOEDIT {endif}\
+{  if Edit_Clear == 1} NOCLEAR {endif}\
+{  if Wndow_Name then} WINDOW {Wndow_Name}{endif}
+{ endif}
+{endif}
+{endofpage();}
+{if Edit_FMT}Fichero de formato: {lower(Edit_FMT)}.fmt
+{endif}
+{endofpage();}
+{if Flter_Cond}Filtro: {Flter_Cond}
+{endif}
+{endofpage();}
+// EOP DD_EDIT.COD
+

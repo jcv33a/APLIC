@@ -1,0 +1,17 @@
+//
+// Module Name: DD_DELE.COD- currently (selector name): Menu_Act = 10
+// Selectors used : Scope, For_Expr, While_Exp
+// Description:
+// Syntax     : DELETE [<scope>] [FOR <condition>] [WHILE <condition>]
+//
+Borrar registros
+{if Scope || For_Expr || While_Exp then}
+{endofpage();}
+Opciones del mandato:
+{  if Scope} SCOPE {upper(Scope)}{endif}\
+{  if For_Expr} FOR {For_Expr}{endif}\
+{  if While_Exp} WHILE {While_Exp}{endif}
+{endif}
+{endofpage();}
+// EOP DD_DELE.COD
+

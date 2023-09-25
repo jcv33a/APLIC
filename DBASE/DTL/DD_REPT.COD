@@ -1,0 +1,36 @@
+//
+// Module Name: DD_REPT.COD - current (selector name): Menu_Act = 4
+// Selectors used : FRM_Dest, FRM_File, FRM_Headng, FRM_Plain, FRM_Eject, FRM_Summry
+//            : Flter_Cond, Scope, For_Expr, While_Exp
+// Description: DOC. include file for REPORT option.
+// Syntax     : REPORT FORM <report form file>/? [<scope>]
+//                  [FOR <condition>] [WHILE <condition>]
+//                  [PLAIN] [SUMMARY] [NOEJECT] [TO PRINT]
+//                  [HEADING <expC>]
+//                  [TO FILE <file>]
+//
+Imprimir el informe {FRM_File}.frm
+{if Scope || For_Expr || While_Exp || FRM_Headng || FRM_Summry || FRM_Eject ||
+  FRM_Plain then }
+{endofpage();}
+Opciones del mandato:
+{ if Scope} SCOPE {upper(Scope)}{endif}\
+{ if For_Expr} FOR {For_Expr}{endif}\
+{ if While_Exp} WHILE {While_Exp}{endif}\
+{if FRM_Plain} PLAIN {endif}
+{endofpage();}
+{if FRM_Summry} SUMMARY {endif}\
+{if FRM_Eject} NOEJECT {endif}\
+{ if FRM_Headng} HEADING "{FRM_Headng}"{ endif}
+{endif}
+{endofpage();}
+Destino de impresi¢n: \
+{if not FRM_Dest}Enviar a la impresora por omisi¢n{endif}\
+{if FRM_Dest == 1}Enviar al fichero {FRM_File}.txt{endif}\
+{if FRM_Dest == 2}Pantalla{endif}\
+{if FRM_Dest == 3}Preguntar al usuario en tiempo de ejecuci¢n{endif}{if Flter_Cond} Filtro: {Flter_Cond}
+{endif}
+{endofpage();}
+
+// EOP DD_REPT.COD
+

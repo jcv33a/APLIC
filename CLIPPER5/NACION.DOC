@@ -1,0 +1,257 @@
+===========================================================================
+   Notas de la versi¢n de CA-Clipper 5.2 Espa¤ola
+
+   Copyright (c) 1993, Computer Associates International, Inc.
+   Todos los derechos reservados.
+
+   Este fichero contiene informaci¢n de importancia para los clientes
+   europeos que precisen soporte de lenguaje en sus aplicaciones.
+
+
+==========================================================================
+1. Introducci¢n
+
+   La versi¢n internacional de CA-Clipper 5.2 proporciona soporte
+   para los lenguajes de diferentes pa¡ses, permitiendo a los
+   usuarios desarrollar aplicaciones para el mercado europeo.
+   Enlazando con el controlador apropiado, se obtiene la traducci¢n
+   de algunos mensajes del sistema que aparecen durante la ejecuci¢n,
+   as¡ como un criterio de ordenaci¢n en los ¡ndices de acuerdo con
+   el alfabeto local.
+
+
+==========================================================================
+2. Soporte de Traducci¢n de Mensajes
+
+   La versi¢n internacional de CA-Clipper 5.2 le permite mostrar los
+   mensajes que aparecen en el producto en diferentes idiomas. Por 
+   defecto ser n mostrados en espa¤ol. Si deseara cambiar este 
+   comportamiento deber¡a cambiar el controlador de idioma mediante los 
+   pasos indicados en el punto 4 de este documento. Recuerde que si 
+   desea que su CA-Clipper 5.2 en castellano se comporte como la 
+   versi¢n internacional, deber  enlazar en su aplicaci¢n el 
+   controlador del idioma ingl‚s.
+
+   Los mensajes afectados son:
+
+   D¡as de la semana   - Nombres de los d¡as usados por la funci¢n CDOW ()
+   Meses del a¤o       - Nombres de los meses usados por la funci¢n CMONTH ()
+
+   Mensajes de mandato - Mensajes en el mandato LABEL FORM SAMPLES.
+                         T¡tulos en el mandato REPORT FORM.
+                         L¡nea de estado en el sistema GET.
+   Errores en ejecuci¢n - Muchos mensajes de error en ejecuci¢n se han
+                          traducido. (Esta prestaci¢n no est  disponible
+                          en todos los controladores).
+
+   Existe un fichero MSG*.OBJ para cada pa¡s soportado.
+
+
+==========================================================================
+3. Criterios de Ordenaci¢n
+
+   Los criterios de ordenaci¢n afectan al orden de sus ¡ndices,
+   operaciones de ordenaci¢n de bases de datos y matrices, y comparaci¢n
+   de cadenas de caracteres. Tambi‚n se ven afectadas las funciones
+   UPPER (), LOWER (), ISUPPER (), ISLOWER (), ISALPHA () y las funciones
+   y mandatos parametrizables mediante la cl usula PICTURE. El operador
+   de igualdad exacta == no se ve afectado.
+
+   El criterio de ordenaci¢n por defecto de CA-Clipper es el orden
+   del alfabeto espa¤ol. Si deseara otro tipo de ordenaci¢n, por 
+   ejemplo el portugu‚s, bastar¡a con cambiar el controlador 
+   del criterio de ordenaci¢n siguiendo los pasos indicados en 
+   el punto 4 de este documento. Los criterios de ordenaci¢n reordenan 
+   esta secuencia con el fin de incluir los caracteres especiales de 
+   cada pa¡s en el lugar correspondiente a su alfabeto. Si usted desea 
+   que su CA-Clipper 5.2 en castellano se comporte como la versi¢n 
+   internacional deber  seleccionar el controlador ingl‚s.
+
+   Un ejemplo de esto lo tenemos en el car cter '‡' [Chr (135)]. Con el
+   criterio de ordenaci¢n por defecto, dicho car cter aparecer¡a entre
+   '†' [Chr (134)] y 'ˆ' [Chr (136)]. Si enlaza con el controlador
+   que proporciona el criterio de ordenaci¢n MDX franc‚s y recrea los
+   ¡ndices, el car cter '‡' [Chr (135)] aparecer  ahora entre los
+   caracteres 'c' [Chr (67)] y 'd' [Chr (68)]. As¡ pues, las operaciones
+   de comparaci¢n descritas a continuaci¢n pueden ocasionar diferentes
+   resultados en funci¢n del controlador del criterio de ordenaci¢n que
+   se haya enlazado.
+
+   ? "‡" > "d"  // Devuelve .T. con el criterio de ordenaci¢n ASCII
+   ? "‡" > "d"  // Devuelve .F. con el criterio de ordenaci¢n MDX franc‚s.
+
+   Nota: Cambiar el criterio de ordenaci¢n en una aplicaci¢n que ya
+         tiene ¡ndices, posiblemente causar  la corrupci¢n de los mismos.
+         Siempre que se cambie el criterio de ordenaci¢n, se deber n
+         recrear los ficheros contenedores de ¢rdenes.
+
+   ---------------------------------------------------------------------
+   3.1  Controladores de Base de Datos Sustituibles
+
+   CA-Clipper 5.2 soporta Controladores de Base de Datos Sustituibles o
+   RDD. Para cada pa¡s, los distintos productos de bases de datos pueden
+   proporcionar criterios de ordenaci¢n distintos. As¡ pues, se incluyen
+   diferentes controladores del criterio de ordenaci¢n para cada uno de
+   los RDD.
+
+   La informaci¢n siguiente resalta las caracter¡sticas espec¡ficas de
+   cada controlador.
+
+   ---------------------------------------------------------------------
+   3.1.1  Soporte de Criterios de Ordenaci¢n para DBFNTX (Clipper)
+
+   Estos controladores de soporte del idioma en formato DBFNTX sustituyen
+   a todos los m¢dulos de naciones europeas suministrados en versiones
+   anteriores de CA-Clipper.
+
+   ---------------------------------------------------------------------
+   3.1.2  Soporte de Criterios de Ordenaci¢n para DBFMDX (dBase IV)
+
+   Los controladores de soporte del idioma permiten que sus aplicaciones
+   actualicen de forma correcta las bases de datos de dBase IV y sus
+   ¡ndices MDX asociados. Las versiones de dBase IV propias de cada pa¡s
+   incorporan su criterio de ordenaci¢n particular. Si no se usa el
+   controlador correcto, se producir  corrupci¢n de ¡ndice.
+
+   ---------------------------------------------------------------------
+   3.1.3  Soporte de Criterios de Ordenaci¢n para DBFCDX (FoxPro 2)
+
+   Las versiones europeas de FoxPro 2 usan el criterio de ordenaci¢n
+   ASCII.
+
+   De todas maneras, puede enlazar el controlador de mensajes del idioma
+   propio si desea mostrar mensajes de sistema en su aplicaci¢n. Esto no
+   afectar  al criterio de ordenaci¢n de su RDD DBFCDX.
+
+   Nota: Informe a su oficina local de Computer Associates si precisa
+         un criterio de ordenaci¢n no ASCII para mantener la compatiblidad
+         con la versi¢n FoxPro de su pa¡s.
+
+   ---------------------------------------------------------------------
+   3.1.4  Soporte de Criterios de Ordenaci¢n para DBPX (Paradox 3.5)
+
+   ACTUALMENTE, NO HAY SOPORTE DE CRITERIOS DE ORDENACION NACIONALES
+   PARA ESTE RDD.
+
+   Puede enlazar los controladores de lenguaje para mostrar los mensajes
+   del sistema en su aplicaci¢n, pero no afectar  al criterio de
+   ordenaci¢n del RDD DBPX.
+
+   ---------------------------------------------------------------------
+   3.2  Soporte de varios RDD.
+
+   S¢lo puede enlazarse un controlador de lenguaje en una aplicaci¢n
+   de CA-Clipper 5.2. No es posible utilizar dos criterios de
+   ordenaci¢n para aplicaciones que usen los controladores DBFNTX y
+   DBFMDX simult neamente, por ejemplo. En tal caso, deber  seleccionar
+   el controlador de lenguaje para los ¡ndices con los cuales quiera
+   mantener compatibilidad. Deber  volver a crear todos los ¡ndices
+   que no se encuentren en este caso.
+
+==========================================================================
+4. ¨Qu‚ pa¡ses se soportan?
+
+   La tabla siguiente lista los pa¡ses que actualmente se
+   soportan:
+   ÚÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   ³ Lenguaje   ³ Mensajes ³ DBFNTX   ³ DBFMDX ³ Notas              ³
+   ÆÍÍÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍµ
+   ³ Ingl‚s     ³ MSGUK    ³ NTXUK    ³ MDXUK  ³ NTX es orden ASCII ³
+   ³ Dan‚s      ³ MSGDAN   ³ NTXDAN   ³        ³                    ³
+   ³ Holand‚s   ³ MSGDUT   ³ NTXDUT   ³ MDXDUT ³                    ³
+   ³ Fin‚s      ³ MSGFIN   ³ NTXFIN   ³        ³                    ³
+   ³ Franc‚s    ³ MSGFRE   ³ NTXFRE   ³ MDXFRE ³                    ³
+   ³ Alem n     ³ MSGGER   ³ NTXGER   ³ MDXGER ³                    ³
+   ³ Griego     ³ MSGGR437 ³ NTXGR437 ³        ³ Para Code Page 437 ³
+   ³            ³ MSGGR851 ³ NTXGR851 ³        ³ Para Code Page 851 ³
+   ³ Island‚s   ³ MSGIC850 ³ NTXIC850 ³        ³ Para Code Page 850 ³
+   ³            ³ MSGIC861 ³ NTXIC861 ³        ³ Para Code Page 861 ³
+   ³ Italiano   ³ MSGITA   ³ NTXITA   ³ MDXITA ³                    ³
+   ³ Noruego    ³ MSGNOR   ³ NTXNOR   ³        ³                    ³
+   ³ Portugu‚s  ³ MSGPOR   ³          ³        ³                    ³
+   ³ Espa¤ol    ³ MSGSPA   ³ NTXSPA   ³ MDXSPA ³                    ³
+   ³ Sueco      ³ MSGSWE   ³ NTXSWE   ³ MDXSWE ³                    ³
+   ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+   Si no hubiera sopote para el lenguaje de su pa¡s, por favor contacte
+   con la oficina local de Computer Associates.
+
+   Para instalar el controlador apropiado a su pa¡s, ejecute el fichero
+   NACION.BAT ubicado en el directorio \CLIPPER5\OBJ y siga las
+   instrucciones mostradas en pantalla. Este copiar  el controlador
+   de mensajes de su pa¡s en MSG.OBJ, el controlador de criterio de
+   ordenaci¢n para sus ¡ndices DBFNTX en NTXSORT.OBJ y el criterio de
+   ordenaci¢n para sus ¡ndices DBFMDX en MDXSORT.OBJ.
+
+==========================================================================
+5. Enlace de los Controladores de Lenguaje.
+
+   La siguiente documentaci¢n usa las convenciones de nombre
+   descritas anteriormente y asume que se ha ejecutado NACION.BAT.
+
+   Antes de enlazar su controlador de lenguaje, aseg£rese de que
+   ha establecido el valor de la variable de entorno OBJ al
+   directorio \CLIPPER5\OBJ. Por ejemplo, incluya la l¡nea
+   "SET OBJ=C:\CLIPPER5\OBJ" en su fichero AUTOEXEC.BAT.
+
+   Para crear una aplicaci¢n en CA-Clipper que soporte el idioma
+   de su pa¡s, debe enlazarla con el controlador del lenguaje y
+   con el controlador del criterio de ordenaci¢n correspondiente
+   al RDD que est‚ usando. La sintaxis a usar para tal prop¢sito
+   es la siguiente:
+
+     RTLINK FI <Objs> [, <ControladordeMensajes>]
+                      [, <ControladordelCriteriodeOrdenaci¢n>]
+
+   donde <Objs>                                Es la lista de los
+                                               ficheros OBJ de su
+                                               aplicaci¢n
+         <ControladordeMensajes>               Es el controlador de
+                                               mensajes
+         <ControladordelCriteriodeOrdenaci¢n>  Es el controlador del
+                                               criterio de ordenaci¢n
+                                               del RDD usado
+
+   Por ejemplo, para crear una aplicaci¢n con soporte de mensajes y
+   criterio de ordenaci¢n para el controlador DBFMDX, enlace de la
+   siguiente manera:
+
+     RTLINK FI <objs>, MSG, MDXSORT
+
+   Tanto los controladores de mensaje como los de criterio de ordenaci¢n
+   son opcionales. Por lo tanto, una aplicaci¢n puede actuar con mensajes
+   traducidos pero con el criterio de ordenaci¢n ASCII. Por ejemplo:
+
+     RTLINK FI <objs>, MSG
+
+   Usando el par metro //INFO en la l¡nea de mandato al invocar a su
+   aplicaci¢n, podr  determinar los controladores de lenguaje que se
+   han enlazado con su aplicaci¢n. Por ejemplo:
+
+     C:\> MIPROG //INFO
+
+   Cuando no se haya enlazado ning£n controlador en la aplicaci¢n, la
+   l¡nea de informaci¢n mostrada al arrancar la aplicaci¢n ser :
+
+
+     Clipper (R) 5.2 Intl. Rev. 1.96 BRITISH - ASCII Collation
+                                     ÀÄÄÂÄÄÙ   ÀÄÂÄÙ
+                                        ³        ³
+              Controlador de mensajes ÄÄÙ        ÀÄÄ Controlador del
+              en idioma local que                    criterio de ordenaci¢n
+              se ha enlazado.                        que se ha enlazado.
+
+   Este mensaje cambia en funci¢n de los controladores que se hayan
+   enlazado en su aplicaci¢n. Junto con el controlador del Criterio de
+   Ordenaci¢n, se mostrar  tambi‚n el pa¡s. Por ejemplo, si ha instalado
+   los controladores de franc‚s y enlazado los ficheros MSG.OBJ y
+   MDXSORT.OBJ, la l¡nea de informaci¢n visualizada ser :
+
+     Clipper (R) 5.2 Intl. Rev. 1.96 FRENCH - FRENCH DBFMDX Collation
+
+
+   ---------------------------------------------------------------------
+   Si requiere m s informaci¢n t‚cnica o encuentra alg£n problema,
+   por favor contacte con la oficina local de Computer Associates.
+
+                              *  *  *

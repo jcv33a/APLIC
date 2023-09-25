@@ -1,0 +1,113 @@
+//
+// Module Name: DS_BOX.COD
+// Description: Used to build graphics boxes for IBM compatible printers
+//
+{//  This is a template language verison of SCREEN() - so that we can output
+ //  graphics characters around boxes.
+
+   do while cnt < scrn_size
+    line = space(col1());
+
+    if cnt < 10 and barflag then
+       linecnt = "0"+str(cnt);
+     else
+       if barflag then // bar flag test for processing a bar menu
+         linecnt = str(cnt);
+       endif
+    endif
+
+    if cnt == row1() then  // START OF BOX
+      case Mnu_Border of
+        0: line=line+chr(219)+replicate(chr(219),(col2()-col1())-1)+chr(219);
+        1: line=line+chr(218)+replicate(chr(196),(col2()-col1())-1)+chr(191);
+        2: line=line+chr(201)+replicate(chr(205),(col2()-col1())-1)+chr(187);
+        3: line=line+" "+replicate(" ",(col2()-col1())-1)+" ";
+      endcase
+    endif
+
+    if cnt == row2() then // END OF BOX
+      case Mnu_Border of
+        0: line=line+chr(219)+replicate(chr(219),(col2()-col1())-1)+chr(219);
+        1: line=line+chr(192)+replicate(chr(196),(col2()-col1())-1)+chr(217);
+        2: line=line+chr(200)+replicate(chr(205),(col2()-col1())-1)+chr(188);
+        3: line=line+" "+replicate(" ",(col2()-col1())-1)+" ";
+      endcase
+    endif
+
+    if cnt > row1() and cnt < row2() then  // Lines between box
+
+      // Test to see if we processed fields or lines of text yet
+      if forflag then
+
+        if Menu_Type == app then // if app process text lines
+           foreach Text_Element tline
+            skipline:
+            if row1()+Row_Positn == cnt then // on a line of text
+               get_box_text(line,linecnt,text_item,col_positn);
+            else // this is a blank line in object
+               line = space(col1());
+               case Mnu_Border of
+                 0: line=line+chr(219)+replicate(" ",(col2()-col1())-1)+chr(219);
+                 1: line=line+chr(179)+replicate(" ",(col2()-col1())-1)+chr(179);
+                 2: line=line+chr(186)+replicate(" ",(col2()-col1())-1)+chr(186);
+                 3: line=line+" "+replicate(" ",(col2()-col1())-1)+" ";
+               endcase
+               if cnt < 10 then
+                 linecnt = "0"+str(cnt);
+               else
+                 linecnt = str(cnt);
+               endif
+               print(substr(linecnt+":"+line,1,80)+crlf);
+               ++cnt;
+               goto skipline;
+            endif
+           next tline; 
+
+        else // Process fields in object
+           foreach Fld_Element flds
+             get_box_text(line,linecnt,Fld_Pictur,col_positn);
+           next flds; 
+        endif
+
+        if Menu_Type == bar then
+          mspace2 = space((col2()-len(line)));
+          case Mnu_Border of
+            0: line = line + mspace2 + chr(219);
+            1: line = line + mspace2 + chr(179);
+            2: line = line + mspace2 + chr(186);
+            3: line = line + mspace2 + " ";
+          endcase
+          print(substr(linecnt+":"+line,1,80)+crlf);
+          endif
+      else
+        if Menu_Type != bar then
+          case Mnu_Border of
+           0: line=line+chr(219)+replicate(" ",(col2()-col1())-1)+chr(219);
+           1: line=line+chr(179)+replicate(" ",(col2()-col1())-1)+chr(179);
+           2: line=line+chr(186)+replicate(" ",(col2()-col1())-1)+chr(186);
+           3: line=line+" "+replicate(" ",(col2()-col1())-1)+" ";
+          endcase
+          print(substr(linecnt+":"+line,1,80)+crlf);
+        endif
+        ++cnt;
+      endif // forflag
+
+      forflag=0;
+      loop;
+    endif // cnt > row1() and cnt < row2() then
+
+    if line > row2() then
+      line = "";
+    endif
+
+    if cnt < 10 then
+      linecnt = "0"+str(cnt);
+    else
+      linecnt = str(cnt);
+    endif
+
+    print(substr(linecnt+":"+line,1,80)+crlf);
+    ++cnt;
+   enddo
+}
+// EOP DS_BOX.COD

@@ -1,0 +1,25 @@
+//
+// Module Name: DD_EXPT.COD - currently (selector name):  Menu_Act = 17
+// Selectors used : Exprt_file, Exprt_Type, Scope, For_Expr, While_Exp
+// Description: DOC. include file for the EXPORT option.
+// Syntax     : EXPORT TO <name> TYPE
+//
+Exportar registros al fichero: {lower(Exprt_file)}
+{if Scope || Field_list || For_Expr || While_Exp then}
+{endofpage();}
+Opciones del mandato:
+{ if Field_List} FIELDS {Field_List}{endif}\
+{ if Scope} SCOPE {upper(Scope)} {endif}
+{ if For_Expr} FOR {For_Expr}{endif}\
+{ if While_Exp} WHILE {While_Exp}{endif}
+{endif}
+ TYPE \
+{ case Exprt_type of}
+{ 0:}PFS
+{ 1:}dBASEII
+{ 2:}FW2
+{ 3:}RPD
+{ endcase}
+{endofpage();}
+// EOP DD_EXPT.COD
+

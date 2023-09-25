@@ -1,0 +1,76 @@
+//
+// Module Name: AD_LIST.COD - Menu_Act = 6
+// Selectors  : Disp_Pause, Field_list, Flter_Cond, Scope, For_Expr, While_Exp
+// Description: List [<parameters>]
+// Syntax     : LIST [OFF] [<scope>] [FIELDS <field name list>]
+//                   [<exp list>]
+//                   [FOR <expL>] [WHILE <expL>]
+//           *:=     [TO [PRINTER]/[FILE <expFN>]]
+//
+//              LIST FILES [[LIKE] [<path>] <skeleton>] *
+//
+//              LIST HISTORY [LAST <expN>] *
+//
+//              LIST MEMORY *
+//
+//              LIST STATUS *
+//
+//              LIST STRUCTURE [IN <expWA>] *
+//
+*-- Desc: Mandato LIST [<par metros>]
+CLEAR
+//
+//
+{if Flter_Cond then}
+SET FILTER TO {Flter_Cond}
+GOTO TOP
+{endif}
+//
+{case Disp_Dest of}
+{0: // Printer}
+SET PRINT ON
+{1: // File}
+SET ALTERNATE TO list.prt
+SET ALTERNATE ON
+{3: // Ask at runtime}
+gn_pkey = 0
+DO PrintSet
+IF gn_pkey <> 27  && esc
+   \
+{endcase}
+//
+{if Disp_Pause then}
+LIST\
+{else}
+DISPLAY ALL\
+{endif}
+{if Field_list then}
+ FIELDS {lower(Field_list)}\
+{endif}
+{if Disp_Off then}
+ OFF\
+{endif}
+{if Scope} {upper(Scope)} {endif}\
+{if For_Expr} FOR {For_Expr}{endif}\
+{if While_Exp} WHILE {While_Exp}{endif}\
+
+{case Disp_Dest of}
+{0:}
+SET PRINT OFF
+{1:}
+CLOSE ALTERNATE
+{2:}
+{  if not Disp_Pause then}
+WAIT
+{  endif}
+{3:}
+   DO Cleanup
+ENDIF
+{endcase}
+//
+{if Flter_Cond then}
+SET FILTER TO
+{endif}
+//
+// EOP AD_LIST.COD
+

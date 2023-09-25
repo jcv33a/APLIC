@@ -1,0 +1,46 @@
+//
+// Module Name: AD_COPY.COD - Menu_Act = 8
+// Selectors  : Copy_Recrd, Copy_type, Scope, Field_list, For_Expr, While_Exp
+// Description: to issue the dBASE COPY command
+// Syntax     : COPY TO <expFN>/ARRAY <array name>
+//                   [<scope>] [FIELDS <field name list>]
+//                   [FOR <expL>] [WHILE <expL>]
+//                   [ [TYPE] DBASEII / DIF / FW2 / RPD / SDF / SYLK / WKS
+//                        [DELIMITED [WITH BLANK/<delimiter>]] ]
+//
+lc_say='Copiando registros en {Copy_Recrd}'
+DO info_box WITH lc_say
+{if !Set_Safety then //safety on}
+lc_safety = SET("SAFETY")
+SET SAFETY OFF
+{endif}
+SET TALK ON
+*--  Desc: Copiar registros en {if Copy_type == 5}ARRAY {endif}{Copy_Recrd}
+COPY\
+{if Copy_Recrd} TO {if Copy_type == 5}ARRAY {endif}{Copy_Recrd}{endif}\
+{if Scope} {upper(Scope)} {endif}\
+{if Field_list} FIELDS {lower(Field_list)}{endif}\
+{if For_Expr} FOR {For_Expr}{endif}\
+{if While_Exp} WHILE {While_Exp}{endif}\
+{if Copy_type && Copy_type != 5 then} TYPE {endif}\
+{ case Copy_type of}
+{ 0: // insert carriage return for DBF}
+
+{ 1:}dBASEII
+{ 2:}FW2
+{ 3:}RPD
+{ 4:}DELIMITED {if Appl_Delim}WITH {Appl_Delim}{endif}
+{ 5: // insert carriage return for ARRAY}
+
+{ 6:}SDF
+{ 7:}DIF
+{ 8:}SYLK
+{ 9:}WKS
+{ endcase}
+SET TALK OFF
+{if !Set_Safety then //safety on}
+SET SAFETY &lc_safety.
+{endif}
+//
+// EOP AD_COPY.COD
+

@@ -1,0 +1,47 @@
+//
+// Module Name: AD_SORT.COD - Menu_Act = 15
+// Selectors  : Sort_File, SortField*, Sort_Ord*, Sort_Case*
+//            : Scope, For_Expr, While_Exp
+// Description: to issue the dBASE SORT command
+// Syntax     : SORT TO <expFN> ON <field name> [/A] [/C] [/D]
+//                   [,<field name> [/A] [/C] [/D]...]
+//                   [<scope>] [FOR <expL>] [WHILE <expL>]
+//
+*--  Desc: Ordena registros en {Sort_File}
+lc_say='Ordenando registros en {Sort_File}'
+DO info_box WITH lc_say
+{if !Set_Safety then //safety on}
+lc_safety = SET("SAFETY")
+SET SAFETY OFF
+{endif}
+SET TALK ON
+{if Sort_File}
+SORT TO {Sort_File} \
+{ if SortField1}
+ON {SortField1}{SUBSTR("/A/D",(Sort_Ord1*2)+1,2)}{if Sort_Case1 == 0}C{endif}\
+{ endif}
+{ if SortField2}
+ , {SortField2}{SUBSTR("/A/D",(Sort_Ord2*2)+1,2)}{if Sort_Case2 == 0}C{endif}\
+{ endif}
+{ if SortField3}
+ , {SortField3}{SUBSTR("/A/D",(Sort_Ord3*2)+1,2)}{if Sort_Case3 == 0}C{endif}\
+{ endif}
+{ if SortField4}
+ , {SortField4}{SUBSTR("/A/D",(Sort_Ord4*2)+1,2)}{if Sort_Case4 == 0}C{endif}\
+{ endif}
+{ if SortField5}
+ , {SortField5}{SUBSTR("/A/D",(Sort_Ord5*2)+1,2)}{if Sort_Case5 == 0}C{endif}\
+{ endif}
+{if Scope} {upper(Scope)} {endif}\
+{if For_Expr} FOR {For_Expr}{endif}\
+{if While_Exp} WHILE {While_Exp}{endif}\
+
+{endif}
+//
+SET TALK OFF
+{if !Set_Safety then //safety on}
+SET SAFETY &lc_safety.
+{endif}
+//
+// EOP AD_SORT.COD
+

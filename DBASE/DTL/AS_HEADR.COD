@@ -1,0 +1,14 @@
+//
+// Module Name: AS_HEADR.COD
+// Selectors used : Appl_Authr, Appl_Cpyrt, Appl_versn
+// Description: Used as a include to produce Program Header Information
+//
+{strng=STR(VERSION());}
+* Autor..........: {if author then}{author}{endif}
+* Fecha..........: {ltrim(SUBSTR(DATE(),1,8))}
+* Aviso..........: {if Copyright then}{Copyright}{endif}
+* Versi¢n dBASE..: {if dBVersion then}{dBVersion}{endif}
+* Generado por...: Generador de Aplicaciones versi¢n {strng}
+* Descripci¢n....: {if Menu_Desc then}{Menu_Desc}{endif}
+// EOP AS_HEADR.COD
+

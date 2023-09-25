@@ -1,0 +1,37 @@
+//
+// Module Name: AD_REPL.COD - Menu_Act = 9
+// Selectors  : Scope, For_Expr, While_Exp, Repl_fld*, Repl_with*, Repl_Addtv*
+// Description: Substitute values into database record
+// Syntax     : REPLACE <field name> WITH <exp> [ADDITIVE]
+//                 [,<field2> WITH <exp>...]
+//                 [<scope>] [FOR <expL>] [WHILE <expL>]
+//
+lc_say='Sustituyendo registros en el fichero {Sort_File}'
+DO info_box WITH lc_say
+//
+SET TALK ON
+*--  Desc: Sustituye registros en el fichero {Sort_File}
+REPLACE \
+{if Repl_fld1} {Repl_fld1} {if Repl_with1} WITH {Repl_with1}{endif}\
+{if Repl_Addtv1} ADDITIVE {endif}\
+{endif}
+{if Repl_fld2}, {Repl_fld2} {if Repl_with2} WITH {Repl_with2}{endif}\
+{if Repl_Addtv2} ADDITIVE {endif}\
+{endif}
+{if Repl_fld3}, {Repl_fld3} {if Repl_with3} WITH {Repl_with3}{endif}\
+{if Repl_Addtv3} ADDITIVE {endif}\
+{endif}
+{if Repl_fld4}, {Repl_fld4} {if Repl_with4} WITH {Repl_with4}{endif}\
+{if Repl_Addtv4} ADDITIVE {endif}\
+{endif}
+{if Repl_fld5}, {Repl_fld5} {if Repl_with5} WITH {Repl_with5}{endif}\
+{if Repl_Addtv5} ADDITIVE {endif}\
+{endif}
+{if Scope} {upper(Scope)} {endif}\
+{if While_Exp} WHILE {While_Exp}{endif}\
+{if For_Expr} FOR {For_Expr}{endif}\
+
+SET TALK OFF
+//
+// EOP AD_REPL.COD
+

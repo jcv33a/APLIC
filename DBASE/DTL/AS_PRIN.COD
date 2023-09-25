@@ -1,0 +1,70 @@
+//
+// Module Name: AS_PRIN.COD
+// Description: Procedure for toggling printer output
+// Notes      : Written for dBASE III PLUS
+//
+PROCEDURE PrintSet
+*-- Inicializaci¢n de variables
+gc_dev='CON'
+lc_choice=' '
+gn_pkey=0
+gn_send=3
+
+DEFINE WINDOW printemp FROM 08,25 TO 17,56
+
+DEFINE POPUP SavePrin FROM 10,40
+DEFINE BAR 1 OF SavePrin PROMPT " Enviar salida a ..." SKIP
+DEFINE BAR 2 OF SavePrin PROMPT REPLICATE(CHR(196),26) SKIP
+DEFINE BAR 3 OF SavePrin PROMPT " CON:   Consola" MESSAGE "Enviar la salida a la pantalla"
+DEFINE BAR 4 OF SavePrin PROMPT " LPT1:  Puerto paralelo 1 " MESSAGE "Enviar la salida a LPT1:"
+DEFINE BAR 5 OF SavePrin PROMPT " LPT2:  Puerto paralelo 2" MESSAGE "Enviar la salida a LPT2:"
+DEFINE BAR 6 OF SavePrin PROMPT " COM1:  Puerto serie 1" MESSAGE "Enviar la salida a COM1:"
+DEFINE BAR 7 OF SavePrin PROMPT " FICHERO = INFORME.TXT" MESSAGE "Enviar la salida al fichero Informe.txt"
+ON SELECTION POPUP SavePrin DO get_sele
+
+ACTIVATE POPUP SavePrin
+RELEASE POPUP SavePrin
+
+gn_pkey=LASTKEY()
+IF gn_send = 7
+   gc_dev = 'TXT'
+   SET ALTERNATE TO INFORME.TXT
+   SET ALTERNATE ON
+ELSE
+   IF .NOT. (gn_send = 3 .OR. LASTKEY() = 27)
+      gc_dev = 'PRN'
+      temp = SUBSTR("   LPT1LPT2COM1 ",((gn_send-2)-1)*4,4)
+      ON ERROR DO prntrtry
+      SET PRINTER TO &temp.
+      IF gn_pkey <> 27
+         SET PRINT ON
+      ENDIF
+      ON ERROR
+   ENDIF
+ENDIF
+RELEASE WINDOW printemp
+RETURN
+
+PROCEDURE prntrtry
+PRIVATE lc_escape
+lc_escape = SET("ESCAPE")
+IF .NOT. PRINTSTATUS()
+   IF lc_escape = "ON"
+      SET ESCAPE OFF
+   ENDIF
+   gn_pkey = 0
+   ACTIVATE WINDOW printemp
+   @ 1,0 SAY "    Prepare su impresora o"
+   @ 2,0 SAY "    pulse ESC para cancelar"
+   DO WHILE ( .NOT. PRINTSTATUS()) .AND. gn_pkey <> 27
+      gn_pkey = INKEY()
+   ENDDO
+   DEACTIVATE WINDOW printemp
+   SET ESCAPE &lc_escape.
+   IF gn_pkey <> 27
+      RETRY
+   ENDIF
+ENDIF
+RETURN
+// EOP AS_PRIN.COD
+

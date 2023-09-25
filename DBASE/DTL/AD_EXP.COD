@@ -1,0 +1,28 @@
+//
+// Module Name: AD_EXP.COD - Menu_Act = 17
+// Selectors  : Exprt_file, Exprt_Type, Scope, For_Expr, While_Exp
+// Description: to issue the dBASE EXPORT command
+// Syntax     : EXPORT [<scope>] TO <expFN> [FOR <expL>] [WHILE <expL>]
+//                 [TYPE] DBASEII / FW2 / RPD / PFS
+//                 [ FIELD <field name list> ]
+//
+lc_say='Exportando registros al fichero {Exprt_file}'
+DO info_box WITH lc_say
+//
+SET TALK ON
+EXPORT TO {Exprt_file}\
+{ if Field_List} FIELDS {Field_List}{endif}\
+{ if Scope} {upper(Scope)} {endif}\
+{ if For_Expr} FOR {For_Expr}{endif}\
+{ if While_Exp} WHILE {While_Exp}{endif}\
+ TYPE \
+{ case Exprt_type of}
+{ 0:}PFS
+{ 1:}dBASEII
+{ 2:}FW2
+{ 3:}RPD
+{ endcase}
+SET TALK OFF
+//
+// EOP AD_EXP.COD
+

@@ -1,0 +1,12 @@
+//
+// Module Name: DD_FCOPY.COD - currently (selector name): Menu_Act = 18
+// Selectors used : File_from, File_To
+// Description: DOC. include file for the File Copy option.
+// Syntax     : COPY file <name> to <new file>
+//
+{if File_from and File_To then}
+Copiar el fichero {File_from} en el fichero {File_To}
+{endif}
+{endofpage();}
+// EOP DD_COPY.COD
+

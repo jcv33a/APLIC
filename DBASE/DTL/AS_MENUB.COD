@@ -1,0 +1,28 @@
+//
+// Module Name: AS_MENUB.COD
+// Description: Used to build a menu heading box with date, name, time
+//
+PROCEDURE MenuBox
+PARAMETER lc_m_name
+*-- Parametro lc_m_name - es la variable del t¡tulo del men£
+SET CLOCK OFF
+@ 1,0 FILL TO 2,79 COLOR n/n
+DO CASE
+CASE gc_brdr = "0"
+   @ 1,0 CLEAR TO 3,79
+CASE gc_brdr = "1"
+   @ 1,0 TO 3,79
+CASE gc_brdr = "2"
+   lc_color = IIF(gl_color,"{color(Clr_box)}", "W+/N")
+   @ 1,0 TO 3,79 DOUBLE COLOR &lc_color.
+ENDCASE
+SET CLOCK TO 2,68
+@ 2,1 SAY SUBSTR(CDOW(DATE()),1,3)+'. '+DTOC(DATE())+' '
+// Because of the length of the heading in the generator I am using 41 so that
+// the date display does not touch the heading.
+@ 2,41 - (LEN(lc_m_name)/2) SAY lc_m_name
+lc_color = IIF(gl_color,"{color(Clr_Text)}", "W+/N")
+@ 2,1 FILL TO 2,78 COLOR &lc_color.
+RETURN
+// EOP AS_MENUB.COD
+

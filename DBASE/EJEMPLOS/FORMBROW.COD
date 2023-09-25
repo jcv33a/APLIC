@@ -1,0 +1,1341 @@
+//
+// Module Name: FORMBROW.COD
+// Written by : Kirk J. Nason Ashton-Tate Torrance Development Center
+// Date       : August 4, 1988
+// Description: This module produces a dBASE IV Line item program
+//              that emulates EDIT navigation
+//
+
+dBASE IV Line Item (.prg) file template
+---------------------------------------
+Version 1.1.3
+
+By Kirk J. Nason
+Ashton-Tate (c) 1987, 1988, 1989
+
+{include "form.def"    // Form selectors
+ include "builtin.def" // Builtin functions
+
+//
+// Enum string constants for international translation
+//
+enum wrong_class = "Imposible usar FORMBROW.GEN en objetos que no sean formatos. ",
+     form_empty = "Dise¤o de formato vac¡o.  ",
+     hit_any_key = "Pulse una tecla para intentarlo de nuevo",
+     more_info_needed = "No ha introducido toda la informaci¢n necesaria"
+;
+//
+
+if frame_class != form then
+  pause(wrong_class + any_key)
+  goto nogen
+endif
+
+enum  Field  = 130,
+      Text   =  85,
+      Square =  86;
+
+enum mono = 0, // values to compare var "display" against
+     cga,
+     ega25,
+     mono43 = 4,
+     ega43  = 6;
+
+enum dbf = 0, // constants for FLD_FIELDTYPE
+     calc,
+     sum,
+     predef,
+     memvar;
+
+var  fmt_name,   // Format file name
+     crlf,       // line feed
+     carry_flg,  // Flag to test carry loop
+     carry_cnt,  // Count of the number of fields to carry
+     carry_len,  // Cumulative length of carry line until 75 characters
+     carry_lent, // Total cumulative length of calc line
+     carry_first,// Flag to test "," output for carry fields
+     color_flg,  // Flag to if color should stay on am line
+     line_cnt,   // Count for total lines processed (Mulitple page forms)
+     temp,temp2, // tempory work variable
+     flds,       // Foreach loop variable
+     helpproc,   // Help procedure name
+     wnd_cnt,    // Window counter
+     wnd_names,  // Window names so I can clear them at the bottom of the file
+     default_drv,// dBASE default drive
+     dB_status,  // dBASE status before entering designer
+     scrn_size,  // Screen size when generation starts
+     left_delimiter, // Delimiter to put around SAY
+     right_delimiter,// Delimiter to put around SAY
+     display,    // Type of display screen we are on
+     color,      // Color returned from getcolor function
+     open,       // Flag variable for successful text file open
+     input_flg,
+     table_name,      // Line Item table name
+     table_field,// Line Item table link field
+     table_fields,// Field list for line item table (SET FIELDS TO)
+     browse_fields,// Field list for line item table (BROWSE FIELDS)
+     link_field,  // Link field from current file
+     func_key,    // Function key to invoke line item table
+     table_window,// Window dimensions
+     table_wndeep,// Window depth
+     boxrow,      // Window row comparsion operator
+     page_cnt,    // Number of pages
+     udf_file;    // File name for udfs to include in program
+ //-----------------------------------------------
+ // Assign default values to some of the variables
+ //-----------------------------------------------
+ crlf = chr(10)
+ temp = ""
+ page_cnt = 1
+ input_flg="Z"
+ table_window = "12,2 TO 20,78"
+ func_key = "F9"
+ carry_flg = carry_first = carry_cnt = carry_len = carry_lent =
+ wnd_cnt = line_cnt = color_flg = 0
+ left_delimiter = right_delimiter = "\""
+
+ screen_size()
+
+ //-------------------------------
+ // Create Format file
+ //-------------------------------
+ default_drv = strset(_defdrive)  // grab default drive from dBASE
+ fmt_name = frame_path + name
+ if not FILEOK(fmt_name) then
+    if !default_drv then
+       fmt_name = name
+    else
+       fmt_name = default_drv + ":" + NAME
+    endif
+ endif
+
+ fmt_name = upper(fmt_name)
+
+ // Look for Box with BROWSETABLE on it
+ foreach box_element b
+   if row_positn-line_cnt > scrn_size then  exit  endif
+   boxrow = nul2zero(box_top)-line_cnt
+   foreach text_element t
+     if boxrow == row_positn and upper(alltrim(text_item)) == "TABLABROWSE" then
+        table_wndeep = box_height - 3
+        table_window = str(nul2zero(box_top)-line_cnt) + "," +
+                   str(nul2zero(box_left)) + " TO " +
+                   str(nul2zero(box_top)+box_height-line_cnt-1) +"," +
+                   str(nul2zero(box_left)+box_width-1)
+        case box_type of
+           0: table_window = table_window + " "
+           1: table_window = table_window + " DOUBLE"
+           2: table_window = table_window + " CHR(" + BOX_SPECIAL_CHAR + ")"
+        endcase
+//        color = getcolor(b.fld_display, b.fld_editable);
+//        if LEN(color) > 0 then
+//          table_window = table_window + " COLOR " + color +","+color;
+//        endif
+     endif
+   next t
+ next b
+
+ // Browse table design file open
+ open = Textopen(fmt_name+".SCX")
+ if not open then
+    if !Write_SCX_File() then goto nogen endif
+ else
+    // There was a .SCX file for this form so read it
+    if !Read_SCX_File() then goto nogen endif
+ endif
+ textclose()
+
+ Write_Stub_FMT()
+
+ if not create(fmt_name+".PRG") then
+    pause(fileroot(fmt_name) +".PRG" + read_only + any_key)
+    goto nogen
+ endif
+ Header();
+}
+//
+//-----------------------------------------------------------------------
+// Process fields to build "SET CARRY", "SET FIELDS" and WINDOW commands.
+//-----------------------------------------------------------------------
+
+CLEAR WIND
+CLOSE DATABASE
+SAVE SCREEN TO {cap_first(fileroot(fmt_name))}
+CLEAR
+
+DEFINE WINDOW Pause FROM 15,00 TO 19,79 DOUBLE
+{helpproc = substr(fileroot(fmt_name),1,1) +
+            lower(substr(fileroot(fmt_name),2,3))+"_hlp";}
+DEFINE WINDOW {helpproc} FROM 3,00 TO 21,79 DOUBLE
+ON ERROR DO Pause WITH "N£mero de l¡nea del programa "+Program()+": "+LTRIM(STR(LINE()))
+
+IF EOF()
+  SKIP -1
+ENDIF
+
+IF SET("TALK")="ON"
+   SET TALK OFF
+   lc_talk = "ON"
+ELSE
+   lc_talk = "OFF"
+ENDIF
+lc_escape = SET("ESCAPE")
+lc_cursor = SET("CURSOR")
+SET CURSOR OFF
+
+{
+ open = Textopen(fmt_name+".QBE");
+ if not open then
+   pause("Fichero no encontrado: "+fmt_name+".QBE");
+   goto nogen;
+ else
+   Get_Qbe(); // APGEN UDF to read dBASE IV .qbe file
+ endif
+}
+*-------------------------------------------------------------------------------
+GO TOP
+
+{if at("43", display_type()) then}
+
+*-- Este formato de pantalla ha sido creado en el modo de visualizaci¢n {display_type()}
+lc_display = SET("display")
+IF lc_display <> "{display_type()}"
+   SET DISPLAY TO {display_type()}
+ENDIF
+{endif
+ temp="";}
+
+lc_status = SET("STATUS")
+*-- SET STATUS estaba \
+{if dB_status then}
+ON cuando se entr¢ en el Dise¤ador de Pantallas.
+IF lc_status = "OFF"
+   SET STATUS ON
+{else}
+OFF cuando se entr¢ en el Dise¤ador de Pantallas.
+IF lc_status = "ON"
+   SET STATUS OFF
+{endif}
+ENDIF
+
+gc_messg = "{func_key}:L¡neas | PgDn:Sig. | PgUp:Ant. | Ctrl-PgDn:Final | Ctrl-PgUp:Principio"
+ {line_cnt = wnd_cnt = 0;
+ foreach fld_element flds
+   if row_positn-line_cnt > scrn_size then  exit  endif
+   if fld_carry then carry_flg = 1; ++carry_cnt; endif
+   if chr(Fld_value_type) == "M" and Fld_mem_typ and wnd_cnt < 20 then
+      ++wnd_cnt; wnd_names = wnd_names + "Wndow" + wnd_cnt + ",";
+}
+
+*-- Ventana para el campo memo {cap_first(fld_fieldname)}.
+DEFINE WINDOW { Window_Def(flds)}\
+{  endif
+ next flds
+ print(crlf);
+}
+
+{
+  if not table_window then
+     table_window="12,0 TO 21,79"
+  endif
+}
+DEFINE WINDOW Table FROM {table_window}
+
+ON KEY LABEL F1 DO {helpproc}
+ON KEY LABEL {func_key}  KEYBOARD CHR(23)+"L" && Manda Ctrl-W + L para l¡nea
+ON KEY LABEL F10 KEYBOARD CHR(23)+"M" && Manda Ctrl-W + M para el Men£
+{// Check for carry forward fields now
+ // not all fields are carried
+ if carry_flg then
+}
+
+lc_carry = SET("CARRY")
+*-- Campos que se copian al utilizar APPEND.
+SET CARRY TO { Carry_Flds()}
+{ endif}
+
+DO Defnmenu
+
+gc_mdx = MDX(1)
+gc_alias = ALIAS()
+
+*-- Establece el  rea de trabajo de las l¡neas de detalle (BROWSE) ------------
+
+gn_sele = IIF(SELE()=10, SELE()-1, SELE())
+SELE (gn_sele)
+USE {table_name} ORDER TAG {table_field}
+SET FIELDS TO \
+{if table_fields then}
+{table_field}, {table_fields}
+{else}
+ALL EXCEPT {table_field}
+{endif}
+SET CARRY TO {table_name}->{table_field}
+
+*------------------------------------------------------------------------------
+
+SELE &gc_alias.
+gn_gorec = 0{tabto(39)}&& Variable para la opci¢n desplazar
+gc_search = SPACE(200){tabto(39)}&& Variable para b£squeda delante y atr s
+gc_seek = SPACE( LEN( {link_field})){tabto(39)}&& Variable para buscar registros
+gl_newrec = .f.{tabto(40)}&& Variable para el registro a¤adido
+gl_chgrec = .t.{tabto(27)}&& Var. para probar si cambi¢ la posici¢n del registro
+gl_extloop = .f.
+gl_rollbck = .f.
+@ 23,0
+@ 23,CENTER(gc_messg,80) SAY gc_messg
+
+DO WHILE .NOT. gl_extloop
+{lmarg(4);}
+gn_recno = RECNO()
+gl_lineitm = .T.
+BEGIN TRANSACTION
+
+DO WHILE gl_lineitm
+{lmarg(8);}
+IF gl_chgrec
+   *-- Dispone los SAYs y GETs en la pantalla
+   DO Show_get
+ENDIF
+
+*-- Muestra los datos de la tabla de l¡neas de detalle
+DO Showbrow
+*-- Vuelve a edici¢n
+
+*-- Edici¢n de GETs
+DO Edit_get
+
+SET CURSOR ON
+READ
+SET CURSOR OFF
+
+gn_inkey = INKEY()
+gn_readkey = READKEY()
+gc_readvar = VARREAD()
+gl_lineitm = .F.
+
+ACTIVATE SCREEN
+DO CASE
+  CASE gn_inkey = 76
+    *-- Se ha introducido mediante el mandato KEYBOARD la letra "L"
+    DO Lineitem
+    gl_lineitm = .T.
+  CASE gn_inkey = 77
+    *-- Se ha introducido mediante el mandato KEYBOARD la letra "M"
+    ACTIVATE MENU Editmenu
+  CASE gn_readkey = 6 .OR. gn_readkey = 262 .OR. gn_readkey = 260 ;
+       .OR. gn_readkey = 4
+    *--  Pgup o flecha del cursor hacia arriba
+    IF .NOT. BOF()
+      SKIP -1
+    ENDIF
+  CASE gn_readkey = 7 .OR. gn_readkey = 263 .OR. gn_readkey = 5 ;
+       .OR. gn_readkey = 261
+    *-- PgDn o flecha del cursor hacia abajo
+    SKIP
+    IF EOF() .AND. .NOT. gl_newrec
+       CLEAR GETS
+       SET DELI OFF
+       @ 23,0
+       @ 23,25 SAY "===> ¨A¤adir nuevos registros? (S/N) " GET gl_newrec PICT "S"
+       READ
+       SET DELI ON
+       CLEAR GETS
+       @ 23,0
+       @ 23,CENTER( gc_messg, 80) SAY gc_messg
+    ENDIF
+    IF gl_newrec
+       DO Recappnd
+    ELSE
+       IF EOF()
+          SKIP -1
+       ENDIF
+    ENDIF
+  CASE gn_readkey = 34 .OR. gn_readkey = 290
+    *-- Ctrl-PgUp
+    GO TOP
+  CASE gn_readkey = 35 .OR. gn_readkey = 291
+    *-- Ctrl-PgDn
+    GO BOTTOM
+  CASE gn_readkey = 12  .or. gn_readkey = 270
+    *-- Esc
+    gl_extloop = .T.
+    EXIT
+ENDCASE
+*
+gl_chgrec = IIF(gn_recno = RECNO(), .F., .T.)  && Ver si cambia el n£m. de reg.
+*
+IF gl_rollbck              && Si el usuario escogi¢ la opci¢n Cancelar del men£
+   gl_rollbck = .F.        && se reinicializa la variable de cancelaci¢n.
+   ROLLBACK
+ENDIF
+{lmarg(4);}
+ENDDO
+*
+END TRANSACTION
+*
+IF .NOT. ROLLBACK()
+   DO Pause WITH "No ha sido posible la cancelaci¢n"
+   ACTIVATE SCREEN
+ENDIF
+DO Chkdele
+{lmarg(0);}
+ENDDO
+
+*-- Restauraci¢n del entorno al salir
+*-- SET STATUS estaba \
+{if dB_status then}
+ON cuando se entr¢ en el Dise¤ador de Pantallas.
+IF lc_status = "OFF" && Al entrar en este formato de pantalla status estaba off
+   SET STATUS OFF    && Restaura STATUS "OFF" al abandonar el programa
+{else}
+OFF cuando se entr¢ en el Dise¤ador de Pantallas.
+IF lc_status = "ON"  && Al entrar en este formato de pantalla, status estaba on
+   SET STATUS ON     && Restaura STATUS "ON" al abandonar el programa
+{endif}
+ENDIF
+{if carry_flg then}
+
+IF lc_carry = "OFF"
+  SET CARRY OFF
+ENDIF
+{endif}
+SET CURSOR &lc_cursor.
+SET TALK &lc_talk.
+{if at("43", display_type()) then}
+
+SET DISPLAY TO &lc_display.       && Restaura el tama¤o de pantalla  kjn
+{endif}
+
+ON KEY
+ON ERROR
+
+SELE 1
+CLOSE DATABASE
+
+RELEASE MENU Editmenu
+RELEASE POPUPS records, go_to, exit
+RELEASE WINDOWS table,pause,seek,search,bsearch,{helpproc}\
+{if wnd_names then}
+,{lower(substr(wnd_names,1,len(wnd_names)-1))}
+{else print(crlf);
+ endif}
+RESTORE SCREEN FROM {lower(fileroot(fmt_name))}
+RELEASE {if carry_flg then}lc_carry,{endif}lc_talk,lc_fields,lc_status,lc_escape
+RELEASE SCREEN {lower(fileroot(fmt_name))}
+RETURN
+
+PROCEDURE Show_get
+{lmarg(4);}
+{line_cnt = wnd_cnt = 0;
+ foreach ELEMENT k
+   color=getcolor(fld_display, fld_editable); // get color of element
+   if nul2zero(row_positn)-line_cnt > scrn_size then  exit  endif
+
+   if Element_type == @Text_element or Element_type == @Fld_element then
+     if text_item == "TABLABROWSE" then goto getnext endif;}
+{    if fld_fieldtype == calc}
+*-- Campo calculado: {cap_first(fld_fieldname)} - {Fld_Descript}
+{    endif}
+{    if fld_fieldtype == memvar then}
+*-- Variable de memoria: {cap_first(fld_fieldname)}
+{    endif}
+@ {nul2zero(row_positn)-line_cnt},{nul2zero(col_positn)} \
+{  endif}
+{  if ELEMENT_TYPE == @box_element then
+     if boxrow == nul2zero(box_top)-line_cnt then goto getnext endif;
+}
+@ {box_coordinates(k)}\
+{  endif}
+//
+{  case ELEMENT_TYPE of
+   @Text_element:}
+// Certain control characters can cause dBASE problems ie, (13,26,0)
+// so we use the chr() function to say them in dBASE
+SAY \
+{    if asc(text_item) < 32 then
+       if len(text_item) == 1 then}
+CHR({asc(text_item)}) \
+{      else}
+REPLICATE(CHR({asc(text_item)}),{len(text_item)}) \
+{      endif
+     else
+         if substr(TEXT_ITEM,1,1) == "\"" then
+            // Double quote is being used on the design surface need to use
+            // brackets "[]" as delimiters
+            left_delimiter = "["
+            right_delimiter = "]"
+         endif
+         left_delimiter + TEXT_ITEM + right_delimiter} \
+{        left_delimiter = right_delimiter = "\""
+     endif
+     outcolor()}
+ {  @box_element:
+     outbox(box_type, box_special_char)}
+{    outcolor()}
+{  @Fld_element:
+    if !fld_editable then; // its a SAY}
+SAY \
+{     if fld_fieldtype == calc then}
+//      Loop thru expression in case it is longer than 237
+{       foreach fld_expression fcursor in k
+           fld_expression}
+{       next}
+// Output a space after the fld_expression and get ready for picture clause
+ \
+{     else // not a editable field
+        if fld_fieldtype == dbf then temp=fld_filename+"->" else temp="m->" endif
+        cap_first(temp) + cap_first(fld_fieldname)} \
+{     endif
+      if Ok_Template(k) then}
+PICTURE "{if fld_picfun then}@{fld_picfun}\
+{            if at("S",fld_picfun) then}{fld_pic_scroll}{endif}\
+ {//leave this space}\
+{        endif}
+{        if !at("S",fld_picfun) and !at("M",fld_picfun) then}
+{            fld_template}\
+{        endif}" \
+{     endif
+    else // it's a get}
+GET \
+{     if fld_fieldtype == dbf then temp=fld_filename+"->" else temp="m->" endif
+      cap_first(temp) + cap_first(fld_fieldname)} \
+{     if chr(Fld_value_type) == "M" && Fld_mem_typ && wnd_cnt < 20 then ++wnd_cnt;}
+{       if fld_mem_typ == 1}OPEN {endif}WINDOW Wndow{wnd_cnt} \
+{     endif
+      if Ok_Template(k) then}
+PICTURE "{if fld_picfun then}@{fld_picfun}\
+{          if AT("S",fld_picfun) then}{fld_pic_scroll}{endif}\
+ {//leave this space}\
+{        endif
+         if AT("M",fld_picfun)}{fld_pic_choice}{endif}\
+{        if !AT("S",fld_picfun) and !AT("M",fld_picfun) then
+             fld_template}\
+{        endif}" \
+{     endif
+    endif // fld_editable}
+{     outcolor()}
+{     color_flg = 0;
+   otherwise: goto getnext;
+   endcase
+}
+
+//Leave the above blank line, it forces a line feed!
+//-----------------
+// End of @ SAY GET
+//-----------------
+{  getnext:
+ next k;}
+CLEAR GETS
+{lmarg(0);}
+RETURN
+
+PROCEDURE Edit_get
+{lmarg(4); wnd_cnt = 0;}
+{foreach Fld_element k
+  color=getcolor(fld_display, fld_editable); // get color of element
+  if fld_editable then
+   if fld_fieldtype == calc}
+*-- Campo calculado: {cap_first(fld_fieldname)} - {Fld_Descript}
+{  endif
+   if fld_fieldtype == memvar then}
+*-- Variable de memoria: {cap_first(fld_fieldname)}
+{  endif}
+@ {nul2zero(row_positn)-line_cnt},{nul2zero(col_positn)} GET \
+{  if fld_fieldtype == dbf then temp=fld_filename+"->" else temp="m->" endif
+   cap_first(temp) + cap_first(fld_fieldname)} \
+{  if chr(Fld_value_type) == "M" && Fld_mem_typ && wnd_cnt < 20 then ++wnd_cnt;}
+{     if fld_mem_typ == 1}OPEN {endif}WINDOW Wndow{wnd_cnt} \
+{  endif
+   if Ok_Template(k) then}
+PICTURE "{if fld_picfun then}@{fld_picfun}\
+{           if AT("S",fld_picfun) then}{fld_pic_scroll}{endif}\
+ {//leave this space}\
+{         endif
+      if AT("M",fld_picfun)}{fld_pic_choice}{endif}\
+{     if !AT("S",fld_picfun) and !AT("M",fld_picfun) then
+         fld_template}\
+{     endif}" \
+{  endif
+   if fld_l_bound or fld_u_bound then color_flg=1;}
+;
+   RANGE {fld_l_bound}{if Fld_u_bound then},{Fld_u_bound}{endif} \
+{  endif
+   if fld_ok_cond then color_flg=1;}
+;
+   VALID {fld_ok_cond} \
+{    if fld_rej_msg then}
+;
+   ERROR \
+{          if !AT("IIF", upper(FLD_REJ_MSG))}"{endif}{FLD_REJ_MSG}\
+{          if !AT("IIF", upper(FLD_REJ_MSG))}"{endif} \
+{    endif
+   endif // fld_ok_cond
+   if fld_ed_cond then color_flg=1;}
+;
+   WHEN {fld_ed_cond} \
+{  endif
+   if fld_def_val then color_flg=1;}
+;
+   DEFAULT {fld_def_val} \
+{  endif
+   if fld_hlp_msg then color_flg=1;}
+;
+   MESSAGE \
+{     if !AT("IIF",upper(fld_hlp_msg))}"{endif}{fld_hlp_msg}\
+{     if !AT("IIF",upper(fld_hlp_msg))}"{endif} \
+{  endif}
+{ outcolor()}
+{ color_flg=0;
+}
+
+//Leave the above blank line, it forces a line feed!
+//-----------------
+// End of @ GET
+//-----------------
+{ endif
+  getnext2:
+ next k;}
+{lmarg(0);}
+RETURN
+// -------------------------
+// Line Item code generation
+// -------------------------
+//
+
+PROCEDURE Showbrow
+{lmarg(4);}
+SELE {table_name}
+SET FILTER TO
+SEEK &GC_ALIAS.->{link_field}
+IF EOF()
+   APPEND BLANK
+   REPLACE {table_name}->{table_field} WITH &GC_ALIAS.->{link_field}
+ENDIF
+SET FILTER TO &GC_ALIAS.->{link_field} = {table_name}->{table_field}
+GO TOP
+KEYBOARD CHR(27)
+DO Browseit
+SELE &gc_alias.
+ACTIVATE SCREEN
+{lmarg(0);}
+RETURN
+
+PROCEDURE Lineitem
+{lmarg(4);}
+ln_key = INKEY()
+DO Keykill
+SELE {table_name}
+//KJN
+APPEND BLANK
+REPLACE {table_name}->{table_field} WITH &GC_ALIAS.->{link_field}
+//KJN
+GO TOP
+DO Browseit
+ACTIVATE SCREEN
+DO Keyset
+*----------------------------------------------------------------------------
+*-- Se podr¡a poner c¢digo aqu¡ para sumar el balance del pedido y rellenar
+*-- un campo de total. Ejemplo:
+*-- SUM ALL importe TO m->importe
+*-- REPLACE &gc_alias.->Total_neto WITH m->importe
+*----------------------------------------------------------------------------
+SELE &gc_alias.
+{lmarg(0);}
+RETURN
+
+PROCEDURE Browseit
+SET CURSOR ON
+BROWSE;
+{if browse_fields then}
+  FIELDS {browse_fields},{table_name}->{table_field} /R;
+{endif}
+  WINDOW table COMPRESS NOMENU NOCLEAR
+SET CURSOR OFF
+RETURN
+
+PROCEDURE Keyset
+   ON KEY LABEL F1 DO {helpproc}
+   ON KEY LABEL {func_key}  KEYBOARD CHR(23)+"L"
+   ON KEY LABEL F10 KEYBOARD CHR(23)+"M"
+RETURN
+
+PROCEDURE Keykill
+   ON KEY LABEL F1 DO Nothing
+   ON KEY LABEL {func_key} DO Nothing
+   ON KEY LABEL F10 DO Nothing
+RETURN
+
+PROCEDURE Nothing
+   ln_key=INKEY()
+RETURN
+
+PROCEDURE Chkdele
+  IF DELETED()
+     DEFINE BAR 4 OF records PROMPT "   Quitar marca de borrado";
+     MESSAGE "Marcar/Quitar marca para borrado a este registro"
+  ELSE
+     DEFINE BAR 4 OF records PROMPT "   Marcar registro para borrado";
+     MESSAGE "Marcar/Quitar marca para borrado a este registro"
+  ENDIF
+RETURN
+
+PROCEDURE Recappnd
+   *------------------------------------------------------------------------
+   *-- Se podr¡a poner c¢digo aqu¡ para incrementar el n£mero de factura, etc.
+//kjn   *--GO BOTT
+//kjn   *--morder = ORDER_ID
+   GO BOTT
+   morder = ORDER_ID
+   APPEND BLANK
+   REPLACE order_id WITH SUBSTR(morder,1,3) + LTRIM(STR(VAL(SUBSTR(morder,4))+1))
+//kjn   *--REPLACE order_id WITH SUBSTR(morder,1,3) + LTRIM(STR(VAL(SUBSTR(morder,4))+1))
+   *------------------------------------------------------------------------
+RETURN
+
+*-- Procedimientos que gestionan las selecciones del men£ de edici¢n ----------
+PROCEDURE Get_recs
+   *-- Acepta la selecci¢n del usuario y almacena BAR en una variable
+   gn_pick = BAR()  && Variable para almacenar la opci¢n
+   DO CASE
+      CASE gn_pick = 1
+         *-- Prepara variable para cancelar cambios al volver
+         gl_rollbck = .T.
+      CASE gn_pick = 3
+          DO Recappnd
+      CASE gn_pick = 4
+         *-- Borrar/eliminar marca de borrado de registros
+         IF DELETE()
+            RECALL
+            SELE {table_name}
+            RECALL ALL
+         ELSE
+            DELETE
+            SELE {table_name}
+            DELETE ALL
+         ENDIF
+         SELE (gc_alias)
+      CASE gn_pick = 5
+         *-- Registro vac¡o
+   ENDCASE
+   DO Chkdele
+   DEACTIVATE MENU
+RETURN
+
+PROCEDURE Get_goto
+   *-- Acepta la selecci¢n del usuario y almacena BAR en una variable
+   gn_pick = BAR()  && Variable para almacenar la opci¢n
+   mpict = REPLICATE("9", LEN( LTRIM( STR( RECCOUNT()))))
+   gc_search = gc_search + SPACE( 200 - LEN(gc_search))
+   gc_seek = gc_seek + SPACE(LEN( {link_field}) - LEN(gc_seek))
+   DO CASE
+      CASE gn_pick = 1
+         *-- Se sit£a en el principio del fichero
+         GO TOP
+      CASE gn_pick = 2
+         *-- Se sit£a en el final del fichero
+         GO BOTTOM
+      CASE gn_pick = 3
+         *-- Se situa en un registro espec¡fico
+         @ 4,39 GET gn_gorec RANGE 1, RECCOUNT() PICTURE mpict
+         READ
+         gn_gorec = IIF( gn_gorec=0, RECNO(), gn_gorec)
+         GO gn_gorec
+      CASE gn_pick = 4
+         *-- Salta un cierto n£mero de registros
+         skiprec = IIF( RECCOUNT() > 9, 10, 5)
+         SET DELI OFF
+         @ 5,39 GET skiprec PICTURE mpict
+         READ
+         SET DELI ON
+         SKIP skiprec
+         IF EOF()
+           SKIP -1
+         ENDIF
+      CASE gn_pick = 6
+         ACTIVATE WINDOW seek
+         *-- B£squeda por campo clave
+         IF "" = ORDER()
+            tempmdx = TAG(1)
+            SET ORDER TO TAG &tempmdx.
+         ENDIF
+         @ 0,1 SAY "Introduzca serie a buscar"
+         @ 1,1 SAY TAG(1)+":" GET gc_seek PICT "@S20";
+           MESSAGE "Cancelar: Esc";
+           VALID LEN( TRIM( gc_seek)) > 0;
+           ERROR "No se ha indicado la serie a buscar"
+         READ
+         IF READKEY() <> 12
+            gc_seek = LTRIM( TRIM(gc_seek))
+            mrec = RECNO()
+            SEEK gc_seek
+            IF .NOT. FOUND()
+               GO mrec
+            ENDIF
+         ENDIF
+         DEACTIVATE WINDOW seek
+         ACTIVATE SCREEN
+      CASE gn_pick = 7
+         *-- B£squeda hacia adelante
+         ACTIVATE WINDOW search
+         @ 0,1 SAY "Introduzca serie a buscar:" GET gc_search PICT "@S21";
+           MESSAGE "Cancelar: Esc";
+           VALID LEN( TRIM( gc_search)) > 0;
+           ERROR "No se ha indicado la serie a buscar"
+           READ
+         DEACTIVATE WINDOW search
+         ACTIVATE SCREEN
+         IF READKEY() <> 12
+            gc_search = LTRIM( RTRIM( gc_search))
+            mrec = RECNO()
+            LOCATE REST FOR &gc_search.
+            IF .NOT. FOUND()
+               GO mrec
+            ENDIF
+         ENDIF
+      CASE gn_pick = 8
+         *-- B£squeda hacia atr s
+         ACTIVATE WINDOW bsearch
+         @ 0,1 SAY "Introduzca serie a buscar:" GET gc_search PICT "@S21";
+           MESSAGE "Cancelar: Esc";
+           VALID len(trim(gc_search)) > 0;
+           ERROR "No se ha indicado la serie a buscar"
+         READ
+         DEACTIVATE WINDOW bsearch
+         ACTIVATE SCREEN
+         IF READKEY() <> 12
+            gc_search = LTRIM( RTRIM( gc_search))
+            mrec = RECNO()
+            DO WHILE .NOT. (BOF() .OR. &gc_search.)
+               SKIP -1
+            ENDDO
+            IF BOF()
+               GO mrec
+            ENDIF
+         ENDIF
+  ENDCASE
+  DEACTIVATE MENU
+RETURN
+
+PROCEDURE Get_exit
+   CLEAR GETS
+   *-- Prepara variable para salir del bucle
+   gl_extloop = .T.
+   DEACTIVATE MENU
+RETURN
+
+{include "as_pause.cod";}
+
+*-- Librer¡a de UDFs ----------------------------------------------------------
+FUNCTION Center
+*-- UDF para centrar una serie.
+*-- lc_string = Serie para centrar
+*-- ln_width = Ancho de la pantalla en la que se centra la serie
+*--
+*-- Ej.: La expresi¢n @ 15,center(serie,80) SAY serie
+*-- centra la <serie> en una pantalla de 80 columnas
+PARAMETER lc_string, ln_width
+RETURN ((ln_width/2)-(LEN(lc_string)/2))
+{ if fileexist(udf_file) then
+    nmsg("Incluyendo la librer¡a de UDFs: "+udf_file);
+    print(crlf);
+    copy(udf_file);
+  else
+    nmsg("Librer¡a de UDFs "+udf_file+" no encontrada");
+ endif}
+*-- Fin de la librer¡a de UDFs -----------------------------------------------
+
+PROCEDURE {helpproc}
+gc_readvar = VARREAD()        && Puede proporcionar ayuda sensible al contexto
+ACTIVATE WINDOW {helpproc}
+CLEAR
+TEXT
+{lmarg(5);}
+AYUDA para cursor:
+------------------
+F1: Visualiza este mensaje
+{func_key}: Accede a las l¡neas de detalle desde la cabecera de factura
+F10: Accede al sistema de men£s desde la cabecera de factura
+
+PgDn: Accede a la factura siguiente
+PgUp: Accede a la factura anterior
+Ctrl-PgDn: Accede a la £ltima factura de la base de datos
+Ctrl-PgUp: Accede a la primera factura de la base de datos
+Esc: Anula la factura
+{lmarg(0);}
+ENDTEXT
+@ 16,5 say "Pulse cualquier tecla..."
+x = INKEY(0)
+CLEAR
+TEXT
+{lmarg(5);}
+AYUDA para l¡neas de detalle:
+-----------------------------
+F1: Visualiza este mensaje
+
+PgDn: Visualiza la siguiente pantalla de l¡neas de detalle
+PgUp: Visualiza la pantalla anterior de l¡neas de detalle
+Ctrl-PgDn: Accede a la £ltima pantalla de l¡neas de detalle
+Ctrl-PgUp: Accede a la primera pantalla de l¡neas de detalle
+Esc: Vuelve a la cabecera de factura
+{lmarg(0);}
+ENDTEXT
+@ 16,5 say "Pulse cualquier tecla..."
+x = INKEY(0)
+DEACTIVATE WINDOW {helpproc}
+ACTIVATE SCREEN
+RETURN
+
+PROCEDURE Defnmenu
+   *-- Este men£ simula para este programa de edici¢n el men£ F10 al que se
+   *-- accede tras ejecutar el mandato EDIT. Aun as¡, no todas las opciones
+   *-- pueden ser ejecutadas.
+   SET BORDER TO DOUBLE
+
+   DEFINE MENU editmenu
+     DEFINE PAD records OF editmenu PROMPT "Registros" AT 0,2
+       ON PAD records OF editmenu ACTIVATE POPUP records
+     DEFINE PAD go_to OF editmenu PROMPT "Desplazar" AT 0,14
+       ON PAD go_to OF editmenu ACTIVATE POPUP go_to
+     DEFINE PAD exit OF editmenu PROMPT "Salir" AT 0,26
+       ON PAD exit OF editmenu ACTIVATE POPUP exit
+
+   * -- Definici¢n de los men£s de ventana
+   DEFINE POPUP records FROM 1,0
+     DEFINE BAR 1 OF records PROMPT "   Cancelar cambios en el registro";
+     MESSAGE "Cancelar los cambios en el registro actual"
+     DEFINE BAR 2 OF records PROMPT "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ" SKIP
+     DEFINE BAR 3 OF records PROMPT "   A¤adir nuevos registros";
+     MESSAGE "A¤adir nuevos registros al final del fichero de base de datos"
+     *-- La opci¢n 4 depende de si el registro est  marcado para borrado o no
+     DO Chkdele  && El mandato Define Bar 4 est  en el procedimiento
+     DEFINE BAR 5 OF records PROMPT "   Eliminar contenido del registro" SKIP ;
+     MESSAGE "Eliminar el contenido de los campos de este registro"
+     DEFINE BAR 6 OF records PROMPT "   Bloquear registro";
+     MESSAGE " " SKIP
+     DEFINE BAR 7 OF records PROMPT "   Situar registro en nueva posici¢n  SI" SKIP
+   DEFINE POPUP go_to FROM 1,12
+     DEFINE BAR 1 OF go_to PROMPT "   Primer registro";
+     MESSAGE "Situarse en el primer registro de esta base de datos"
+     DEFINE BAR 2 OF go_to PROMPT "   Ultimo registro";
+     MESSAGE "Situarse en el £ltimo registro de esta base de datos"
+     DEFINE BAR 3 OF go_to PROMPT "   N£mero de registro";
+     MESSAGE "Situarse en el registro con el n£mero que indique"
+     DEFINE BAR 4 OF go_to PROMPT "   Saltar";
+     MESSAGE "Saltar el n£mero de registros indicado (signo menos para ir hacia atr s)"
+     DEFINE BAR 5 OF go_to PROMPT "ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ" SKIP
+     DEFINE BAR 6 OF go_to PROMPT "   B£squeda a trav‚s del ¡ndice"  SKIP FOR "" = gc_mdx;
+     MESSAGE "Usar el fichero de ¡ndice para buscar la serie indicada"
+     DEFINE BAR 7 OF go_to PROMPT "   Delante: b£squeda     ";
+     MESSAGE "Buscar en este campo la serie indicada a partir del registro hacia el final"
+     DEFINE BAR 8 OF go_to PROMPT "   Atr s: b£squeda       ";
+     MESSAGE "Buscar en este campo la serie indicada a partir del registro hacia el principio"
+     DEFINE BAR 9 OF go_to PROMPT "   May£sculas deben coincidir  NO" SKIP
+
+   DEFINE POPUP exit FROM 1,24
+     DEFINE BAR 1 OF exit PROMPT "   Salir";
+     MESSAGE "Almacenar cambios en el registro actual y salir"
+     DEFINE BAR 2 OF exit PROMPT "   Ir al Dise¤o de consulta  " SKIP
+
+   ON SELECTION POPUP records DO Get_recs
+   ON SELECTION POPUP go_to DO Get_goto
+   ON SELECTION POPUP exit DO Get_exit
+
+   DEFINE WINDOW seek FROM 8,15 TO 11,44
+   DEFINE WINDOW search FROM 9,15 TO 11,66
+   DEFINE WINDOW bsearch FROM 10,15 TO 12,66
+
+   SHOW MENU Editmenu
+RETURN
+*---------------------------------------------------------------------------
+*-- EOP: {fileroot(fmt_name)}.PRG
+{fileerase(fmt_name+".DBO");
+ nogen:
+ return 0;
+//---------------------------------------
+// Template user defined functions follow
+//---------------------------------------
+
+define header()
+    // Print Header in program
+    print( replicate( "*",80) + crlf);}
+*-- Nombre..: {fileroot(fmt_name)}.PRG
+*-- Fecha...: {ltrim(substr(date(),1,8))}
+*-- Versi¢n.: dBASE IV, Formatos {Frame_ver}.0
+*-- Notas...: ­Los ficheros de formato usan "" como delimitadores!
+{   print( replicate( "*",80) + crlf);
+enddef
+
+//--------------------------------------------------------------
+define ok_template(cur)
+     if cur.FLD_TEMPLATE && !(chr(cur.FLD_VALUE_TYPE) == "D" ||
+                              chr(cur.FLD_VALUE_TYPE) == "M") then
+        return 1;
+     else
+        return 0;
+     endif
+enddef
+
+//--------------------------------------------------------------
+define screen_size()
+   // Test screen size if display > 2 screen is 43 lines
+   display = numset(_flgcolor);
+   if display > ega25 then scrn_size = 39 else scrn_size = 21 endif;
+
+   // Test to see if status was off before going into form designer
+   dB_status = numset(_flgstatus)
+   if scrn_size == 21 and !db_status then
+      scrn_size = 24
+   endif
+   if scrn_size == 39 and !db_status then // status is off
+      scrn_size = 42
+   endif
+   return;
+enddef
+
+//--------------------------------------------------------------
+define display_type()
+    var temp;
+    case display of
+       mono:   temp="MONO"
+       cga:    temp="COLOR"
+       ega25:  temp="EGA25"
+       mono43: temp="MONO43"
+       ega43:  temp="EGA43"
+     endcase
+     return temp;
+enddef
+
+//--------------------------------------------------------------
+define getcolor(f_display, f_editable)
+ // Determines the color from f_display and f_editable (GET or SAY)
+ enum  Foreground  =   7,
+       Intensity   =   8,  // Color
+       Background  = 112,
+       MIntensity  = 256,
+       Reverse     = 512,  // Mono
+       Underline   =1024,
+       Blink       =2048,
+       default     =32768; // Screen set to default
+
+ var forgrnd, enhanced, backgrnd, blnk, underln, revrse, use_colors, incolor;
+ incolor="";
+
+ use_colors  = default & f_display
+ forgrnd  = Foreground & f_display
+ enhanced = (Intensity & f_display) || (MIntensity & f_display)
+ backgrnd = Background & f_display
+ blnk     = Blink  & f_display
+ underln  = Underline & f_display
+ revrse   = Reverse & f_display
+
+ if not use_colors then // Use system colors, no colors set in designer
+
+    if backgrnd then backgrnd = backgrnd/16 endif
+
+    if (display != mono and display != mono43) then
+       case forgrnd of
+        0: incolor = "n"
+        1: incolor = "b"
+        2: incolor = "g"
+        3: incolor = "bg"
+        4: incolor = "r"
+        5: incolor = "rb"
+        6: incolor = "gr"
+        7: incolor = "w"
+       endcase
+    else
+       incolor = "w"
+    endif
+
+    if revrse then
+       incolor = incolor + "i"
+    endif
+    if underln then
+       incolor = incolor + "u"
+    endif
+    if enhanced then
+       incolor = incolor + "+"
+    endif
+    if blnk then
+       incolor = incolor + "*"
+    endif
+
+    incolor = incolor + "/"
+
+    if (display != mono and display != mono43) then
+       case backgrnd of
+        0: incolor = incolor + "n"
+        1: incolor = incolor + "b"
+        2: incolor = incolor + "g"
+        3: incolor = incolor + "bg"
+        4: incolor = incolor + "r"
+        5: incolor = incolor + "rb"
+        6: incolor = incolor + "gr"
+        7: incolor = incolor + "w"
+       endcase
+    else
+       incolor = incolor + "n"
+    endif
+
+    if f_editable and incolor then
+       incolor = incolor + "," + incolor
+    endif
+
+ endif // use no colors
+ return alltrim(incolor);
+enddef
+
+//--------------------------------------------------------------
+define outbox(mbox,            // Border type
+              mchar            // Special character of border
+             )
+   // Output the of Box border and character if any
+   var result;
+   case mbox of
+      0: result = " " // single
+      1: result = " DOUBLE "
+      2: result = " CHR("+mchar+") "
+   endcase
+   return result;
+enddef
+
+//--------------------------------------------------------------
+define outcolor()
+  // Output the of color of the @ SAY GET or Box
+  var result;
+  result = "";
+  if len(color) > 0 then
+     if color_flg then
+        // If flag is set output a dBASE continuation ";"
+        result = ";" + crlf + space(3)
+     endif
+     result = result + "COLOR " + color + " "
+  endif
+  return result;
+enddef
+
+//--------------------------------------------------------------
+define window_def(cur)
+   // Build dBASE window command
+   var result;
+   result = "wndow" + wnd_cnt + " FROM " + Box_Coordinates(cur)
+   result = result + outbox(cur.BOX_TYPE, cur.BOX_SPECIAL_CHAR)
+   color = getcolor(cur.FLD_DISPLAY, cur.FLD_EDITABLE)
+   result = result + outcolor()
+   return result;
+enddef
+
+//--------------------------------------------------------------
+define box_coordinates(cur)
+   // Build box coordinates for a dBASE window command
+   var result, temp_page, line_cnt;
+   temp_page = page_cnt;
+   // Adjust box coordinates so that negative numbers are not generated
+   do while nul2zero(cur.BOX_TOP) - (scrn_size * temp_page) < 0
+      temp_page = temp_page - 1
+   enddo
+   if !temp_page then
+      line_cnt = 0
+   else
+      line_cnt = (scrn_size * temp_page) + 1
+   endif
+   result = nul2zero(cur.BOX_TOP) - line_cnt +","
+   result = result + nul2zero(cur.BOX_LEFT) + " TO "
+   temp = nul2zero(cur.BOX_TOP) + cur.BOX_HEIGHT - line_cnt - 1
+   if temp > scrn_size then temp = scrn_size endif
+   result = result + temp + "," + (nul2zero(cur.BOX_LEFT) + cur.BOX_WIDTH - 1)
+   return result;
+enddef
+
+//--------------------------------------------------------------
+define Get_Qbe();
+   print("*-- C¢digo importado de " + fmt_name + ".QBE" + crlf);
+   do
+      temp = textgetl();
+      // Need textgetl() by itself so WHILE comparsion works ok
+      while temp != eof
+         temp = alltrim( upper( temp));
+         if at("SELECT",temp) == 1 or at("DBASE",temp) == 3 or
+            at("RELATION",temp) == 5  then
+            print(temp + crlf);
+         endif
+         if at("USE",temp) == 1 then
+            if at("ORDER",temp) == 0 and at(" IN ",temp) == 0 then
+               print(substr( temp, 1, at("AGAIN",temp)-1)+crlf);
+            else if at("ORDER",temp) > 0 and at(" IN ",temp) > 0 then
+                    temp = substr( temp, 1, at("AGAIN",temp)-1) +
+                    substr( temp, at(" IN ",temp)+1);
+                    print(temp + crlf);
+                 else if at("ORDER",temp) > 0 and at(" IN ",temp) == 0 then
+                        temp = substr( temp, 1, at("AGAIN",temp)-1) +
+                        substr( temp, at("ORDER",temp));
+                        print(temp + crlf);
+                      endif
+                 endif
+            endif
+         endif
+         if at("FIELDS",temp) == 5 then
+            if at(";", temp) > 0 then
+               do while at(";", temp) > 0
+                     print(temp+crlf);
+                   temp = upper(alltrim(textgetl()));
+               enddo
+            endif
+            print(temp+crlf);
+         endif
+   enddo
+ textclose()
+ return;
+enddef
+
+//--------------------------------------------------------------
+define Read_SCX_File()
+  do
+    temp = textgetl();
+    while temp != eof
+      temp = ltrim(upper(temp))
+      if at("TABLABROWSE",temp) == 1 then
+        table_name = alltrim(substr(temp,at("=",temp)+1,len(temp)))
+      endif
+      if at("CAMPOTABLA",temp) == 1 then
+        table_field = alltrim(substr(temp,at("=",temp)+1,len(temp)))
+      endif
+      if at("CAMPOENLACE",temp) == 1 then
+        link_field = alltrim(substr(temp,at("=",temp)+1,len(temp)))
+      endif
+      if at("LISTACAMPOS",temp) == 1 then
+        table_fields = alltrim(substr(temp,at("=",temp)+1,len(temp)))
+      endif
+      if at("CAMPOSBROWSE",temp) == 1 then
+        browse_fields = alltrim(substr(temp,at("=",temp)+1,len(temp)))
+      endif
+      if at("TECLAFUNCION",temp) == 1 then
+        func_key = alltrim(substr(temp,at("=",temp)+1,len(temp)))
+      endif
+      if at("FICHERO_UDF",temp) == 1 then
+        udf_file = alltrim(substr(temp,at("=",temp)+1,len(temp)))
+      endif
+   enddo
+   return
+enddef
+//--------------------------------------------------------------
+define Write_SCX_file()
+    do while (input_flg != "S") or !table_name or
+      !table_field or !link_field or !browse_fields
+       input_flg="Z"
+       cls()
+       say(6, 0, "Defina la tabla de Browse respondiendo las siguientes preguntas.")
+       say(7, 0, "Si comete alg£n error, tendr  la oportunidad de corregirlo m s adelante.",7,0)
+       table_name = askuser("Introduzca nombre de la tabla de l¡neas para browse (fichero.dbf) (necesario)",table_name,8)
+       browse_fields = askuser("Introduzca la lista de campos para la tabla de l¡neas de detalle (necesario)",browse_fields,78)
+       table_field = askuser("Introduzca el campo de enlace de la tabla de l¡neas de detalle (necesario)",table_field,10)
+       link_field = askuser("Introduzca el campo de enlace de la cabecera (necesario)",link_field,10)
+       udf_file = askuser("Introduzca el nombre del fichero UDF a incluir en este programa (opcional)",udf_file,78)
+       cls()
+       say(4, 0, "La tabla de Browse est  definida como")
+       say(6 ,0, "TABLA = "+table_name)
+       say(7 ,0, "CAMPOTABLA = "+table_field)
+       say(8 ,0, "CAMPOENLACE = "+link_field)
+       say(9 ,0, "CAMPOSBROWSE = "+browse_fields)
+       say(10,0, "VENTANA para la tabla = "+table_window)
+       say(12,0, "Nombre del fichero UDF a incluir en el programa = "+udf_file)
+       say(14,0, "¨Definici¢n correcta (S/N/C)?")
+       cursor_pos(14,30)
+       do while at(input_flg,"SNC") == 0
+          input_flg=upper(chr(cget()))
+       enddo
+       if input_flg == "C" then return 0; endif
+       if !table_name or !table_field or !browse_fields or !link_field then
+          nmsg(more_info_needed)
+          pause(Hit_any_key)
+       endif
+    enddo
+    if not create(fmt_name+".SCX") then
+       pause(fileroot(fmt_name) +".SCX" + read_only + any_key)
+       return 0;
+    endif
+    print(REPLICATE("*",80)+crlf);
+    print("*-- Nombre: "+fmt_name+".SCX - Fichero de datos para l¡neas de detalle en dBASE IV" +crlf);
+    print("*-- Fecha: "+date()+crlf);
+    print("*-- Creado a partir de: "+fmt_name+".SCR"+crlf);
+    print("*-- Usado para ampliar informaci¢n del dise¤o de: "+fmt_name+".PRG"+crlf);
+    print(REPLICATE("*",80)+crlf);
+    print("TABLABROWSE="+lower(table_name)+crlf);
+    print("CAMPOTABLA="+lower(table_field)+crlf);
+    print("CAMPOENLACE="+lower(link_field)+crlf);
+    print("CAMPOSBROWSE="+lower(browse_fields)+crlf);
+    print("TECLAFUNCION="+func_key+crlf);
+    print("FICHERO_UDF=" + alltrim(udf_file) + crlf);
+    temp = browse_fields;
+    if at("/",temp) == 0 then
+       // No read only or field width info in temp
+       table_fields = browse_fields;
+    else
+       // Strip out read only or field width info in temp
+       do while at("/",temp) > 0
+          table_fields = SUBSTR(temp,AT("/",temp))
+          temp = SUBSTR(temp,1,AT("/",temp)-1)
+          table_fields = AT(",", table_fields) > 0 ?
+                         temp + substr(table_fields, AT(",",table_fields)) :
+                         temp ;
+          temp = table_fields
+       enddo
+    endif
+    print("LISTACAMPOS=" + table_fields + crlf);
+    return 1;
+enddef
+
+define Write_Stub_FMT()
+ if not create(fmt_name+".FMT") then
+    pause(fileroot(fmt_name) +".FMT" + read_only + any_key)
+    return 0;
+ endif
+ nmsg("Generando programa de facturas "+fileroot(fmt_name)+ " con l¡neas de detalle");
+ print(replicate("*",80)+crlf);
+}
+*-- Nombre..: Fichero de formato de cabecera {fileroot(fmt_name)}.FMT para {fileroot(fmt_name)}.prg
+*-- Fecha...: {ltrim(SUBSTR(date(),1,8))}
+*-- Versi¢n.: dBASE IV, Formatos {Frame_ver}.0
+*-- Notas...: ­Los ficheros de formato usan "" como delimitadores!
+{print(replicate("*",80)+crlf);}
+@ 1,0 TO 21,79
+@ 3,3 TO 19,76
+@ 5,6 TO 17,73
+@ 7,9 TO 15,70
+@ 9,24 SAY "Fichero de formato de cabecera para {fileroot(fmt_name)}.PRG"
+@ 11,20 SAY "Teclee DO {fileroot(fmt_name)}.PRG desde el punto indicativo"
+@ 12,20 SAY "para ejecutar este programa de formato m£ltiple"
+SET FORMAT TO
+{ return 1;
+enddef
+
+//--------------------------------------------------------------
+define carry_flds()
+   // Build dBASE SET CARRY command
+   carry_len = carry_lent = 13
+   carry_first = 0
+   foreach FLD_ELEMENT flds
+      if FLD_CARRY then
+         carry_len = carry_len + len(FLD_FIELDNAME + ",")
+         carry_lent = carry_lent + len(FLD_FIELDNAME + ",")
+         if carry_lent > 1000 then
+            print(crlf + "SET CARRY TO ")
+            carry_len = carry_lent = 13
+         endif
+         if carry_len > 75 then print(";" + crlf + "  ")  carry_len = 2 endif
+         temp = cap_first(FLD_FIELDNAME)
+         if !carry_first then
+            print(temp)
+            carry_first = 1
+         else
+            print("," + temp)
+         endif
+      endif
+    next flds
+    print(" ADDITIVE");
+ return
+enddef
+// EOP FORMBROW.COD
+}
+

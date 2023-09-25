@@ -1,0 +1,77 @@
+#
+#  Base52.lnk
+#
+#  Fichero Script para la creaci¢n de la biblioteca preenlazada.
+#
+#  Copyright (c) 1990-1993, Computer Associates International, Inc.
+#  Todos los derechos reservados.
+#
+
+PreLink
+Output Base52
+
+Lib Clipper
+Lib Extend
+
+#
+#  Las siguientes l¡neas permiten la inclusi¢n de uno de los diversos
+#  Controladores de Terminal Alternativos. Por defecto se usar  
+#  Terminal.Lib. Si se precisara otro controlador, simplemente ponga
+#  un s¡mbolo de comentario delante de la l¡nea 'Lib Terminal' y
+#  qu¡telo de la l¡nea que contenga el controlador a usar. Los
+#  controladores PCBIOS y ANSITERM requieren que se enlace a su vez
+#  el fichero GT.OBJ. Este fichero se encuentra en el directorio
+#  \OBJ de la instalaci¢n por defecto. Si la variable de entorno OBJ
+#  se ha configurado correctamente, .RTLink encontrar  el fichero de
+#  forma autom tica.
+#
+
+Lib Terminal
+#  Lib PCBios    Fi GT
+#  Lib AnsiTerm  Fi GT
+#  Lib NovTerm
+
+
+#
+#  Las siguientes l¡neas permiten la inclusi¢n de uno o varios
+#  Controladores de Base de Datos Sustituibles (RDD). El fichero del
+#  systema RddSys.Prg define el controlador que se usar  por defecto.
+#  La versi¢n actual de RddSys.Prg establece que el controlador por
+#  defecto ser  DbfNtx.Lib. Para poder cambiar el RDD usado por 
+#  defecto, basta con modificar el fichero RddSys.Prg para que haga
+#  referencia al controlador deseado. El fichero RddSys.Prg se
+#  se encuentra en el subdirectorio SOURCE\SYS de la instalaci¢n por 
+#  defecto. Para incluir cualquiera de los RDD listados a continuaci¢n
+#  simplemente elimine el car cter de comentario de la misma. Por
+#  ejemplo, para incluir el controlador DBFMDX elimine el comentario
+#  de la l¡nea "Lib DBFMDX Refer DBFMDX".
+
+Lib DBFNTX  Refer DBFNTX
+#  Lib DBFNDX  Refer DBFNDX
+#  Lib DBFMDX  Refer DBFMDX
+#  Lib DBFCDX  Refer DBFCDX
+#  Lib DBPX    Refer DBPX
+
+Refer _VOPS, _VMACRO, _VDB
+Refer _VTERM, _VPICT, _VGETSYS
+Refer _VDBG
+
+#
+#  Si desea incluir un RddSys.Obj alternativo para establecer otro RDD
+#  como controlador por defecto, elimine el comentario de la l¡nea
+#  "File RddSys" y a¤ada uno a la l¡nea "Exclude RddSys"
+#
+#  File RddSys
+#
+Exclude RddSys
+
+Exclude ErrorSys
+
+#
+#  Soporte de lenguas internacionales para CA-Clipper 5.2
+#  Estas exclusiones eliminan la aparici¢n de los mensajes de aviso
+#  durante la fase de enlace principal de la aplicaci¢n.
+#
+Exclude NationMsg, __NATRDDVER, ISALPHA, __EXACTCMP
+
+

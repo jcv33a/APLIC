@@ -1,0 +1,242 @@
+//
+// Module name: as_proc.cod
+// Description: Procedure file for the generated application
+//
+{  replicate("*",79)}
+
+* Descripci¢n..: Ficheros de procedimientos para el sistema de men£s generado
+* Los programas listados a continuaci¢n son compartidos por las rutinas
+* principales. El £ltimo procedimiento es la DEFinici¢n del proceso de men£s.
+{  replicate("*",79)}
+
+PROCEDURE Lockit
+PARAMETER ltype
+IF NETWORK()
+   gn_error=0
+   ON ERROR DO Multerr
+   IF ltype = "1"
+     ll_lock=FLOCK()
+   ENDIF
+   IF ltype = "2"
+     ll_lock=RLOCK()
+   ENDIF
+   ON ERROR
+ENDIF
+RETURN
+
+PROCEDURE Info_Box
+PARAMETERS lc_say
+? lc_say
+? REPLICATE("-",LEN(lc_say))
+?
+RETURN
+* EOP: Info_Box
+
+PROCEDURE get_sele
+*-- Acepta la selecci¢n del usuario y almacena BAR en una variable
+gn_send = BAR()  && Variable para el destino de la impresi¢n
+DEACTIVATE POPUP
+RETURN
+
+PROCEDURE ShowPick
+listval=PROMPT()
+IF LEFT(entryflg,1)="B"
+   lc_file=POPUP()
+   DO &lc_file. WITH "A"
+   RETURN
+ENDIF
+IF TYPE("lc_window")="U"
+   ACTIVATE WINDOW ShowPick
+ELSE
+   ACTIVATE WINDOW &lc_window.
+ENDIF
+STORE 0 TO ln_ikey,x1,x2
+ln_ikey=LASTKEY()
+IF ln_ikey=13
+   x1=AT(TRIM(listval)+',',lc_fldlst)
+   IF x1 = 0
+      lc_fldlst=lc_fldlst+TRIM(listval)+','
+   ELSE
+      x2=AT(',',SUBSTR(lc_fldlst,x1))
+      lc_fldlst=STUFF(lc_fldlst,x1,x2,'')
+   ENDIF
+   CLEAR
+   ? lc_fldlst
+ENDIF
+ACTIVATE SCREEN
+RETURN
+* EOP: ShowPick
+
+{  include "as_clnup.cod";}
+* EOP: Cleanup
+
+{  include "as_pause.cod";}
+* EOP: Pause
+
+{  include "as_muser.cod";}
+* EOP: Multerr
+
+{  include "as_trce.cod";}
+* EOP: Trace
+
+{  include "as_prin.cod";}
+* EOP: PrintSet
+
+{  include "as_posit.cod";}
+* EOP: Position
+
+PROCEDURE BefAct
+SAVE SCREEN TO Browscr&lc_ApGen.
+DEACTIVATE WINDOW Fullscr
+SET SCOREBOARD ON
+RETURN
+* EOP: BefAct
+
+PROCEDURE AftAct
+CLEAR
+SET SCOREBOARD OFF
+ACTIVATE WINDOW Fullscr
+RESTORE SCREEN FROM Browscr&lc_ApGen.
+RELEASE SCREEN Browscr&lc_ApGen.
+RETURN
+* EOP: AftAct
+
+PROCEDURE Postnhlp
+ln_getkey=INKEY()
+DEFINE WINDOW Temphelp FROM 3,12 TO 19,67
+ACTIVATE WINDOW Temphelp
+DO CASE
+CASE "SEEK" $ PROMPT()
+*-- AYUDA PARA SEEK
+? " SEEK <exp>"
+?
+? " Evalua la expresi¢n especificada e intenta hallar"
+? " su valor en el ¡ndice maestro del fichero de base"
+? " de datos. El valor devuelto es de tipo l¢gico,"
+? " verdadero (.V.) si encuentra la clave o falso (.F.)"
+? " si no la encuentra"
+?
+? " Ej: SEEK CTOD('11/03/87')  -  convierte la"
+? "     expresi¢n de car cter a fecha y a continuaci¢n"
+? "     busca el valor en el ¡ndice."
+?
+CASE LEFT(LTRIM(PROMPT()),4) $ "GOTO TOP BOTT Reco"
+*-- AYUDA PARA GOTO
+? " GO/GOTO BOTTOM/TOP [IN <alias>]"
+? " o"
+? " GO/GOTO [RECORD] <n£mero registro> [IN <alias>]"
+? " o"
+? " <n£mero registro>"
+?
+? " Sit£a el puntero de registros en el registro"
+? " o posici¢n indicados dentro del fichero de base"
+? " de datos activo."
+? "      TOP sit£a el puntero en el primer registro"
+? "      BOTTOM sit£a el puntero en el £ltimo registro"
+?
+? " Ej: 4  -  sit£a el puntero en el registro 4"
+?
+CASE "LOCATE" $ PROMPT()
+*-- AYUDA PARA LOCATE
+? " LOCATE FOR <condici¢n> [< mbito>]"
+? "      [WHILE <condici¢n>]"
+?
+? " Busca secuencialmente en el fichero de base de"
+? " datos activo el primer registro que cumpla la"
+? " condici¢n especificada. La funci¢n FOUND() devuelve"
+? " verdadero (.V.) si LOCATE encuentra alg£n registro."
+?
+? " Ej: LOCATE FOR Edad = '25' NEXT 5"
+? "     busca los primeros cinco registros cuyo "
+? "     campo Edad contenga 25"
+?
+CASE "Return" $ PROMPT()
+?
+? " Vuelve a la acci¢n que estaba siendo ejecutada,"
+? " situando o no el puntero de registros."
+ENDCASE
+ln_getkey = INKEY(0)
+DEACTIVATE WINDOW Temphelp
+RELEASE WINDOW Temphelp
+RETURN
+* EOP: Postnhlp
+
+FUNCTION Color
+*---------------------------------------------------------------------------
+* Formato:
+* COLOR( <expC> )
+*  <expC> = NORMAL, HIGHLIGHT, MESSAGES, TITLES, BOX, INFORMATION, FIELDS
+*        o una serie de caracteres que contenga todos los colores
+*  Versi¢n: dBASE 1.1
+*
+* La funci¢n COLOR() o bien devuelve los colores que devolver¡a
+* SET("attribute"), o bien establece los colores contenidos en la serie
+* pasada como par metro.
+* Si <expC> es una serie que contiene todos los colores, COLOR() devuelve un
+* NULL. Si no, devuelve los atributos de color actuales del grupo requerido
+*
+* Ve se tambi‚n: SET("attribute")
+*-----------------------------------------------------------------------------
+PARAMETERS set_color
+PRIVATE color_num, color_str, cnt
+
+set_color = UPPER(set_color)
+IF set_color = "COLOR"
+  *- Devuelve s¢lo los colores del est ndar, el realzado y el marco
+  RETURN SUBSTR(SET("attr"),1, AT(" &", SET("attr")))
+ENDIF
+*- Declara la serie en la que se desglosan las opciones de color a partir
+*- de SET("attr")
+PRIVATE color_
+DECLARE color_[8]
+*- Determina si el usuario esta recuperando o almacenando los colores
+IF " &" $ set_color
+  color_str = ","+set_color+","            && Recuperar los atributos de color
+ELSE
+  color_str = ","+SET("ATTRIBUTE")+","     && Almacenar los atributos de color
+ENDIF
+
+*-- Rellena la serie con los atributos de color individuales
+color_str = STUFF(color_str, AT(" &", color_str), 4, ",")
+cnt = 1
+DO WHILE cnt <= 8
+  color_str = SUBSTR(color_str, AT(",", color_str ) +1 )
+  color_[cnt] = SUBSTR(color_str, 1, AT(",", color_str ) - 1)
+  cnt = cnt + 1
+ENDDO
+
+IF " &" $ set_color
+  *-- Restaura los atributos de color
+  SET COLOR TO ,,&color_[3].                     && Color del borde
+  SET COLOR OF NORMAL TO &color_[1].
+  SET COLOR OF HIGHLIGHT TO &color_[2].
+  SET COLOR OF MESSAGES TO &color_[4].
+  SET COLOR OF TITLES TO &color_[5].
+  SET COLOR OF BOX TO &color_[6].
+  SET COLOR OF INFORMATION TO &color_[7].
+  SET COLOR OF FIELDS TO &color_[8].
+ELSE
+  *-- Devuelve los atributos de color del grupo requerido
+  DO CASE
+  CASE set_color $ "NORMAL"
+    color_num =  1
+  CASE set_color $ "HIGHLIGHT"
+    color_num =  2
+  CASE set_color $ "BORDER"
+    color_num =  3
+  CASE set_color $ "MESSAGES"
+    color_num =  4
+  CASE set_color $ "TITLES"
+    color_num =  5
+  CASE set_color $ "BOX"
+    color_num =  6
+  CASE set_color $ "INFORMATION"
+    color_num =  7
+  CASE set_color $ "FIELDS"
+    color_num =  8
+  ENDCASE
+ENDIF
+RETURN IIF(" &" $ set_color, "", color_[color_num])
+
+// EOP AS_PROC.COD
+

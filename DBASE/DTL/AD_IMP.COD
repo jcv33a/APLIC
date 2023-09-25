@@ -1,0 +1,23 @@
+//
+// Module Name: AD_IMP.COD - Menu_Act = 16
+// Selectors  : Imprt_File, Imprt_Type
+// Description: to issue the dBASE IMPORT command
+// Syntax     : IMPORT FROM <expFN> [TYPE]
+//                  DBASEII / FW2 / PFS / RPD / WK1
+//
+lc_say='Importando registros desde el fichero {Imprt_file}'
+DO info_box WITH lc_say
+SET TALK ON
+//
+IMPORT FROM {Imprt_File} TYPE \
+{ case Imprt_type of}
+{ 0:}PFS
+{ 1:}DBASEII
+{ 2:}RPD
+{ 3:}FW2
+{ 4:}WK1
+{ endcase}
+SET TALK OFF
+//
+// EOP AD_IMP.COD
+

@@ -1,0 +1,2838 @@
+//
+// Module Name: REPORT.COD
+// Description: Define report program structure.
+//
+
+Plantilla para Programas de Informes (.frg)
+-------------------------------------------
+Versi¢n 1.1.9
+Ashton-Tate (c) 1987, 1988, 1989, 1990
+
+{
+ include "report.def";
+ include "builtin.def";
+//
+// Enum string constants for international translation
+//
+enum
+    wrong_class = "Imposible usar REPORT.GEN con objetos que no sean informes. ",
+    report_empty = "Dise¤o de informe vac¡o.  ",
+    demo_string  = "MUESTRA DE INFORME DE dBASE IV - SOLO PARA PROPOSITOS DE EVALUACION",
+    increase_page = "Aumente la longitud de p gina del informe.",
+    demo_version = 0;
+
+enum    FIRST_GEN = 2;
+
+enum    CHARACTER_TYPE = 67,
+        DATE_TYPE,
+        FLOAT_TYPE = 70,
+        LOGICAL_TYPE = 76,
+        MEMO_TYPE,
+        NUMERIC_TYPE = 78;
+
+enum    AVERAGE_OP = 0,
+        COUNT_OP = 1,
+        MAX_OP,
+        MIN_OP,
+        SUM_OP,
+        STD_DEV_OP,
+        VARIANCE_OP;
+
+    if frame_class != report then
+        pause(wrong_class + any_key)
+        return 0
+    endif
+
+var
+// temporary variables
+    count,x,a,i,ni,j,k,temp,temp2,
+// global variables
+     rptname,   // Report name
+ default_drive, // dBASE default drive
+     isfirst,   // first system memvar? (handles commas)
+     isnew,     // is this a new band?
+     isopen,    // is the band open?
+     priv_vars, // system memvars list
+    priv_vars2, // if FLD_EXPRESSION is broken into 2 strings
+     bandedit,  // word wrap off or on
+     bandgrp,   // GROUP id for bands
+     bandhgt,   // band row position plus height plus one
+     bandlen2,  // length of page header (0 if band is closed)
+  bandspacing2, // spacing on page header band
+     bandlen50, // length of detail band        "
+   bandspacing, // spacing on detail band
+     bandlen98, // length of page footer        "
+ bandspacing98, // spacing on footer band
+     bandtype,  // type of band ie. page footer, report intro, etc.
+ band_previous, // previous bandtype
+     length,    // length of field or text
+     maxgrp,    // maximum number of bands
+     isrepo,    // is there report intro/summary bands
+     maxrow,    // maximum row
+     nextrow,   // next row when looking ahead ie. ++<cursor>
+current_column, // current text or field plus length
+     bsrv,      // beginning of band suppress repeated value
+     xsrv,      // current suppress repeated value var
+     xsum,      // current "noname" summary field
+     xxsum,     // subset of either an average, std. deviation or variance
+     samerow,   // flag set for items occuring on the same row
+     bandrow,   // band row plus one
+ first_combine, // text or field is the first in the chain of combined data
+     combine,   // combine fields flag
+ suppress_line, // if the text "Page no." appears first on the line
+  previous_row, // previous elements' row
+    pre_type,   // previous element type was field or text
+    next_type,
+   inner_loop,  // elements inside the band encountered
+  optl_heading, // flag to test whether optional heading has been output
+is_rintro_open, // is the Report Intro band open
+ is_rsumm_open, // is the Report Summary band open
+number_of_open_group_intros,   // none open, Grphead procedure is suppressed
+number_of_open_group_summarys, // none open, Grpfoot procedure is suppressed
+is_page_header_open, // if Page Header band is open
+number_of_reset_on_page, // summary fields reset on page
+number_of_fld_suppress,  // suppressed fields
+intro_band_one_height,   // footer widow checking for
+intro_band_two_height,   // dBASE III PLUS reports
+number_of_word_wrap_bands,
+number_of_group_calc_fields,
+number_of_group_footer_fields,
+number_of_group_intro_each,
+current_group_footer_field,
+number_of_begin_new_pages,
+retain_previous,
+external_define,
+blankable_row,
+left_delimiter,
+right_delimiter,
+delimit_flag,
+ruler_flag,
+previous_indent,
+previous_lmargin,
+previous_rmargin,
+previous_tabs
+;
+    default_drive = STRSET(_defdrive)
+    rptname = FRAME_PATH + NAME
+    if not FILEOK(rptname) then
+        if FILEDRIVE(NAME) || !default_drive then
+            rptname=NAME
+        else
+            rptname=default_drive + ":" + NAME
+        endif
+    endif
+
+    if not CREATE(rptname+".FRG") then
+        PAUSE(fileroot(rptname)+".FRG"+read_only+any_key)
+        return 0
+    endif
+
+    pre_pass();
+
+// variable initializations
+    bandrow=0
+    bsrv=0
+    combine=0
+    current_column=0
+    first_combine=1
+    isopen=0
+    maxrow=0
+    nextrow=0
+    optl_heading=0
+    previous_row=0
+  left_delimiter="\""
+  right_delimiter="\""
+  delimit_flag=0
+    samerow=0
+    xsrv=0
+    xsum=0
+    xxsum=0
+    isrepo=0
+    is_rintro_open=0
+    bandlen2=0
+    is_page_header_open=0
+    bandlen50=0
+    current_group_footer_field=0
+    number_of_begin_new_pages=0
+    number_of_group_footer_fields=0
+    number_of_group_intro_each=0
+    number_of_open_group_summarys=0
+    number_of_word_wrap_bands=0
+    bandlen98=0
+    bandspacing=0
+    bandspacing98=0
+    is_rsumm_open=0
+    intro_band_one_height=0
+    intro_band_two_height=0
+    ruler_flag=1;    }
+* Programa...........: {rptname}.FRG
+* Fecha..............: {LTRIM(SUBSTR(DATE(),1,8))}
+* Versi¢n............: dBASE IV, Informes {FRAME_VER}.1
+*
+* Notas:
+* ------
+* Antes de ejecutar este procedimiento con el mandato DO
+* es necesario usar LOCATE, pues la sentencia CONTINUE
+* est  en el bucle principal.
+*
+*-- Par metros
+PARAMETERS gl_noeject, gl_plain, gl_summary, gc_heading, gc_extra
+** Los tres primeros par metros son de tipo L¢gico.
+** El cuarto es una serie y el quinto es un par metro adicional.
+{
+    if dBASE_III_PLUS == FIRST_GEN then
+        a=", _plength, _ploffset";
+    else
+        a="";
+    endif
+}
+PRIVATE _peject{a}, _wrap
+
+*-- Comprueba si no se ha encontrado ning£n registro
+IF EOF() .OR. .NOT. FOUND()
+   RETURN
+ENDIF
+
+*-- desactiva la justificaci¢n entre m rgenes
+_wrap=.F.
+
+{       report_setup();
+}
+IF _plength < {tb_margin(bandlen2,bandspacing2)} \
++ {tb_margin(bandlen98,bandspacing98)} + 2
+   SET DEVICE TO SCREEN
+   DEFINE WINDOW gw_report FROM 7,17 TO 11,62 DOUBLE
+   ACTIVATE WINDOW gw_report
+   @ 0,1 SAY "{increase_page}"
+   @ 2,1 SAY "{any_key}"
+   x=INKEY(0)
+   DEACTIVATE WINDOW gw_report
+   RELEASE WINDOW gw_report
+   RETURN
+ENDIF
+
+_plineno=0          && pone el n£mero de l¡nea a cero
+{   if dBASE_III_PLUS == FIRST_GEN then  }
+
+*-- configuraci¢n de informe de dBASE III PLUS
+{
+    case PRINT_NEW_PAGE of
+    0: a="\"AFTER\""
+    1: a="\"BEFORE\""
+    2: a="\"BOTH\""
+    3: a="\"NONE\""
+    endcase
+}
+_peject={a}
+_plength={PRINT_PAGE_LENGTH}
+_ploffset={(!PRINT_LEFT_OFFSET) ? 0 : PRINT_LEFT_OFFSET}
+
+*-- Opci¢n PLAIN con destino a la pantalla s¢lamente
+IF gl_plain
+   IF SET("PRINT") = "OFF" .AND. SET("ALTERNATE") = "OFF"
+      gl_noeject=.T.
+   ENDIF
+ENDIF
+
+{   endif   }
+*-- Par metro NOEJECT
+IF gl_noeject
+   IF _peject="BEFORE"
+      _peject="NONE"
+   ENDIF
+   IF _peject="BOTH"
+      _peject="AFTER"
+   ENDIF
+ENDIF
+
+*-- Establecimiento del entorno
+ON ESCAPE DO Prnabort
+IF SET("TALK")="ON"
+   SET TALK OFF
+   gc_talk="ON"
+ELSE
+   gc_talk="OFF"
+ENDIF
+gc_space=SET("SPACE")
+SET SPACE OFF
+gc_time=TIME()      && tiempo del sistema para el campo predefinido
+gd_date=DATE()      && fecha del sistema   "   "    "        "
+gl_fandl=.F.        && indicador de primera y £ltima p gina
+{       if number_of_group_intro_each then }
+gl_intros=.F.       && indicador para las introducciones de grupo de cada p g.
+{       endif   }
+gl_prntflg=.T.      && indicador de continuar impresi¢n
+gl_widow=.T.        && indicador de comprobar apartados viudos 
+gn_length=LEN(gc_heading)  && almacena la longitud del encabezamiento (HEADING)
+gn_level=2          && apartado actual en proceso
+gn_page=_pageno     && captura el n£mero de p gina actual
+gn_pspace=_pspacing && captura el interlineado de la p gina impresa actual
+
+{   init_group_footer_vars();
+    init_calculated_vars(); }
+
+*-- Activa el procedimiento para el salto de p gina
+gn_atline=_plength - {tb_margin(bandlen98,bandspacing98)}
+ON PAGE AT LINE gn_atline EJECT PAGE
+
+*-- Imprime el informe
+
+PRINTJOB
+
+{   if number_of_begin_new_pages then   }
+gl_newpage=.T.      && se puede comenzar apartado en p gina nueva
+
+{   endif
+    init_group_break_vars()
+    init_summary_vars()
+    init_suppress_repeated_value_vars()
+    assign_calculated_vars()
+    assign_summary_vars()
+    if isrepo && is_rintro_open && not FRAME_PAGEHEADINGS then  }
+DO Rintro
+
+*-- inicializa el n£m. de p g. por si la introducci¢n del informe abarca 2 p g.
+_pageno=gn_page
+
+{   endif   }
+IF gl_plain
+   ON PAGE AT LINE gn_atline DO Pgplain
+ELSE
+   ON PAGE AT LINE gn_atline DO Pgfoot
+ENDIF
+
+{   if has_headers() then   }
+DO Pghead
+
+{   endif   }
+gl_fandl=.T.        && comienzo de la primera p gina f¡sica
+
+{   if isrepo && is_rintro_open && FRAME_PAGEHEADINGS then  }
+DO Rintro
+{       if number_of_begin_new_pages then   }
+gl_newpage=.F.
+{       endif  }
+
+{   endif
+    if number_of_open_group_intros then }
+DO Grphead
+{       if number_of_group_intro_each then }
+gl_intros=.F.
+{       endif   }
+
+{   endif   }
+*-- Bucle de fichero
+DO WHILE FOUND() .AND. .NOT. EOF() .AND. gl_prntflg
+{   lmarg(4)
+//
+// If there are group bands
+// set up the CASE structure to test
+// the group band values
+//
+    if (number_of_open_group_intros || number_of_open_group_summarys) then }
+DO CASE
+{       build_case_statement(); }
+OTHERWISE
+   gn_level=0
+ENDCASE
+*-- comprueba si alguna expresi¢n no ha casado
+IF gn_level <> 0
+{       if number_of_open_group_summarys then   }
+   DO Grpfoot WITH 100-gn_level
+{       endif   }
+   DO Grpinit
+ENDIF
+{       if number_of_open_group_intros then }
+*-- Repite las introducciones de grupo
+IF gn_level <> 0{if number_of_group_intro_each then} .OR. gl_intros{endif}
+   DO Grphead
+ENDIF
+{       endif
+        if number_of_group_intro_each then }
+gl_intros=.F.
+{       endif
+    endif   }
+gn_level=0
+{   if bandlen50 then   }
+*-- Cuerpo del informe
+IF gl_summary
+   DO Upd_Vars
+ELSE
+   DO __Detail
+ENDIF
+{   else    }
+DO Upd_Vars
+{   endif}
+gl_widow=.T.         && activa la comprobaci¢n de apartados viudos
+CONTINUE
+{   if number_of_open_group_intros || number_of_open_group_summarys then
+        increment_group_by_record_vars()
+    endif
+    lmarg(1);   }
+ENDDO
+
+IF gl_prntflg
+//
+// If there are group bands
+//
+{   if maxgrp > 3 then  }
+   gn_level=3
+{       if number_of_open_group_summarys then   }
+   DO Grpfoot WITH 97
+{       endif
+    endif   }
+//
+// Report summary
+//
+{   if isrepo && is_rsumm_open then }
+   DO Rsumm
+{   endif
+    if bandlen98 then
+        if !is_rsumm_open then  }
+   gl_fandl=.F.     && fin de la £ltima p gina
+{       endif   }
+   IF _plineno <= gn_atline
+      EJECT PAGE
+   ENDIF
+{   endif   }
+ELSE
+{   if isrepo && is_rsumm_open then
+        if maxgrp > 3 then  }
+   gn_level=3
+{       endif   }
+   DO Rsumm
+{   endif   }
+   DO Reset
+   RETURN
+ENDIF
+
+ON PAGE
+
+ENDPRINTJOB
+
+DO Reset
+RETURN
+* EOP: {rptname}.FRG
+{   output_proc_gheight();  }
+
+*-- Actualiza los campos resumen y/o los campos calculados.
+PROCEDURE Upd_Vars
+{   update_summary_and_calc_vars(); }
+RETURN
+* EOP: Upd_Vars
+
+*-- Desactiva el indicador para salir del bucle DO WHILE cuando se pulse ESC
+PROCEDURE Prnabort
+gl_prntflg=.F.
+RETURN
+* EOP: Prnabort
+
+{   if number_of_open_group_intros
+     || number_of_open_group_summarys then    }
+*-- Reinicializa las variables de cambio de grupo. Reinicializa los campos
+*-- resumen que vuelvan a empezar el c lculo cada apartado particular.
+PROCEDURE Grpinit
+{       reinit_group_variables();   }
+RETURN
+* EOP: Grpinit
+
+{   endif
+    if number_of_reset_on_page || number_of_fld_suppress then   }
+*-- Vuelve a empezar el c lculo (cada p gina) de los campos resumen y suprime
+*-- los valores repetidos
+PROCEDURE Pageinit
+{       reinit_page_variables();    }
+RETURN
+* EOP: Pageinit
+
+{   endif
+    if (number_of_open_group_intros
+     || number_of_open_group_summarys) then
+        output_group_calls();
+    endif
+    if external_define then
+        fileerase(rptname+".grp");
+        APPEND(rptname+".FRG");
+    endif
+    output_band_procs();    }
+
+*-- Proceso de los saltos de p gina cuando se usa la opci¢n PLAIN
+PROCEDURE Pgplain
+PRIVATE _box
+EJECT PAGE
+{   if number_of_reset_on_page
+    || number_of_fld_suppress then  }
+IF gl_fandl
+   DO Pageinit
+ENDIF
+{   endif   }
+RETURN
+* EOP: Pgplain
+
+*-- Restaura el entorno de dBASE previo a la impresi¢n del informe
+PROCEDURE Reset
+SET SPACE &gc_space.
+SET TALK &gc_talk.
+ON ESCAPE
+ON PAGE
+RETURN
+* EOP: Reset
+
+{   if !count then
+        pause(report_empty + any_key)
+    endif
+
+    return 0;
+//--------------------------------
+// End of main template procedure
+// User defined functions follow
+//--------------------------------
+define output_band_procs()
+//
+// Main loop which outputs the procedures for all the bands
+// and the contents of each band (also setup code).
+//
+    bandtype=99
+//
+    foreach ELEMENT ecursor
+        inner_loop=0
+        pre_type=0
+        next_type=0
+//
+// List type is a BAND?
+//
+        if ELEMENT_TYPE == @Band_Element then
+            begin_new_band(ecursor)
+            loop
+        else
+            ++count;
+        endif
+
+do while ELEMENT_TYPE != @Band_Element && !eoc(ecursor)
+  inner_loop=1;
+//
+  if ELEMENT_TYPE == @Fld_Element then
+    if FLD_SUPPRESS then
+      ++xsrv;
+    endif
+
+    retain_previous=0;
+    if GROUP > 50 then
+      retain_previous=retain_previous_value(ecursor)
+    endif
+    if retain_previous then
+      ++current_group_footer_field;
+    endif
+
+    if !FLD_FIELDNAME && FLD_FIELDTYPE == Summ_data then
+      ++xsum;
+    endif
+  endif
+//
+  if FLD_HIDDEN || not isopen goto noprint endif
+//
+// List type is TEXT or FIELD?
+//
+  if ELEMENT_TYPE == @Text_Element || ELEMENT_TYPE == @Fld_Element then
+    if pre_type && previous_row != Row_Positn then
+      samerow=0;
+      combine=0;
+      first_combine=1;
+    endif
+  endif
+//
+// Output carriage returns for dBASE report
+//
+  if !bandedit then
+nextline1:
+    if maxrow < Row_Positn then }
+?
+{     ++maxrow;
+      goto nextline1;
+    endif
+  else
+    if blankable_row && previous_row < Row_Positn then
+      blankable_row=0;
+      lmarg(1); }
+ENDIF
+{   endif
+    if (previous_row < Row_Positn) && (ELEMENT_TYPE == @Fld_Element
+    || ELEMENT_TYPE == @Text_Element) then
+      blankable_row=check4blank(ecursor);
+      if blankable_row then
+        if conditional_if_for_blank_line(ecursor) then
+          isnew=1;
+          lmarg(4);
+        endif
+      endif
+    endif
+    maxrow=Row_Positn;
+  endif
+//
+// Insert heading code for no page number
+//
+    if !optl_heading
+        && bandtype == Page_Header
+        && Row_Positn > bandrow+1
+        && !suppress_line then
+            output_optional_heading()
+    endif
+//
+  pre_type=0;
+  next_type=0;
+  ++ecursor;
+  nextrow=Row_Positn;
+  if ELEMENT_TYPE == @Text_Element
+  || ELEMENT_TYPE == @Fld_Element then
+    next_type=1;
+  endif
+  --ecursor;
+//
+  case ELEMENT_TYPE of
+  @Text_Element:
+//
+    x=Col_Positn;
+    i=LEN(Text_Item);
+    ni=0;
+    pre_type=1;
+    if i == 237 then
+      foreach Text_Item fcursor in ecursor
+        if ni then
+          i=i+LEN(Text_Item);
+          temp=Text_Item;
+        endif
+        ++ni;
+      next
+    endif
+    current_column=x+i;
+    set_combine_flag(ecursor);
+    ++ecursor;
+    if (bandtype == Page_Header || bandtype == Page_Footer)
+      && ELEMENT_TYPE == @Fld_Element
+      && nextrow == maxrow then
+        if FLD_FIELDTYPE == Pred_data
+            && FLD_PREDEFINE == 3 then
+          --ecursor;
+          if SUBSTR(UPPER(Text_Item),1,4) == "PAGE" then
+            if previous_row == Row_Positn then
+               suppress_line=2;
+            else
+               suppress_line=1;
+            endif
+          endif
+          ++ecursor;
+          if suppress_line == 1 then
+            ++ecursor;
+            if !eoc(ecursor) && Row_Positn == nextrow then
+              suppress_line=2;
+            endif
+            --ecursor;
+          endif
+        endif
+    endif
+    --ecursor;
+//
+    if suppress_line == 1 &&
+     (bandtype == Page_Header || bandtype == Page_Footer) then
+       plainopt(ecursor);
+    endif
+    if isnew then
+      isnew=0;  }
+?? \
+{   else
+      if samerow then}
+ \
+{     else}
+?? \
+{     endif
+    endif
+    if substr(Text_Item,1,1) == "\"" then
+      left_delimiter = "["
+      right_delimiter = "]"
+      delimit_flag = 1
+    endif
+    if suppress_line == 2 then}
+IIF(gl_plain,'' , \
+{   endif
+    if i > 70 then}
+;
+{     separate(Text_Item);
+      if ni then}
++ {left_delimiter}{temp}{right_delimiter};
+{     endif
+    else}
+{left_delimiter}{Text_Item}{right_delimiter} \
+{   endif
+    if suppress_line == 2 then}
+) \
+{     suppress_line=0;
+    endif
+    if delimit_flag then
+      left_delimiter="\""
+      right_delimiter="\""
+      delimit_flag=0
+    endif
+  @Box_Element:}
+DEFINE BOX FROM {(!BOX_LEFT) ? 0 : BOX_LEFT} TO \
+{((!BOX_LEFT) ? 0 : BOX_LEFT)+BOX_WIDTH-1} \
+HEIGHT {BOX_HEIGHT} \
+{   case BOX_TYPE of
+    0: // Single}
+SINGLE
+{   1: // Double}
+DOUBLE
+{   2: // Defined}
+CHR({BOX_SPECIAL_CHAR})
+{   endcase
+  @Page_Element:}
+EJECT PAGE
+{ @Para_Element:}
+?
+{ @Ruler_Element:
+//
+    ++ecursor;
+    if ELEMENT_TYPE == @Para_Element then
+      loop
+    endif
+    --ecursor;
+    a=((!RULER_LEFTM) ? 0 : RULER_LEFTM);
+    if ruler_flag || a != previous_lmargin then }
+_lmargin={a}
+{     previous_lmargin=a;
+    endif
+    a=RULER_RIGHTM;
+    if ruler_flag || a != previous_rmargin then }
+_rmargin={a}
+{     previous_rmargin=a;
+    endif
+    x=((!RULER_INDENT) ? 0 : RULER_INDENT);
+    if x && x > 255 then
+      x = x - 65536;
+    endif
+    if ruler_flag || x != previous_indent then  }
+_indent={x}
+{     previous_indent=x;
+    endif   }
+_pcolno={previous_lmargin+x }
+{   a=RULER_TABS;
+    if ruler_flag || a != previous_tabs then    }
+_tabs=\
+{     if LEN(a) > 70 then}
+;
+{       separate(a);}
+
+{     else}
+"{a}"
+{     endif
+      previous_tabs=a;
+    endif
+    ruler_flag=0;
+}
+{ @Fld_Element:
+//
+    x=Col_Positn;
+    i=FLD_REPWIDTH;
+    ni=0;
+    pre_type=1;
+    if i > 237 then
+      foreach FLD_TEMPLATE fcursor in ecursor
+        if ni then
+          temp2=FLD_TEMPLATE;
+        endif
+        ++ni;
+      next
+    endif
+    current_column=x+i;
+//
+    set_combine_flag(ecursor)
+//
+    k=0;
+    x=0;
+    priv_vars2="";
+    if dBASE_III_PLUS == FIRST_GEN && FLD_VALUE_TYPE == CHARACTER_TYPE &&
+    (FLD_FIELDTYPE == Tabl_data || FLD_FIELDTYPE == Calc_data) then
+      priv_vars="TRIM(";
+      x=1;
+    else
+      priv_vars="";
+    endif
+  if retain_previous then
+      priv_vars="r_foot"+str(current_group_footer_field);
+  else
+    case FLD_FIELDTYPE of
+    Tabl_data:
+// With ALIAS
+//      priv_vars=priv_vars+upper_first(FLD_FILENAME)+"->"+
+//                          upper_first(FLD_FIELDNAME);
+// Without ALIAS
+      priv_vars=priv_vars+upper_first(FLD_FIELDNAME);
+    Calc_data:
+      if FLD_FIELDNAME then
+        priv_vars=priv_vars+lower(FLD_FIELDNAME);
+      else
+        foreach FLD_EXPRESSION fcursor in ecursor
+          if k then
+            priv_vars2=FLD_EXPRESSION;
+          endif
+          ++k;
+        next
+        if (UPPER(SUBSTR(LTRIM(FLD_EXPRESSION),1,5))) != "TRIM(" then
+          priv_vars=priv_vars+FLD_EXPRESSION;
+        else
+          priv_vars=FLD_EXPRESSION;
+          x=0;
+        endif
+      endif
+    Pred_data: ;
+      case FLD_PREDEFINE of
+      0: // Date
+        priv_vars="gd_date";
+      1: // Time
+        priv_vars="gc_time";
+      2: // Recno
+        priv_vars="RECNO()";
+      3: // Pageno
+        priv_vars="_pageno";
+      endcase
+    Summ_data:
+      if !FLD_FIELDNAME then
+        priv_vars="r_msum"+STR(xsum);
+      else
+        priv_vars=lower(FLD_FIELDNAME);
+      endif
+    endcase
+  endif
+    if x then
+      priv_vars2=priv_vars2+")";
+    endif
+    if !suppress_line &&
+    (bandtype == Page_Header || bandtype == Page_Footer) then
+      plainopt(ecursor);
+    endif
+//
+// For output of suppress repeated value memo fields
+//
+    if FLD_SUPPRESS && FLD_VALUE_TYPE == MEMO_TYPE then  }
+
+lf_temp={suppress_repeated_values(ecursor);}
+{     isnew=1;
+    endif
+    if isnew then
+      isnew=0;  }
+?? \
+{   else
+      if samerow then}
+ \
+{     else}
+?? \
+{     endif
+    endif
+    if FLD_SUPPRESS && FLD_VALUE_TYPE == MEMO_TYPE then  }
+&lf_temp. \
+{   else
+      suppress_repeated_values(ecursor);
+    endif
+
+    j=0;
+    if FLD_PICFUN then
+      temp=FLD_PICFUN;
+      j=AT("V",temp) | AT("H",temp);
+      if not j then}
+FUNCTION "{FLD_PICFUN}" \
+{     else
+        if not AT("H",temp) then
+          if j < LEN(FLD_PICFUN) then
+            temp=SUBSTR(temp,1,j)+STR(i)+SUBSTR(temp,j+1);
+          else
+            temp=temp+STR(i);
+          endif
+        endif}
+FUNCTION "{temp}" \
+{     endif
+    endif
+    temp=FLD_TEMPLATE+temp2;
+    if FLD_VALUE_TYPE == CHARACTER_TYPE then
+      if FLD_LENGTH == FLD_REPWIDTH && temp == REPLICATE("X",FLD_LENGTH) then
+        j=FLD_LENGTH;
+      endif
+    endif
+    if not j then
+//
+// test for invalid picture templates
+//
+      if temp && (FLD_FIELDTYPE != Pred_data || FLD_PREDEFINE != 1) &&
+      FLD_VALUE_TYPE != DATE_TYPE then
+        if i > 70 then}
+PICTURE ;
+{         separate(temp);
+        else}
+PICTURE "{FLD_TEMPLATE}" \
+{       endif
+      endif
+    endif
+  endcase
+//
+// Style of output ie. BOLD, UNDERLINE and ITALICS.
+//
+  if FLD_STYLE then}
+STYLE "\
+{   if Bold & FLD_STYLE then}
+B\
+{   endif
+    if Italic & FLD_STYLE then}
+I\
+{   endif
+    if Underline & FLD_STYLE then}
+U\
+{   endif
+    if Superscript & FLD_STYLE then}
+R\
+{   endif
+    if Subscript & FLD_STYLE then}
+L\
+{   endif
+    if User_Font & FLD_STYLE then
+      if  1 & FLD_STYLE then}1{endif}\
+{     if  2 & FLD_STYLE then}2{endif}\
+{     if  4 & FLD_STYLE then}3{endif}\
+{     if  8 & FLD_STYLE then}4{endif}\
+{     if 16 & FLD_STYLE then}5{endif}\
+{   endif}
+" \
+{ endif
+//
+// List type is TEXT or FIELD?
+//
+  if (ELEMENT_TYPE == @Text_Element || ELEMENT_TYPE == @Fld_Element) then
+//
+// not a word wrap band?
+//
+    if !bandedit && first_combine then  }
+AT {Col_Positn}\
+{   endif
+    if Row_Positn != nextrow then   }
+
+{     isnew=1;
+    else
+      if FLD_SUPPRESS && bsrv != xsrv then    }
+,
+{       isnew=1;
+      else
+        if next_type && Row_Positn == nextrow then
+          ++samerow;
+          if samerow > 16 then  }
+
+{           isnew=1;
+            samerow=1;
+          else    }
+,;
+{         endif
+        else    }
+
+{         isnew=1;
+        endif
+      endif
+    endif
+//
+    if FLD_SUPPRESS && bsrv != xsrv then
+        assign_suppress_var(ecursor);
+    endif
+//
+    if first_combine && combine then
+      first_combine=0;
+    endif
+    if !combine && !first_combine then
+      first_combine=1;
+    endif
+//
+  endif
+  if bandtype == Page_Header || bandtype == Page_Footer then
+    x=0;
+    if previous_row < maxrow && nextrow > maxrow &&
+    FLD_FIELDTYPE == Pred_data &&
+    (!FLD_PREDEFINE || FLD_PREDEFINE == 3) then
+      x=1;
+    endif
+    if x || (suppress_line && nextrow > maxrow) then
+      if suppress_line && nextrow > maxrow then suppress_line=0; endif
+//
+      if optl_heading && nextrow > maxrow && bandtype != Page_Footer then}
+?
+{       ++maxrow;
+        isnew=1;
+      endif
+      lmarg(1);}
+ENDIF
+//
+// Insert heading code if pageno exists
+//
+{     if !optl_heading
+       && bandtype == Page_Header
+       && bandrow+1 == Row_Positn
+       && FLD_FIELDTYPE == Pred_data
+       && FLD_PREDEFINE == 3 then  }
+
+*-- Imprime el encabezamiento pasado como
+*-- par metro de HEADING (REPORT FORM <nombre> HEADING <expC>)
+IF .NOT. gl_plain .AND. gn_length > 0
+   ?? " "
+   ?? gc_heading FUNCTION "I;V"+;
+   LTRIM(STR(_rmargin-_lmargin-(_pcolno*2)))
+ENDIF
+{       if nextrow > maxrow then}
+IF .NOT. gl_plain
+   ?
+ENDIF
+{         ++maxrow;
+        endif
+        isnew=1;
+        optl_heading=1;
+      endif
+//
+    endif
+  endif
+noprint:
+  x=0;
+  if ELEMENT_TYPE != @Ruler_Element then
+    previous_row=Row_Positn;
+  endif
+  ++ecursor;
+enddo
+if inner_loop then --ecursor; endif
+next ecursor;
+//
+// Output carriage returns for dBASE report to handle blank lines
+//
+nextline3:
+if maxrow < bandhgt then
+  if isopen then}
+?
+{ endif
+  ++maxrow;
+  goto nextline3;
+endif
+if bandtype == Report_Summary && is_rsumm_open then
+}
+gl_fandl=.F.
+?
+RETURN
+* EOP: Rsumm
+{
+endif
+if bandtype == Page_Footer then
+  finish_page_footer();
+endif
+return;
+enddef
+
+define upper_first(string)
+        // Takes and returns a string with first letter upper case
+        return upper( substr( string,1,1)) + lower( substr( string,2))
+enddef
+
+define separate(string);
+//
+// Separates strings longer than 70 so that printed output
+// of the report does not cause truncation or line wrap.
+//
+    var x,y,length;
+    x=1
+    length=LEN(string)
+moreleft:
+    if x <= length then
+        if x != 1 then  }
++ \
+{       endif
+        if x+70 <= length then
+            y=70
+        else
+            y=length-x+1
+        endif;  }
+{left_delimiter}{SUBSTR(string,x,y)}{right_delimiter};
+{       x=x+70
+        goto moreleft;
+    endif
+    return
+enddef
+
+define retain_previous_value(cursor)
+//
+// Test whether a footer field needs to ...
+//
+    var result;
+    result=0;
+    case cursor.FLD_FIELDTYPE of
+    Tabl_data: result=1
+    Pred_data:
+        if cursor.FLD_PREDEFINE == 2 then
+            result=1
+        endif
+    endcase
+    return result
+enddef
+
+define set_combine_flag(cursor)
+//
+// Determine whether field and or text are touching.
+// If they are, a trim is performed on the field.
+//
+    ++cursor;
+    if cursor.ELEMENT_TYPE == @Text_Element
+     || cursor.ELEMENT_TYPE == @Fld_Element then
+        if current_column == cursor.Col_Positn
+         && maxrow == cursor.Row_Positn then
+            combine=1;
+        else
+            combine=0;
+        endif
+    endif
+    --cursor;
+enddef
+
+define assign_suppress_var(cursor)}
+IF .NOT. (r_msrv{xsrv} = \
+//
+{     if !cursor.FLD_FIELDNAME then
+        if cursor.FLD_FIELDTYPE == Calc_data then}
+{extend(cursor,@FLD_EXPRESSION)}
+{       endif
+        if cursor.FLD_FIELDTYPE == Summ_data then}
+r_msum{xsum}\
+{       endif
+      else
+        if cursor.FLD_VALUE_TYPE == MEMO_TYPE then}
+LEFT({upper_first(cursor.FLD_FIELDNAME)},254)\
+{       else
+          if cursor.FLD_FIELDTYPE == Tabl_data then
+upper_first(cursor.FLD_FIELDNAME)}
+{         else
+lower(cursor.FLD_FIELDNAME)}
+{         endif
+        endif
+      endif}
+)
+{     if !cursor.FLD_FIELDNAME then}
+   r_msrv{xsrv}=\
+{       if cursor.FLD_FIELDTYPE == Calc_data then}
+{extend(cursor,@FLD_EXPRESSION)}
+
+{       endif
+        if cursor.FLD_FIELDTYPE == Summ_data then}
+r_msum{xsum}
+{       endif
+      else}
+   r_msrv{xsrv}=\
+{       if cursor.FLD_FIELDTYPE == Tabl_data then
+upper_first(cursor.FLD_FIELDNAME)}
+
+{       else
+lower(cursor.FLD_FIELDNAME)}
+
+{       endif
+      endif}
+ENDIF
+{
+    return;
+enddef
+
+define suppress_repeated_values(cursor)
+//
+// Suppress repeated values
+//
+    if cursor.FLD_SUPPRESS then}
+IIF(\
+//
+// Date field?
+//
+{       if cursor.FLD_VALUE_TYPE == DATE_TYPE then}
+DTOS(r_msrv{xsrv}) \
+{       else}
+r_msrv{xsrv} \
+{       endif}
+<> \
+//
+// Date field?
+//
+{       if cursor.FLD_VALUE_TYPE == DATE_TYPE then}
+DTOS({priv_vars}{priv_vars2})\
+{       else}
+//
+// Memo field?
+//
+{           if cursor.FLD_VALUE_TYPE == MEMO_TYPE then}
+LEFT({priv_vars},254)\
+{           else}
+{priv_vars}{priv_vars2}
+{           endif}
+{       endif}
+//
+// Memo field?
+//
+{       if cursor.FLD_VALUE_TYPE == MEMO_TYPE then}
+,[{priv_vars}],[""])
+{       else}
+,{priv_vars}{priv_vars2},"") \
+{       endif
+    else
+ priv_vars}{priv_vars2} \
+{   endif
+enddef
+
+define extend(elk,selno)
+    var result;
+    foreach selno j in elk
+        result = result + j.selno
+    next j
+    return result
+enddef
+
+define plainopt(cursor)
+//
+// Strictly for Page headers and Page footers, suppresses
+// page numbers and dates when the PLAIN option is used.
+//
+    var temp; temp=0
+    if previous_row < maxrow && nextrow > maxrow
+     && cursor.FLD_FIELDTYPE == Pred_data
+     && (!cursor.FLD_PREDEFINE || cursor.FLD_PREDEFINE == 3) then
+        temp=1
+    endif
+    if temp || suppress_line then   }
+IF .NOT. gl_plain
+{       lmarg(4);
+    else
+        if cursor.FLD_FIELDTYPE == Pred_data &&
+         (!cursor.FLD_PREDEFINE || cursor.FLD_PREDEFINE == 3) then
+            if !cursor.FLD_PREDEFINE then
+                priv_vars="IIF(gl_plain,'',gd_date)"
+            else
+                priv_vars="IIF(gl_plain,'',_pageno)"
+            endif
+        endif
+    endif
+    return
+enddef
+
+define output_optional_heading()
+//
+// Where to place the HEADING parameter in the page header
+//
+}
+
+*-- Imprime el encabezamiento pasado como
+*-- par metro de HEADING (REPORT FORM <nombre> HEADING <expC>)
+IF .NOT. gl_plain .AND. gn_length > 0
+   ?? gc_heading FUNCTION "I;V"+LTRIM(STR(_rmargin-_lmargin))
+   ?
+ENDIF
+{
+    isnew=1;
+    optl_heading=1;
+enddef
+
+define begin_new_band(cursor)
+//
+// Code output at the beginning of each band procedure
+//
+    band_previous=bandtype
+    bandtype=cursor.BAND_BANDTYPE
+    samerow=0
+    combine=0
+    first_combine=1
+    ruler_flag=1;
+//
+// Output carriage returns for dBASE report to handle blank lines
+//
+nextline2:
+    if maxrow < bandhgt then
+        if isopen then  }
+?
+{       endif
+        if blankable_row then
+            blankable_row=0;
+            lmarg(1);   }
+ENDIF
+{       endif
+        ++maxrow;
+        goto nextline2;
+    endif
+//
+// beyond the first band?
+//
+    if band_previous != 99 then
+//
+        if number_of_begin_new_pages && isopen then
+            if band_previous == Group_Intro
+             || band_previous == Group_Summary then }
+gl_newpage=.F.
+?
+{           endif
+        endif
+        if band_previous == Page_Header
+         || band_previous == Page_Footer
+         || isopen then
+            case band_previous of
+            Page_Header:
+                if suppress_line then
+                    suppress_line=0
+                    lmarg(1);   }
+ENDIF
+{               endif   }
+//
+{               if isopen
+                 || (is_rintro_open && FRAME_PAGEHEADINGS)
+                 || number_of_open_group_intros then
+//
+// Insert heading code for no page number
+//
+                    if !optl_heading then
+                        output_optional_heading()
+                    endif;  }
+//
+RETURN
+* EOP: Pghead
+{               endif
+            Report_Intro:   }
+RETURN
+* EOP: Rintro
+{           Group_Intro:    }
+RETURN
+{           Detail: }
+RETURN
+* EOP: __Detail
+{           Group_Summary:
+                if dBASE_III_PLUS == FIRST_GEN then }
+IF ln_level < 9{if cursor.GROUP == 96 then}6{else}7{endif}
+   ?
+ENDIF
+{               endif   }
+RETURN
+{           Report_Summary: }
+gl_fandl=.F.        && final de la £ltima p gina
+?
+RETURN
+* EOP: Rsumm
+{           Page_Footer:
+                finish_page_footer();
+            endcase
+        endif   }
+
+{   endif
+//
+// capture band attributes
+// -----------------------
+// bandrow and maxrow for row position
+// bandedit for word wrap band
+// isopen for band open or closed
+//
+    if cursor.Row_Positn then
+        bandhgt=cursor.Row_Positn+cursor.BAND_HEIGHT+1
+        bandrow=cursor.Row_Positn+1
+        maxrow=cursor.Row_Positn+1
+    else
+        bandhgt=cursor.BAND_HEIGHT+1
+        bandrow=1
+        maxrow=1;
+    endif
+
+    bandedit=cursor.BAND_BANDEDIT
+    bandgrp=cursor.GROUP
+    bsrv=xsrv
+    isnew=1
+    isopen=cursor.BAND_OPENFLG;
+//
+    if cursor.BAND_BANDTYPE == Page_header
+     || cursor.BAND_BANDTYPE == Page_Footer
+     || cursor.BAND_OPENFLG then
+        if cursor.BAND_BANDTYPE then   }
+PROCEDURE \
+{       else
+            if cursor.BAND_OPENFLG
+             || (is_rintro_open && FRAME_PAGEHEADINGS)
+             || number_of_open_group_intros then    }
+PROCEDURE \
+{           endif
+        endif
+        case bandtype of
+        Page_Header:
+            if cursor.BAND_OPENFLG
+             || (is_rintro_open && FRAME_PAGEHEADINGS)
+             || number_of_open_group_intros then    }
+Pghead
+{           endif
+        Report_Intro:   }
+Rintro
+{       Group_Intro:    }
+Head{cursor.GROUP}
+{           if not cursor.BAND_INTROEACH then  }
+IF gn_level=1
+   RETURN
+ENDIF
+{           endif
+            if dBASE_III_PLUS == FIRST_GEN && cursor.GROUP == 4
+             && intro_band_one_height && intro_band_two_height then
+                ++bandhgt;
+            else
+                if number_of_begin_new_pages && isopen then
+                    --bandhgt;
+                endif
+            endif
+        Detail: }
+__Detail
+{       Group_Summary:  }
+Foot{cursor.GROUP}
+{           if dBASE_III_PLUS == FIRST_GEN then }
+ln_lines=IIF(ln_level < 97, \
+{               case cursor.GROUP of
+                96: }
+{intro_band_one_height+intro_band_two_height+2}, \
+{intro_band_one_height+intro_band_two_height+1})
+{               95: }
+{intro_band_two_height+2}, \
+{intro_band_two_height+1})
+{               endcase }
+IF _plineno+ln_lines > gn_atline
+   _plineno=gn_atline
+   ?
+ENDIF
+{           else
+                if number_of_begin_new_pages && isopen then
+                    --bandhgt;
+                endif
+            endif
+        Report_Summary: }
+Rsumm
+{           --bandhgt;
+        Page_Footer:    }
+Pgfoot
+PRIVATE _box{if isopen}, _pspacing{endif}
+gl_widow=.F.         && desactiva la comprobaci¢n de apartados viudos
+{           if isopen then  }
+_pspacing=1
+?
+{           endif
+            --bandhgt
+            if cursor.BAND_OPENFLG && cursor.BAND_HEIGHT then }
+IF .NOT. gl_plain
+{           endif
+        endcase
+    endif
+//
+// is the band open?
+// make system memvars PRIVATE
+// only if the values change
+//
+    if isopen then
+//
+// BAND_NEWPAGE  - Begin band on new page:  No, Yes|
+//
+        if cursor.BAND_NEWPAGE then    }
+IF .NOT. gl_newpage
+   gl_newpage=.T.
+   EJECT PAGE
+ENDIF
+{       endif
+//
+// BAND_TEXTPITCH - Text pitch for band:  Pica, Elite, Condensed, Default|
+//
+        if cursor.BAND_TEXTPITCH != 3 then }
+IF SET("PRINT") = "ON" .AND. _ppitch <> {text_pitch(cursor.BAND_TEXTPITCH)}
+   PRIVATE _ppitch
+   _ppitch = {text_pitch(cursor.BAND_TEXTPITCH)}
+ENDIF
+{       endif
+//
+// BAND_QUALITY - Quality pitch for band:  Yes, No|
+//
+        if cursor.BAND_QUALITY < 2 then    }
+IF SET("PRINT") = "ON" .AND. {if !cursor.BAND_QUALITY then}.NOT. {endif}_pquality
+   PRIVATE _pquality
+   _pquality = {if cursor.BAND_QUALITY then}.F.{else}.T.{endif}
+ENDIF
+{       endif
+//
+// BAND_SPACING - Default, single, double or triple
+//
+        if cursor.BAND_SPACING then    }
+IF _pspacing <> {cursor.BAND_SPACING}
+   PRIVATE _pspacing
+   _pspacing={cursor.BAND_SPACING}
+ENDIF
+{       endif
+//
+// BAND_BANDEDIT - Wordwrap band:  Yes, No|
+//
+        if number_of_word_wrap_bands then
+            if cursor.BAND_BANDEDIT then   }
+PRIVATE _indent, _lmargin, _rmargin, _tabs
+{           endif   }
+IF {if cursor.BAND_BANDEDIT then}.NOT. {endif}_wrap
+   PRIVATE _wrap
+   _wrap = {if cursor.BAND_BANDEDIT then}.T.{else}.F.{endif}
+ENDIF
+{       endif
+//
+        ni="";
+        if cursor.BAND_BANDTYPE == Detail then
+            if cursor.BAND_HEIGHT then
+                if !bandspacing then
+                    if cursor.BAND_HEIGHT > 1 then
+                        ni=STR(cursor.BAND_HEIGHT)+" * gn_pspace";
+                    else
+                        ni="gn_pspace";
+                    endif
+                else
+                    if bandspacing > 1 then
+                        ni=STR(cursor.BAND_HEIGHT * cursor.BAND_SPACING);
+                    else
+                        if cursor.BAND_HEIGHT > 1 then
+                            ni=STR(cursor.BAND_HEIGHT);
+                        endif
+                    endif
+                endif
+                if ni then  }
+IF {ni} < gn_atline - {tb_margin(bandlen2,bandspacing2)}
+   IF gl_widow .AND. _plineno+{ni} > gn_atline + 1
+      EJECT PAGE
+{                   if number_of_group_intro_each then }
+      gl_intros=.T.
+      DO Grphead
+      gl_intros=.F.
+{                   endif   }
+   ENDIF
+ENDIF
+{               endif
+            endif}
+DO Upd_Vars
+{           if number_of_begin_new_pages then   }
+gl_newpage=.F.
+{           endif
+        endif
+        if cursor.Row_Positn then previous_row=cursor.Row_Positn endif;
+    endif
+    return
+enddef
+
+define text_pitch(pitch_value)
+    var result;
+    case pitch_value of
+    0: result="\"PICA\""
+    1: result="\"ELITE\""
+    2: result="\"CONDENSED\""
+    3: result="\"DEFAULT\""
+    endcase
+    return result
+enddef
+
+define check4blank(incursor);
+//
+// This function determines whether or not a line is "blankable".
+// A flag is set if the line contains text made up of only spaces
+// or a numeric with a function Z which prints nothing for zero values
+// or a character field.  It is only called for word wrap bands.
+//
+    var blank_line,j,k,previous_row,temp;
+    k=incursor;
+    blank_line=1;
+    previous_row=k.Row_Positn;
+
+    do while !eoc(k);
+      if k.Row_Positn > previous_row then
+        exit
+      endif
+      if blank_line then
+        if k.FLD_VALUE_TYPE == 78 then
+          if not AT("Z",k.FLD_PICFUN) then
+            blank_line=0;
+          endif
+        else
+          if k.Text_Item then
+            j=LEN(k.Text_Item);
+            temp = k.Text_Item;
+            if j == 237 then
+              foreach Text_Item fcursor in k
+                j=j+LEN(fcursor.Text_Item);
+                temp = temp + fcursor.Text_Item;
+              next
+            endif
+            if space(j) != temp then
+              blank_line=0;
+            else
+              ++k;
+              if !eoc(k) && k.Row_Positn > previous_row then
+                blank_line=0;
+              endif
+              --k;
+            endif
+          endif
+          if k.ELEMENT_TYPE == @Fld_Element && k.FLD_VALUE_TYPE != 67 then
+            blank_line=0;
+          endif
+        endif
+      endif
+      if !blank_line then
+        exit
+      endif
+      ++k;
+    enddo
+  return blank_line;
+enddef
+
+define conditional_if_for_blank_line(incursor);
+//
+// A dBASE IF statement is output for lines tested by check4blank()
+// to test whether the printed line will contain only spaces.
+//
+    var field_flag, current_row, cursor2;
+       cursor2=incursor;
+       current_row=cursor2.Row_Positn;
+}
+*-- Prueba si l¡nea en blanco
+IF LEN(TRIM( \
+{
+       do while !eoc(cursor2) && cursor2.Row_Positn == current_row}
+{        if cursor2.ELEMENT_TYPE == @Fld_element then
+           if field_flag then}+ \
+{          else
+             field_flag=1;
+           endif
+         endif
+         if cursor2.FLD_VALUE_TYPE == 78 then}
+TRANSFORM(\
+{          putfld(cursor2);}
+,"\
+{          if cursor2.FLD_PICFUN then}
+@{cursor2.FLD_PICFUN} \
+{          endif}
+{cursor2.FLD_TEMPLATE}") \
+{//
+         else
+           if cursor2.ELEMENT_TYPE == @Fld_element then
+             putfld(cursor2);
+           endif
+         endif
+         ++cursor2;
+       enddo}
+)) > 0
+{  return 1;
+enddef
+
+define putfld(cursor);
+//
+// Subfunction of conditional_if_for_blank_line(), this places
+// the individual fields on the same line as the IF statement.
+//
+    var value,value2;
+    value=cursor.FLD_FIELDTYPE;
+    case value of
+    Tabl_data:
+        if cursor.FLD_VALUE_TYPE == 77 then }
+MLINE({upper_first(cursor.FLD_FIELDNAME)},1)\
+{       else    }
+{upper_first(cursor.FLD_FIELDNAME)}\
+{       endif
+    Calc_data:  }
+{       if cursor.FLD_FIELDNAME then    }
+{lower(cursor.FLD_FIELDNAME)}\
+{       else
+            foreach FLD_EXPRESSION exp in cursor    }
+{FLD_EXPRESSION}\
+{           next    }
+ ;
+{       endif   }
+{   Pred_data:
+        value2=cursor.FLD_PREDEFINE;
+        case value2 of
+        0: // Date  }
+gd_date\
+{       1: // Time  }
+gc_time\
+{       2: // Recno }
+RECNO()\
+{       3: // Pageno}
+_pageno\
+{       endcase }
+{   endcase }
+ \
+{   return;
+enddef
+
+define output_group_calls()
+
+        if number_of_open_group_intros then }
+*-- Procesa los Apartados Introducci¢n de los grupos al cambiar de grupo
+PROCEDURE Grphead
+IF EOF()
+   RETURN
+ENDIF
+PRIVATE _pspacing
+{           if bandspacing then }
+_pspacing={bandspacing}
+{           else    }
+_pspacing=gn_pspace
+{           endif   }
+{       endif
+        if dBASE_III_PLUS == FIRST_GEN
+         && !number_of_open_group_summarys then   }
+IF gn_level > 3
+   ?
+ENDIF
+{       endif
+        if number_of_open_group_intros then }
+IF gn_level = 0
+   gn_level=50
+ENDIF
+{       endif
+        check4widows()
+        if external_define then
+            textopen(rptname+".grp")
+        endif
+        foreach BAND_ELEMENT k
+            case BAND_BANDTYPE of
+            Group_Intro:
+                if BAND_OPENFLG then    }
+IF gn_level <= {GROUP}{if BAND_INTROEACH then} .OR. gl_intros{endif}
+   DO Head{GROUP}
+ENDIF
+{               endif
+            Detail:
+                if number_of_open_group_intros then }
+gn_level=0
+RETURN
+* EOP: Grphead.PRG
+
+{               endif
+                if number_of_open_group_summarys then   }
+*-- Procesa los Apartados Resumen de los grupos al cambiar de grupo
+PROCEDURE Grpfoot
+PARAMETER ln_level
+{               endif
+            Group_Summary:
+                if external_define then
+                    textspos(0);
+                    temp2=STR(GROUP)+": ";
+                    if (temp = find_string(temp2) ) then }
+IF ln_level >= {GROUP}
+{                       lmarg(4);
+    substr(temp,5)  }
+
+{                       do while (temp = find_string(temp2) )    }
+{   substr(temp,5)  }
+
+{                       enddo
+                        lmarg(0);   }
+ENDIF
+{                   endif
+                endif
+                if BAND_OPENFLG then    }
+IF ln_level >= {GROUP}
+   DO Foot{GROUP}
+ENDIF
+{               endif
+            Page_Footer:
+                if number_of_open_group_summarys then   }
+RETURN
+* EOP: Grpfoot.PRG
+
+{               endif
+                exit;
+            endcase
+        next k;
+        if external_define then
+            textclose()
+        endif
+enddef
+
+define find_string(string)
+//
+// Assume the text file is open and rewound.  Matches are
+// done on exact equality.  Returns entire string.
+//
+    var length,retval,temp; length=len(string); retval="";
+
+    do while ( temp = textgetl() ) != EOF
+        if string == substr(temp,1,length) then
+            retval = temp;
+            exit
+        endif
+    enddo
+
+    return retval;
+enddef
+
+define check4widows()
+//
+// Check for possible widow band for group intros (includes detail length)
+//
+    foreach BAND_ELEMENT cursor
+        if cursor.BAND_BANDTYPE == Group_Intro && cursor.BAND_OPENFLG then
+//
+            ni="";
+            if !cursor.BAND_SPACING && !bandspacing then
+                ni=" * gn_pspace";
+            else
+                if !cursor.BAND_SPACING && bandspacing > 1 then
+                    ni=" * "+str(bandspacing);
+                else
+                    if cursor.BAND_SPACING > 1 then
+                        ni=" * "+str(cursor.BAND_SPACING);
+                    endif
+                endif
+            endif
+            if cursor.BAND_HEIGHT > 1 then
+                a=str(cursor.BAND_HEIGHT)+ni+" ";
+            else
+                if ni then
+                    a=substr(ni,4)+" ";
+                else
+                    a="";
+                endif
+            endif   }
+IF gn_level = {GROUP}
+{           lmarg(4);
+            if a then   }
+IF {a} < gn_atline
+{               lmarg(7);
+            endif   }
+IF (gl_widow .AND. _plineno+Gheight({cursor.GROUP}) > gn_atline + 1)\
+{           if cursor.BAND_HEIGHT then}
+ ;
+.OR. (gl_widow .AND. _plineno+\
+{               if cursor.BAND_HEIGHT > 1 then}
+{cursor.BAND_HEIGHT}{ni}\
+{               else
+                    if !cursor.BAND_SPACING then
+                        if ni then}
+{SUBSTR(ni,4)}\
+{                       else}
+1\
+{                       endif
+                    else}
+{cursor.BAND_SPACING}\
+{                   endif
+                endif}
+ > gn_atline)
+{           else}
+
+{           endif}
+   EJECT PAGE
+ENDIF
+{           if a then
+                lmarg(4);   }
+ENDIF
+{           endif
+            lmarg(1);   }
+ENDIF
+{       endif
+    next
+    return
+enddef
+
+define reinit_page_variables()
+//
+// Summary fields set to Reset every page are assigned starting values.
+//
+    i=0
+    x=0;
+    foreach FLD_ELEMENT k
+        if FLD_SUPPRESS then    }
+r_msrv{++x}={init_not_value(k)}{logical_expression(k)}
+{       endif
+        if FLD_FIELDTYPE == Summ_data then
+            if !FLD_FIELDNAME then
+                ++i
+            endif
+            if FLD_RESET == Each_Page then
+                if !FLD_FIELDNAME then
+                    priv_vars="r_msum"+STR(i)
+                else
+                    priv_vars=lower(FLD_FIELDNAME)
+                endif
+                sub_init_summary_vars(k)
+            else
+                if FLD_OPERATION > SUM_OP then
+                    xxsum = xxsum + 4
+                else
+                    if FLD_OPERATION == AVERAGE_OP then
+                        xxsum = xxsum + 2
+                    endif
+                endif
+            endif
+        endif
+    next k;
+    xxsum=0
+    return
+enddef
+
+define reinit_group_variables()
+//
+// Group break and summary fields are setup for next grouping.
+//
+    i=0
+    x=0
+    foreach FLD_ELEMENT k
+//
+// Summary field and reset on group?
+//
+        if FLD_FIELDTYPE == Summ_data then
+            if !FLD_FIELDNAME then
+                ++x
+            endif
+            if FLD_RESET > Each_Group then
+                if i && i != FLD_RESET then
+                    i=0
+                    lmarg(1);   }
+ENDIF
+{               endif
+                if i != FLD_RESET then    }
+IF gn_level <= {FLD_RESET}
+{                   i=FLD_RESET
+                    lmarg(4)
+                endif
+                if !FLD_FIELDNAME then
+                    priv_vars="r_msum"+STR(x)
+                else
+                    priv_vars=lower(FLD_FIELDNAME)
+                endif
+                sub_init_summary_vars(k)
+            else
+                if FLD_OPERATION > SUM_OP then
+                    xxsum = xxsum + 4
+                else
+                    if FLD_OPERATION == AVERAGE_OP then
+                        xxsum = xxsum + 2
+                    endif
+                endif
+            endif
+        endif
+    next k;
+    xxsum=0
+    if i then
+        i=0
+        lmarg(1);   }
+ENDIF
+{   endif
+    foreach BAND_ELEMENT k
+        if BAND_BANDTYPE == Group_Intro then    }
+//
+// Reset Group break vars on group intro bands
+//
+IF gn_level <= {GROUP}
+   r_mvar{GROUP}={group_break_type(k)}
+ENDIF
+{       else
+            if BAND_BANDTYPE > Group_Intro then
+                exit
+            endif
+        endif
+    next k;
+    return
+enddef
+
+define update_summary_and_calc_vars()
+//
+// This function is currently based on a calc all scenario.
+// Which means all calculations happen in a left to right and
+// top to bottom based on position in the report design surface.
+//
+    var temp;
+    x=1
+    xsum=0
+    xxsum=0
+    if external_define then
+       textopen(rptname+".grp")
+    endif
+    foreach FLD_ELEMENT k
+        case k.FLD_FIELDTYPE of
+//
+// Initialize named calculated fields for all bands
+//
+        Calc_data:
+            if FLD_FIELDNAME then}
+{lower(FLD_FIELDNAME)}={
+                foreach FLD_EXPRESSION j in k
+                    j.FLD_EXPRESSION}
+{               next}
+
+{           endif
+//
+// Summary fields
+//
+        Summ_data:
+            if !FLD_FIELDNAME then
+                ++xsum
+                priv_vars="r_msum"+STR(xsum)
+            else
+                priv_vars=lower(FLD_FIELDNAME);
+            endif
+            if external_define then
+                textspos(0);
+                if upd_find_string(priv_vars+"=") then
+                    loop
+                endif
+            endif
+            case FLD_OPERATION of
+            AVERAGE_OP: }
+*-- Media
+r_sum{++xxsum}=r_sum{xxsum}+1{tabto(40)}&& cuenta
+r_sum{++xxsum}=r_sum{xxsum}+{FLD_SUMFIELD}{tabto(40)}&& suma
+{priv_vars}=r_sum{xxsum}/r_sum{xxsum-1}{tabto(40)}&& promedia
+{           COUNT_OP:   }
+*-- Contar
+{priv_vars}={priv_vars}+1
+{           MAX_OP:     }
+*-- M ximo
+IF {FLD_SUMFIELD} > {priv_vars}
+   {priv_vars}={FLD_SUMFIELD}
+ENDIF
+{           MIN_OP:     }
+*-- M¡nimo
+IF {FLD_SUMFIELD} < {priv_vars}
+   {priv_vars}={FLD_SUMFIELD}
+ENDIF
+{           SUM_OP:     }
+*-- Sumar
+{priv_vars}={priv_vars}+{FLD_SUMFIELD}
+{           otherwise: // STD or VAR
+                if FLD_OPERATION == STD_DEV_OP then  }
+*-- Desviaci¢n t¡pica
+{               else    }
+*-- Varianza
+{               endif   }
+r_sum{++xxsum}=r_sum{xxsum}+{FLD_SUMFIELD}^2\
+{tabto(40)}&& suma los cuadrados
+r_sum{++xxsum}=r_sum{xxsum}+{FLD_SUMFIELD}\
+{tabto(40)}&& suma
+r_sum{++xxsum}=r_sum{xxsum}+1\
+{tabto(40)}&& cuenta
+r_sum{++xxsum}=r_sum{xxsum-2}/r_sum{xxsum-1}\
+{tabto(40)}&& promedia
+*-- varianza
+{priv_vars}=\
+(r_sum{xxsum-3}+r_sum{xxsum-1}*(r_sum{xxsum}^2);
+   -(2*r_sum{xxsum}*r_sum{xxsum-2}))/r_sum{xxsum-1}
+{               if FLD_OPERATION == STD_DEV_OP then  }
+{priv_vars}=SQRT({priv_vars})\
+{tabto(40)}&& desviaci¢n est ndar
+{               endif
+            endcase;
+        otherwise:
+//
+// footer fields
+//
+// When a group break occurs the record pointer is positioned
+// on the next group.  Therefore, it is neccessary to capture
+// the values of the previous record into temporary variables.
+//
+            if GROUP > 50 then
+                retain_previous=0;
+                case k.FLD_FIELDTYPE of
+                Tabl_data: retain_previous=1;
+                Pred_data:
+                        if k.FLD_PREDEFINE == 2 then
+                            retain_previous=1;
+                        endif
+                endcase
+                if retain_previous then
+                    case FLD_FIELDTYPE of
+                    Tabl_data:
+                        temp = substr(FLD_FIELDNAME,1,1) +
+                            lower(substr(FLD_FIELDNAME,2))
+                    Pred_data:
+                        temp = "RECNO()"
+                    endcase;}
+r_foot{x}={temp}
+{                   ++x;
+                endif
+            endif
+        endcase
+    next k;
+    if external_define then
+       textclose()
+    endif
+    xsum=0
+    xxsum=0
+    return
+enddef
+
+define upd_find_string(string)
+//
+// Assume the text file is open and rewound.  Matches are
+// done on exact equality.  Determines whether string is found.
+//
+    var length,retval,temp; length=len(string); retval="";
+
+    do while ( temp = textgetl() ) != EOF
+        if string == substr(temp,5,length) then
+            retval = "1";
+            exit
+        endif
+    enddo
+
+    return retval;
+enddef
+
+define output_proc_gheight()
+    x=0
+    foreach BAND_ELEMENT k
+        if BAND_BANDTYPE > Group_Intro then
+            exit
+        endif
+        if BAND_BANDTYPE == Group_Intro && BAND_OPENFLG then
+            if !x then  }
+
+*-- Determina la altura de los apartados de grupo y del apartado cuerpo
+*-- informe para la comprobaci¢n de si hay apartados viudos
+FUNCTION Gheight
+PARAMETER Group_Band
+retval=0              && valor retornado
+{           endif   }
+IF Group_Band <= {GROUP}
+   retval = retval +\
+{           if BAND_HEIGHT > 1 then }
+ {BAND_HEIGHT}\
+{           endif
+            if !BAND_SPACING && !bandspacing then
+                if BAND_HEIGHT > 1 then } *{endif}\
+ gn_pspace
+{           else
+                if !BAND_SPACING && bandspacing > 1 then
+                    if BAND_HEIGHT > 1 then } *{endif}\
+ {bandspacing}
+{               else
+                    if BAND_SPACING > 1 then
+                        if BAND_HEIGHT > 1 then } *{endif}\
+ {BAND_SPACING}
+{                   else
+                        if BAND_HEIGHT < 2 then }
+ {BAND_HEIGHT}\
+{                       endif   }
+
+{                   endif
+                endif
+            endif   }
+ENDIF
+{           ++x
+        endif
+    next k;
+    if x then
+        if bandlen50 then   }
+*-- suma la altura del apartado cuerpo informe
+retval = retval + \
+{           if !bandspacing then    }
+{               if bandlen50 > 1 then   }
+{bandlen50} * \
+{               endif   }
+gn_pspace
+{           else
+                if bandspacing > 1 then }
+{bandspacing*bandlen50}
+
+{               else}
+{bandlen50}
+
+{               endif
+            endif
+        endif   }
+RETURN retval
+* EOP: Gheight
+{   endif
+    return
+enddef
+
+define increment_group_by_record_vars()
+    foreach BAND_ELEMENT k
+        if BAND_BANDTYPE == Group_Intro then
+//
+// increment any group by record count vars.
+//
+            if BAND_GROUP_REC then  }
+r_mvar{GROUP}=r_mvar{GROUP}+1
+{           endif
+        else
+            if BAND_BANDTYPE > Group_Intro then
+                exit
+            endif
+        endif
+    next k;
+    return
+enddef
+
+define tb_margin(bandhgt,bandspc)
+    var retval;
+// Band set to default spacing
+    if !bandspc then
+
+// Detail band set to default
+        if !bandspacing then
+
+// Band height greater than 1
+            if bandhgt > 1 then
+                retval="(_pspacing * "+STR(bandhgt)+" + 1)"
+            else
+                if bandhgt then
+                    retval="(_pspacing + 1)"
+                else
+                    retval=1
+                endif
+            endif
+
+// Detail band is not default
+        else
+            retval=bandspacing * bandhgt +1
+        endif
+
+// Band is not default
+    else
+        retval=bandspc * bandhgt +1
+    endif
+    return retval
+enddef
+
+define build_case_statement()
+    foreach BAND_ELEMENT k
+        if BAND_BANDTYPE == Group_Intro then
+//
+// Group by field
+//
+            if BAND_GFIELD then }
+CASE \
+{               if at(">",BAND_GFIELD) then // Check for ALIAS
+substr(BAND_GFIELD,at(">",BAND_GFIELD)+1)   }
+{               else
+BAND_GFIELD }
+{               endif   }
+ <> r_mvar{GROUP}
+{           endif
+//
+// Group by expression
+//
+            if BAND_EXPRESSION then }
+CASE (\
+{               foreach BAND_EXPRESSION fcursor in k
+BAND_EXPRESSION }
+{               next    }
+) <> r_mvar{GROUP}
+{           endif
+//
+// Group by record count
+//
+            if BAND_GROUP_REC then  }
+CASE r_mvar{GROUP} > {BAND_GROUP_REC}
+{           endif   }
+   gn_level={GROUP}
+{       endif
+    next k;
+    return
+enddef
+
+define init_group_footer_vars()
+    x=0
+    if number_of_group_footer_fields then
+        x=1;    }
+*-- Inicializa las variables de los campos de pie de grupo
+{       do while x <= number_of_group_footer_fields }
+r_foot{x}=.F.
+{           ++x;
+        enddo   }
+
+{   endif
+    return
+enddef
+
+define init_calculated_vars()
+//
+// Initialize calculated fields. This is neccesary since summary,
+// calculated or group break variables might reference the field.
+//
+    x=0
+    foreach FLD_ELEMENT k
+//
+// Reset Summary (on page) and Suppress repeated values
+//
+        if FLD_FIELDTYPE == Summ_data && FLD_RESET == 1 then
+            ++number_of_reset_on_page
+        endif
+        if FLD_SUPPRESS then
+            ++number_of_fld_suppress
+        endif
+//
+// only if there is a fieldname assigned to the calculated field
+//
+        if FLD_FIELDTYPE == Calc_data && FLD_FIELDNAME then
+            if !x then  }
+*-- Iniciliza las variables calculadas.
+{           endif
+lower(FLD_FIELDNAME)}={get_init_val(FLD_VALUE_TYPE)}
+{           ++x
+        endif
+    next k;
+    return
+enddef
+
+define get_init_val(valtype)
+//
+// Called by init_calculated_vars()
+//
+    var result;
+    case valtype of
+    DATE_TYPE: result="CTOD(\"  /  /  \")"
+    FLOAT_TYPE: result="FLOAT(0)"
+    LOGICAL_TYPE: result=".F."
+    NUMERIC_TYPE: result="0"
+    otherwise: result="\"\""
+    endcase
+    return result
+enddef
+
+define init_group_break_vars()
+    x=1  // to obtain number of group bands
+    number_of_open_group_intros=0
+
+    foreach BAND_ELEMENT k
+        if BAND_BANDTYPE == Group_Intro then
+            if x == 1 then  }
+*-- Inicializa las variables de cambio de grupo
+{           endif
+            if BAND_OPENFLG then
+                ++number_of_open_group_intros
+            endif;  }
+//
+r_mvar{GROUP}={group_break_type(k)}
+{           ++x
+        endif
+        if BAND_BANDTYPE == Detail then
+            exit
+        endif
+    next k;
+    maxgrp=x+2
+    if x > 1 then   }
+
+{   endif
+    return
+enddef
+
+define group_break_type(cursor)
+//
+// Depending on type of group break e.g. Expression, Field or Record count
+// assign the beginning value to the group break variable.
+//
+    var result;
+    case cursor.BAND_GROUPTYPE of
+    1: // by field
+        if at(">",cursor.BAND_GFIELD) then  // Check for ALIAS
+            result = substr(cursor.BAND_GFIELD,at(">",cursor.BAND_GFIELD)+1)
+        else
+            result = cursor.BAND_GFIELD
+        endif
+    3: // by record count
+        result = "1"
+    otherwise: // by expression
+        foreach BAND_EXPRESSION j in cursor
+            result = result + j.BAND_EXPRESSION
+        next
+    endcase
+    return result
+enddef
+
+define init_summary_vars()
+//
+// Initialize summary fields, similar to calculated fields, it is
+// necessary to assign "unrelated" starting values to these fields.
+//
+    x=0
+    foreach FLD_ELEMENT k
+        if FLD_FIELDTYPE == Summ_data then
+            if !x then  }
+*-- Inicializa las variables del resumen.
+{           endif
+            ++x
+            if !FLD_FIELDNAME then
+                ++xsum
+                priv_vars="r_msum"+STR(xsum)
+            else
+                priv_vars=lower(FLD_FIELDNAME)
+            endif
+            sub_init_summary_vars(k)
+        endif
+    next k;
+    xsum=0
+    xxsum=0
+    if x then  }
+
+{   endif
+    return
+enddef
+
+define sub_init_summary_vars(cursor)
+//
+// Called by init_summary_vars() and reinit_group/page_variables()
+// Set summary variables to starting values for next grouping.
+//
+    if cursor.FLD_OPERATION > SUM_OP then   }
+STORE 0 TO r_sum{++xxsum},r_sum{++xxsum},\
+r_sum{++xxsum},r_sum{++xxsum},{priv_vars}
+{   else
+        case cursor.FLD_OPERATION of
+        AVERAGE_OP: }
+STORE 0 TO r_sum{++xxsum},r_sum{++xxsum},{priv_vars}
+{       COUNT_OP:   }
+{priv_vars}=0
+{       otherwise: // Min, Max or Sum
+            if cursor.FLD_OPERATION == MIN_OP then }
+{priv_vars}={cursor.FLD_SUMFIELD}
+{           else    }
+{priv_vars}=0
+{           endif
+        endcase
+    endif
+    return
+enddef
+
+define init_suppress_repeated_value_vars()
+    x=0  // to offset each suppress repeated value variable
+//
+    foreach FLD_ELEMENT k
+//
+// suppress repeated values?
+//
+        if FLD_SUPPRESS then
+            if !x then  }
+*-- Inicializa las variables de suprimir los valores repetidos
+{           endif   }
+r_msrv{++x}={init_not_value(k)}{logical_expression(k)}
+{       endif
+    next k;
+    if x then   }
+
+{   endif
+    return
+enddef
+
+define init_not_value(elk)
+//
+// Used assign a reverse value to suppress repeated value variables.
+// Needed to print the first in the list of suppresed values.
+//
+    var result;
+    case elk.FLD_VALUE_TYPE of
+    DATE_TYPE: result ="CTOD(\"  /  /  \")"
+    FLOAT_TYPE: result="FLOAT(0)"
+    LOGICAL_TYPE: result=".NOT. "
+    NUMERIC_TYPE: result="0"
+    otherwise: result="\"\""
+    endcase
+    return result
+enddef
+
+define logical_expression(elk)
+//
+// If suppressed variable is of logical type the expression is returned
+//
+    var result;
+    if elk.FLD_VALUE_TYPE != LOGICAL_TYPE then return "" endif
+    if elk.FLD_FIELDNAME then
+        if FLD_FIELDTYPE == Tabl_data then
+            result=upper_first(elk.FLD_FIELDNAME)
+        else
+            result=lower(elk.FLD_FIELDNAME)
+        endif
+    else
+        result=extend(elk,@FLD_EXPRESSION)
+    endif
+    return result
+enddef
+
+define assign_calculated_vars()
+//
+// Now the starting values for calculated fields are assigned.
+// It could be a table, calculated or summary field (or any combination).
+//
+    x=0
+    foreach FLD_ELEMENT k
+//
+// only if there is a fieldname assigned to the calculated field
+//
+        if FLD_FIELDTYPE == Calc_data && FLD_FIELDNAME then
+            if !x then  }
+*-- Asigna valores iniciales a las variables calculadas
+{           endif}
+{lower(FLD_FIELDNAME)}={
+                foreach FLD_EXPRESSION j in k
+                    j.FLD_EXPRESSION}
+{               next}
+
+{           ++x
+        endif
+    next k;
+    if x then   }
+
+{   endif
+    return
+enddef
+
+define assign_summary_vars()
+//
+// This is synonymous with assign_calculated_vars.
+//
+    x=0
+    foreach FLD_ELEMENT k
+        if FLD_FIELDTYPE == Summ_data then
+            if !FLD_FIELDNAME then
+                ++xsum
+            endif
+            if FLD_OPERATION == MAX_OP || FLD_OPERATION == MIN_OP then
+                if !x then  }
+*-- Inicializa de nuevo las variables de m ximo y m¡nimo
+*-- por si est n basadas en un campo calculado.
+{               endif
+                ++x
+                if !FLD_FIELDNAME then
+                    priv_vars="r_msum"+STR(xsum)
+                else
+                    priv_vars=lower(FLD_FIELDNAME)
+                endif;  }
+{priv_vars}={FLD_SUMFIELD}
+{           endif
+        endif
+    next k;
+    xsum=0
+    if x then   }
+
+{   endif
+    return
+enddef
+
+define finish_page_footer()
+//
+// Complete the bottom portion of the Page Footer band
+//
+    if suppress_line then
+        suppress_line=0
+        lmarg(1);   }
+ENDIF
+{   endif
+    if isopen && bandhgt+1 then }
+ENDIF
+{   endif
+    if demo_version then    }
+? "{demo_string}" FUNCTION "IV"+LTRIM(STR(_rmargin-_lmargin))
+{   endif   }
+EJECT PAGE
+{   if number_of_group_intro_each then }
+gl_intros=.T.
+{   endif   }
+{   if number_of_begin_new_pages then   }
+gl_newpage=.T.
+{   endif   }
+*-- comprueba si el n£mero de p gina es mayor que el de la £ltima p gina
+IF _pageno > _pepage
+   GOTO BOTTOM
+   SKIP
+   gn_level=0
+ENDIF
+{   if number_of_reset_on_page || number_of_fld_suppress then   }
+IF gl_fandl
+   DO Pageinit
+ENDIF
+{   endif
+    if has_headers() then
+        if bandspacing then
+            temp = bandspacing
+        else
+            temp = "gn_pspace"
+        endif;  }
+IF .NOT. gl_plain .AND. gl_fandl
+   _pspacing={temp}
+   DO Pghead
+ENDIF
+{   endif   }
+RETURN
+* EOP: Pgfoot
+{   return
+enddef
+
+define has_headers()
+    if is_page_header_open
+     || (is_rintro_open && FRAME_PAGEHEADINGS)
+     || number_of_open_group_intros then
+        return 1
+    else
+        return 0
+    endif
+enddef
+
+define pre_pass()
+//
+// Two passes are made thru the fields.  The first pass outputs a
+// list of calculated fields to be used for lookup.  The next pass
+// examines the "field to summarize on" attribute of summary fields
+// and makes a list of those which reference the calc. fields.
+//
+    var xsum,xxsum,subgroup;
+    external_define=0
+    xsum=0
+    xxsum=0
+    number_of_group_calc_fields=0;
+
+    create(rptname+".ord");
+
+    foreach FLD_ELEMENT k
+        if k.FLD_FIELDNAME && k.FLD_FIELDTYPE == Calc_data
+        && k.GROUP > 3 && k.GROUP != 50 && k.GROUP < 97 then }
+{k.FLD_FIELDNAME} = {if k.GROUP > 50 then k.GROUP else 100-k.GROUP endif}
+{           ++number_of_group_calc_fields;
+        endif
+    next
+    if number_of_group_calc_fields then
+        create(rptname+".grp");
+        textopen(rptname+".ord");
+
+        foreach FLD_ELEMENT k
+            if k.FLD_FIELDTYPE == Summ_data then
+                textspos(0);
+                if not ( subgroup=
+                  pre_pass_find_string(k.FLD_SUMFIELD+" = ") ) then
+                    subgroup = 50;
+                endif
+                if k.FLD_FIELDNAME then
+                    priv_vars=lower(k.FLD_FIELDNAME);
+                else
+                    ++xsum
+                    priv_vars="r_msum"+STR(xsum);
+                endif
+                if subgroup != 50 then
+                    if !external_define then
+                        external_define=1;
+                    endif
+                    pre_pass_summary_field(k,subgroup);
+                endif
+            endif
+        next
+
+        textclose();
+    endif
+    append(rptname+".FRG");
+    fileerase(rptname+".ord");
+    if not external_define then
+        fileerase(rptname+".grp");
+    endif
+    return;
+enddef
+
+define pre_pass_find_string(string)
+//
+// Assume the text file is open and rewound.  Matches are
+// done on exact equality, returns the right portion of the string.
+//
+    var length,retval,temp; length=len(string); retval="";
+
+    do while ( temp = textgetl() ) != EOF
+        if string == substr(temp,1,length) then
+            retval = substr(temp,length+1);
+            exit
+        endif
+    enddo
+
+    return retval;
+enddef
+
+define pre_pass_summary_field(cursor,subgroup)
+//
+// Output a statement for the summary calculation to be included later.
+//
+    case cursor.FLD_OPERATION of
+    AVERAGE_OP: }
+{subgroup}: *-- Media
+{subgroup}: r_sum{++xxsum}=r_sum{xxsum}+1{tabto(40)}&& cuenta
+{subgroup}: r_sum{++xxsum}=r_sum{xxsum}+{cursor.FLD_SUMFIELD}{tabto(40)}&& suma
+{subgroup}: {priv_vars}=r_sum{xxsum}/r_sum{xxsum-1}{tabto(40)}&& promedia
+{   COUNT_OP:   }
+{subgroup}: *-- Contar
+{subgroup}: {priv_vars}={priv_vars}+1
+{   MAX_OP:     }
+{subgroup}: *-- M ximo
+{subgroup}: IF {cursor.FLD_SUMFIELD} > {priv_vars}
+{subgroup}:    {priv_vars}={cursor.FLD_SUMFIELD}
+{subgroup}: ENDIF
+{   MIN_OP:     }
+{subgroup}: *-- M¡nimo
+{subgroup}: IF {cursor.FLD_SUMFIELD} < {priv_vars}
+{subgroup}:    {priv_vars}={cursor.FLD_SUMFIELD}
+{subgroup}: ENDIF
+{   SUM_OP:     }
+{subgroup}: *-- Sumar
+{subgroup}: {priv_vars}={priv_vars}+{cursor.FLD_SUMFIELD}
+{   otherwise: // STD or VAR
+        if cursor.FLD_OPERATION == STD_DEV_OP then  }
+{subgroup}: *-- Desviaci¢n t¡pica
+{       else    }
+{subgroup}: *-- Varianza
+{       endif   }
+{subgroup}: r_sum{++xxsum}=r_sum{xxsum}+{cursor.FLD_SUMFIELD}^2\
+{tabto(40)}&& suma los cuadrados
+{subgroup}: r_sum{++xxsum}=r_sum{xxsum}+{cursor.FLD_SUMFIELD}\
+{tabto(40)}&& suma
+{subgroup}: r_sum{++xxsum}=r_sum{xxsum}+1\
+{tabto(40)}&& cuenta
+{subgroup}: r_sum{++xxsum}=r_sum{xxsum-2}/r_sum{xxsum-1}\
+{tabto(40)}&& promedia
+{subgroup}: *-- varianza
+{subgroup}: {priv_vars}=(r_sum{xxsum-3}+r_sum{xxsum-1}*(r_sum{xxsum}^2);
+{subgroup}:    -(2*r_sum{xxsum}*r_sum{xxsum-2}))/r_sum{xxsum-1}
+{       if cursor.FLD_OPERATION == STD_DEV_OP then  }
+{subgroup}: {priv_vars}=SQRT({priv_vars})\
+{tabto(40)}&& desviaci¢n t¡pica
+{       endif
+    endcase;
+enddef
+
+define report_setup()
+    foreach BAND_ELEMENT cursor
+
+        if BAND_BANDEDIT then
+            ++number_of_word_wrap_bands;
+        endif
+
+        if BAND_NEWPAGE then
+            ++number_of_begin_new_pages;
+        endif
+
+        case BAND_BANDTYPE of
+        Report_Intro:
+            isrepo=1;
+            if BAND_OPENFLG then
+                is_rintro_open = 1;
+            endif
+
+        Page_Header:
+            if BAND_OPENFLG then
+                is_page_header_open = 1;
+                bandlen2=BAND_HEIGHT;
+                if BAND_SPACING then
+                    bandspacing2=BAND_SPACING;
+                endif
+            else
+                bandspacing2=1;
+            endif
+
+        Group_Intro:
+            if dBASE_III_PLUS == FIRST_GEN then
+                if GROUP == 4 then
+                    intro_band_one_height = BAND_HEIGHT;
+                endif
+                if GROUP == 5 then
+                    intro_band_two_height = BAND_HEIGHT;
+                endif
+            endif
+            if BAND_INTROEACH then
+                ++number_of_group_intro_each;
+            endif
+
+        Detail:
+            if BAND_OPENFLG then
+                bandlen50=BAND_HEIGHT;
+            endif
+            if BAND_SPACING then
+                bandspacing=BAND_SPACING;
+            endif
+
+        Group_Summary:
+            if BAND_OPENFLG then
+                ++number_of_open_group_summarys;
+            endif
+
+        Page_Footer:
+            if BAND_OPENFLG then
+                bandlen98=BAND_HEIGHT;
+                if BAND_SPACING then
+                    bandspacing98=BAND_SPACING;
+                endif
+            else
+                bandspacing98=1;
+            endif
+
+        Report_Summary:
+            if BAND_OPENFLG then
+                is_rsumm_open = 1;
+            endif
+        endcase
+    next
+    if demo_version then
+        ++bandlen98;
+    endif
+
+    if number_of_open_group_summarys || is_rsumm_open || bandlen98 then
+        foreach FLD_ELEMENT cursor
+            if GROUP > 50 then
+                retain_previous=0;
+                case cursor.FLD_FIELDTYPE of
+                Tabl_data: retain_previous=1;
+                Pred_data:
+                        if cursor.FLD_PREDEFINE == 2 then
+                            retain_previous=1;
+                        endif
+                endcase
+                if retain_previous then
+                    ++number_of_group_footer_fields;
+                endif
+            endif
+        next
+    endif
+    return;
+enddef
+
+// EOP: REPORT.COD
+
+//
+// Change summary
+// --------------
+//
+// - Begin band on new page is considered if the next band
+//   followed by the page header has been printed.  During the
+//   printing, if the band immediately following the page header
+//   is set to begin on new page, the setting will be ignored.
+//
+// - Spacing for each band now is included in widow checking.
+//   Changes from the print menu for spacing are now honored.
+//
+// - Summary fields of the type Average, Standard deviation and
+//   Variance can now be referenced by name in another calculation.
+//
+// - Suppress repeated values based on an expression now work.
+//   Previously caused an error since the expression was not output.
+//
+// - At the beginning of each word wrap band the system memvar
+//   _pcolno is updated with the left margin and indent values.
+//   This puts new paragraph(s) in the correct column position.
+//
+// - Group intros on each page were changed by: (1) widow checking
+//   done prior to printing, (2) eliminate call to printing group
+//   intros from page break routine, (3) added a flag to test whether
+//   group intros have been printed at the top of the page.
+//
+// - A line in a word wrap band containing only blanks, field and text,
+//   will not be printed and the line will be collapsed.  Useful when
+//   a form letter contains an address where second address is blank.
+//
+// - Optimized word wrap band system memvar assignments.
+//   Negative indents are now allowed, needed for outdented paragraphs.
+//
+// - Changed calculations (see Variables below).
+//
+// Variables
+//
+// Named calculated fields are calculated for every record
+// Unnamed calculated fields are directly printed after calculation
+// Summary fields, named and unnamed, depend on field to sum on.
+//      Table field - every record,  Calculated fields - band oriented
+//
+// r_msum - Unnamed summary fields
+// r_sum  - sub-calculations of summary fields ie. Average, Variance
+// r_foot - (retained values)  Table fields and RECNO() in summary bands
+// r_msrv - suppress repeated values
+// r_mvar - Group by expression, field or records
+//
+// ----------------------------------------------------- //
+
+

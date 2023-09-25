@@ -1,0 +1,42 @@
+//
+// Module Name: DD_SORT.COD - currently (selector name): Menu_Act = 15
+// Selectors used : Sort_File, SortField*, Sort_Ord*, Sort_Case*
+//            : Scope, For_Expr, While_Exp
+// Syntax     : SORT TO <new file> ON <field> [Ascending] [/C] [/D]
+//                   [,<field2> [/A] [/C] [/D]...]
+//                   [<scope>] [FOR <condition>] [WHILE <condition>]
+//
+Ordenar f¡sicamente el fichero
+{endofpage();}
+Opciones del mandato:
+{if Sort_File} TO {Sort_File}{endif}
+{if SortField1 then}\
+ ON {SortField1}{if not Sort_Ord1} Ascendente{else} Descendente{endif}\
+{ if not Sort_Case1} Ignora May£sculas {endif}
+{endif}
+{endofpage();}
+{if SortField2 then}\
+ ON {SortField2}{if not Sort_Ord2} Ascendente{else} Descendente{endif}\
+{ if not Sort_Case2} Ignora May£sculas {endif}
+{endif}
+{endofpage();}
+{if SortField3 then}\
+ ON {SortField3}{if not Sort_Ord3} Ascendente{else} Descendente{endif}\
+{ if not Sort_Case3} Ignora May£sculas{endif}
+{endif}
+{endofpage();}
+{if SortField4 then}\
+ ON {SortField4}{if not Sort_Ord4} Ascendente{else} Descendente{endif}\
+{ if not Sort_Case4} Ignora May£sculas{endif}
+{endif}
+{endofpage();}
+{if SortField5 then}
+ ON {SortField5}{if not Sort_Ord5} Ascendente{else} Descendente{endif}\
+{ if not Sort_Case5} Ignora May£sculas{endif}
+{endif}
+{endofpage();}
+{if Scope} SCOPE {upper(Scope)}{endif}\
+{if For_Expr} FOR {For_Expr}{endif}\
+{if While_Exp} WHILE {While_Exp}{endif}
+// EOP DD_SORT.COD
+

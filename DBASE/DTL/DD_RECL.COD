@@ -1,0 +1,17 @@
+//
+// Module Name: DD_RECL.COD - current (selector name): Menu_Act = 11
+// Selectors used : Scope, For_Expr, While_Exp
+// Description: DOC. include file for the RECALL option.
+// Syntax     : RECALL [<scope>] [FOR <condition>] [WHILE <condition>]
+//
+Quitar marca de borrado de los registros
+{if Scope || For_Expr || While_Exp || Copy_type then}
+{endofpage();}
+Opciones del mandato:
+{ if Scope} SCOPE {upper(Scope)}{endif}\
+{ if For_Expr} FOR {For_Expr}{endif}\
+{ if While_Exp} WHILE {While_Exp}{endif}
+{endif}
+{endofpage();}
+// EOP DD_RECL.COD
+

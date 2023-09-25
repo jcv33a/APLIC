@@ -1,0 +1,65 @@
+//
+// Module Name: AS_TRCE.COD
+// Description: Used for stubs and status level
+//
+{// Enum string constants for international translation
+enum  trace1 = "D - Definir nivel de rastreo, V - Visualizar estado",
+      trace2 = "M - visualizar Memoria, I - Conectar la impresora, S - para Salir",
+      trace3 = "Definir nivel de rastreo",
+      trace4 = "Cambiar el nivel de rastreo a:' GET gn_trace PICTURE '#",
+      trace5 = "            0 desactiva el rastreo",
+      trace6 = "El rastreo est  ahora desactivado..Para reactivar el rastreo - Pulse [F3]",
+      trace7 = "Pulse cualquier tecla para continuar...",
+;
+}
+PROCEDURE Trace
+*  Desc: Procedimiento de rastreo. Permite al programador conocer qu‚
+*           m¢dulo va a ser ejecutado y cu les lo han sido ya.
+PARAMETERS p_msg, p_lvl
+*-- Par metros : p_msg = l¡nea de mensajes, p_lvl = nivel de rastreo
+lc_msg = p_msg
+ln_lvl = p_lvl
+lc_trp = ' '
+IF gn_trace < ln_lvl
+   RETURN
+ENDIF
+DEFINE WINDOW trace FROM 5,0 TO 16,79 DOUBLE
+ACTIVATE WINDOW trace
+DO WHILE lc_trp <> 'S'
+   CLEAR
+   @ 2,40-LEN(lc_msg)/2 SAY lc_msg
+   @ 4,05 SAY '{trace1}'
+   @ 5,05 SAY '{trace2}'
+   lc_trp = 'S'
+   @ 5,71 GET lc_trp PICTURE "!"
+   READ
+   DO CASE
+   CASE lc_trp = 'D'
+      @ 2,01 CLEAR
+      @ 2,33 SAY '{trace3}'
+      @ 4,05 SAY '{trace4}'
+      @ 5,05 SAY '{trace5}'
+      READ
+      IF gn_trace=0
+         @ 2,01 CLEAR
+         @ 3,05 SAY '{trace6}'
+         @ 4,05 say '{trace7}'
+         WAIT ''
+         ON KEY LABEL F3 gn_trace = 1
+      ENDIF
+   CASE lc_trp = 'V'
+      DISPLAY STATUS
+      WAIT
+   CASE lc_trp = 'M'
+      DISPLAY MEMORY
+      WAIT
+   CASE lc_trp = 'I'
+      SET PRINT ON
+   ENDCASE
+ENDDO
+SET PRINT OFF
+RELEASE WINDOW trace
+@ 24,79 SAY " "
+RETURN
+// EOP AS_TRCE.COD
+

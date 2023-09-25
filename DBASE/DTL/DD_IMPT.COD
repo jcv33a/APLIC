@@ -1,0 +1,17 @@
+//
+// Module Name: DD_IMPT.COD - currently (selector name): Menu_Act = 16
+// Selectors used : Imprt_File, Imprt_Type
+// Description: DOC. include file for the IMPORT option.
+// Syntax     : IMPORT FROM <name> TYPE
+//
+Importar registros desde el fichero: {lower(Imprt_File)} Tipo \
+{ case Imprt_type of}
+{ 0:}PFS
+{ 1:}dBASE II
+{ 2:}RPD
+{ 3:}FW2
+{ 4:}WK1
+{ endcase}
+{endofpage();}
+// EOP DD_IMPT.COD
+

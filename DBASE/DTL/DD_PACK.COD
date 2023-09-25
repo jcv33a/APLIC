@@ -1,0 +1,9 @@
+//
+// Module Name: DD_PACK.COD - current (selector name): Menu_Act = 12
+// Selectors used : Pack_Safe
+// Description: DOC. include file for the PACK option.
+// Syntax     : PACK
+//
+Eliminar registros marcados del fichero activo
+// EOP DD_PACK.COD
+

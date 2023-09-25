@@ -1,0 +1,197 @@
+//
+// Module Name: AS_POSIT.COD
+// Description: Record positioning (Ask at runtime)
+//
+{
+//
+// Enum string constants for international translation
+//
+enum pause_msg1 = "No hay base de datos en uso. ",
+     pause_msg2 = "No es posible usar esta opci¢n - No hay ficheros de ¡ndice abiertos.",
+     pause_msg3 = "Todos lo campos estaban en blanco.",
+     pause_msg4 = "Registro no encontrado.",
+     order_msg1 = "Orden del ¡ndice: "
+     order_msg2 = "La base de datos est  en orden natural",
+     order_msg3 = "Los 16 primeros campos est n listados a continuaci¢n.",
+     fld_string = "= Car   = Fecha = L¢g   = Num   = Flot  = Memo          ",
+     Posit_bar1 = " Posicionamiento ",
+     Posit_bar3 = " BUSCAR registro",    Posit_msg3 = "B£squeda indexada seg£n la clave del ¡ndice",
+     Posit_bar4 = " IR a registro",    Posit_msg4 = "Posicionarse en un registro determinado",
+     Posit_bar5 = " LOCALIZAR registro ", Posit_msg5 = "B£squeda secuencial seg£n una condici¢n",
+     Posit_bar6 = " Salir",         Posit_msg6 = "Salir sin posicionar",
+     Posit2_wnd1 = "Introduzca el tipo de expresi¢n:",
+     Posit2_wnd2 = "(1=car cter, 2=num‚rico o 3=fecha.)",
+     Posit2_wnd3 = "Introduzca la expresi¢n clave a buscar:",
+     Posit2_bar1 = " SALTO AL:",
+     Posit2_bar3 = " PRINCIPIO",       Posit2_msg3 = "Ir al principio del fichero",
+     Posit2_bar4 = " FINAL",    Posit2_msg4 = "Ir al final del fichero",
+     Posit2_bar5 = " Registro n§ ", Posit2_msg5 = "Ir a un registro espec¡fico",
+     Posit2_wnd4 = "N§ registro m x.= ",
+     Posit2_wnd5 = "Ir al registro",
+     Posit2_wnd6 = "por ej. ALL, NEXT <n>, o REST",
+     Posit2_wnd7 = "Ambito:",
+     Posit2_wnd8 = "For   :",
+     Posit2_wnd9 = "While :"
+;
+var ln_frow, ln_fcol;
+}
+PROCEDURE Position
+IF LEN(DBF()) = 0
+   DO Pause WITH "{pause_msg1}"
+   RETURN
+ENDIF
+SET SPACE ON
+SET DELIMITERS OFF
+// Frame row position
+{ln_frow=8;}
+// Frame col position
+{ln_fcol=30;//28}
+ln_type=0          && selecci¢n de subnivel
+ln_rkey=READKEY()  && comprobaci¢n de si se ha pulsado ESC o Return
+ln_rec=RECNO()     && n£mero de registro del fichero de base de datos
+ln_num=0           && para la introducci¢n de un n£mero
+ld_date=DATE()     && para la introducci¢n de una fecha
+lc_option='0'      && opci¢n principal, p.eg. Buscar, Ir a y Localizar
+*-- Ambito, p.eg. ALL, REST, NEXT <n>
+STORE SPACE(10) TO lc_scp
+*-- 1 = B£squeda de car cter, 2 = Cla£sula For, 3 = Cla£sula While
+STORE SPACE(40) TO lc_ln1, lc_ln2, lc_ln3
+lc_temp=""
+@ 0,00 SAY "{order_msg1}"+IIF(""=ORDER(),"{order_msg2}",ORDER())
+@ 1,00 SAY "{order_msg3}"
+lc_temp=REPLICATE(CHR(196),19)
+@ 2,0 SAY CHR(218)+lc_temp+CHR(194)+lc_temp+CHR(194)+lc_temp+CHR(194)+lc_temp
+ln_num=240
+DO WHILE ln_num < 560
+   lc_temp=FIELD( (ln_num-240)/20 +1)
+   @ (ln_num/80),MOD(ln_num,80) SAY CHR(179)+;
+lc_temp+SPACE(11-LEN(lc_temp))+;
+SUBSTR("{fld_string}",;
+AT(TYPE(lc_temp),"CDLNFMU")*8-7,8)
+   ln_num=ln_num+20
+ENDDO
+ln_num=1
+
+DEFINE POPUP Posit1 FROM {ln_frow},{ln_fcol}
+DEFINE BAR 1 OF Posit1 PROMPT "{posit_bar1}" SKIP
+DEFINE BAR 2 OF Posit1 PROMPT REPLICATE(CHR(196),20) SKIP
+DEFINE BAR 3 OF Posit1 PROMPT "{posit_bar3}" MESSAGE "{posit_msg3}" SKIP FOR ""=ORDER()
+DEFINE BAR 4 OF Posit1 PROMPT "{posit_bar4}" MESSAGE "{posit_msg4}"
+DEFINE BAR 5 OF Posit1 PROMPT "{posit_bar5}" MESSAGE "{posit_msg5}"
+DEFINE BAR 6 OF Posit1 PROMPT "{posit_bar6}" MESSAGE "{posit_msg6}"
+ON SELECTION POPUP Posit1 DO get_sele
+
+SET CONFIRM ON
+DO WHILE lc_option='0'
+  ACTIVATE POPUP Posit1
+  lc_option = ltrim(str(gn_send))  && para el men£ de ventana
+   IF LASTKEY() = 27 .OR. lc_option="6"
+      GOTO ln_rec
+      EXIT
+   ENDIF
+   DO CASE
+   CASE lc_option='3'
+      *-- Buscar
+      IF LEN(NDX(1))=0 .AND. LEN(MDX(1))=0
+         DO Pause WITH "{pause_msg2}"
+         LOOP
+      ENDIF
+      ln_type=1
+      lc_ln1=SPACE(40)
+      DEFINE WINDOW Posit2 FROM {ln_frow},{ln_fcol-11} TO {ln_frow+7},{ln_fcol+33} DOUBLE
+      ACTIVATE WINDOW Posit2
+      @ 1,1 SAY "{posit2_wnd1}" GET ln_type PICT "#" RANGE 1,3
+      @ 2,1 SAY "{posit2_wnd2}"
+      SET CURSOR ON
+      READ
+      SET CURSOR OFF
+      IF .NOT. (READKEY() = 12 .OR. READKEY() = 268)
+         SET CONFIRM ON
+         @ 3,1 SAY "{posit2_wnd3}"
+         IF ln_type=3
+            @ 4,1 GET ld_date PICT "@D"
+         ELSE
+            IF ln_type=2
+               @ 4,1 GET ln_num PICT "##########"
+            ELSE
+               @ 4,1 GET lc_ln1
+            ENDIF
+         ENDIF
+         SET CURSOR ON
+         READ
+         SET CURSOR OFF
+         SET CONFIRM OFF
+         IF .NOT. (READKEY() = 12 .OR. READKEY() = 268)
+            lc_temp=IIF(ln_type=1,"TRIM(lc_ln1)",IIF(ln_type=2,"ln_num","ld_date"))
+            SEEK &lc_temp.
+         ENDIF
+      ENDIF
+      RELEASE WINDOWS Posit2
+   CASE lc_option='4'
+      *-- Desplazar
+      ln_type=1
+      DEFINE POPUP Posit2 FROM {ln_frow},{ln_fcol}
+      DEFINE BAR 1 OF Posit2 PROMPT "{posit2_bar1}" SKIP
+      DEFINE BAR 2 OF Posit2 PROMPT REPLICATE(CHR(196),13) SKIP
+      DEFINE BAR 3 OF Posit2 PROMPT "{posit2_bar3}" MESSAGE "{posit2_msg3}"
+      DEFINE BAR 4 OF Posit2 PROMPT "{posit2_bar4}" MESSAGE "{posit2_msg4}"
+      DEFINE BAR 5 OF Posit2 PROMPT "{posit2_bar5}" MESSAGE "{posit2_msg5}"
+      ON SELECTION POPUP Posit2 DO get_sele
+      ACTIVATE POPUP posit2
+      ln_type = gn_send
+      IF LASTKEY() <> 27
+         IF ln_type=5
+            DEFINE WINDOW Posit2 FROM {ln_frow},{ln_fcol-4} TO {ln_frow+5},{ln_fcol+20} DOUBLE
+            ACTIVATE WINDOW Posit2
+            ln_num=0
+            @ 3,1 SAY "{posit2_wnd4}"+LTRIM(STR(RECCOUNT()))
+            @ 1,1 SAY "{posit2_wnd5}" GET ln_num PICT "######" RANGE 1,RECCOUNT()
+            SET CURSOR ON
+            READ
+            SET CURSOR OFF
+            IF .NOT. (READKEY() = 12 .OR. READKEY() = 268)
+               GOTO ln_num
+            ENDIF
+            RELEASE WINDOWS Posit2
+         ELSE
+           lc_temp=IIF(ln_type=3,"TOP","BOTTOM")
+           GOTO &lc_temp.
+         ENDIF
+      ENDIF
+   CASE lc_option='5'
+      *-- Localizar
+      DEFINE WINDOW Posit2 FROM {ln_frow},{ln_fcol-14} TO {ln_frow+6},{ln_fcol+37} DOUBLE
+      ACTIVATE WINDOW Posit2
+      @ 1,20 SAY "{posit2_wnd6}"
+      @ 1,01 SAY "{posit2_wnd7}" GET lc_scp
+      @ 2,01 SAY "{posit2_wnd8}" GET lc_ln2
+      @ 3,01 SAY "{posit2_wnd9}" GET lc_ln3
+      SET CURSOR ON
+      READ
+      SET CURSOR OFF
+      IF .NOT. (READKEY() = 12 .OR. READKEY() = 268)
+         lc_temp=TRIM(lc_scp)
+         lc_temp=lc_temp + IIF(LEN(TRIM(lc_ln2)) > 0," FOR "+TRIM(lc_ln2),"")
+         lc_temp=lc_temp + IIF(LEN(TRIM(lc_ln3)) > 0," WHILE "+TRIM(lc_ln3),"")
+         IF LEN(lc_temp) > 0
+            LOCATE &lc_temp.
+         ELSE
+            DO Pause WITH "{pause_msg3}"
+         ENDIF
+      ENDIF
+      RELEASE WINDOW Posit2
+   ENDCASE
+   IF EOF()
+      DO Pause WITH "{pause_msg4}"
+      GOTO ln_rec
+   ENDIF
+   IF READKEY()=12 .OR. READKEY()= 268 .OR. LASTKEY()=27  && Se ha pulsado ESC
+      lc_option='0'
+   ENDIF
+ENDDO
+SET CURSOR &gc_cursor.
+SET DELIMITERS &gc_deli.
+SET CONFIRM {if Set_Confrm then}ON{else}OFF{endif}
+RETURN
+// EOP AS_POSIT.COD
+

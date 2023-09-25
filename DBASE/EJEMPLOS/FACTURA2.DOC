@@ -1,0 +1,119 @@
+Nombre de fichero: Factura2.doc
+                   Fichero de informaci¢n sobre los formatos de
+                   pantalla con m£ltiples l¡neas de detalle.
+
+Los siguientes ficheros se encuentran en su disco de ejemplos:
+
+FORMBROW.COD - C¢digo fuente de la nueva plantilla que habr  de
+               usarse con el dise¤ador de pantallas.
+
+FORMBROW.GEN - Versi¢n compilada de la plantilla para formatos
+               de pantalla con m£ltiples l¡neas de detalle (FMLD).
+               Este fichero hay que renombrarlo FORM.GEN si se desea
+               generar un FMLD. O tambi‚n se puede introducir el
+               mandato SET DTL_FORM = formbrow.gen desde el DOS
+               antes de comenzar la generaci¢n.
+
+FACTURA2.SCX - Fichero con informaci¢n adicional de dise¤o (para
+               factura2.scr) creado tras preguntarle al usuario
+               durante la generaci¢n del programa la informaci¢n
+               necesaria. Si este fichero ya existe, no se hacen
+               estas preguntas.
+
+FACTURA2.SCR - Formato de pantalla de ejemplo que usado con
+               FORMBROW.GEN genera un FMLD. El programa de
+               ejemplo ya generado es FACTURA2.PRG.
+
+FACTURA2.PRG - Programa de ejemplo generado a partir de FACTURA2.SCR
+               con FORMBROW.GEN.
+
+FACTURA2.QBE - Fichero de Consulta de ejemplo empleado para
+               establecer las relaciones y los ficheros
+               de datos adecuados usados en FACTURA2.PRG.
+
+FACTURA2.DOC - Este documento.
+
+
+
+Estos ficheros de ejemplo ilustran el uso de Formatos de Pantalla
+con M£ltiples L¡neas de Detalle con dBASE IV. Emplean tres
+ficheros de datos del disco de ejemplos (CLIENTES.DBF, TRANSACC.DBF
+y EXISTEN.DBF) as¡ como sus correspondientes ¡ndices y ficheros .DBT.
+
+
+PARA VER EL FUNCIONAMIENTO DE ESTOS FICHEROS DE EJEMPLO simplemente
+escriba el siguiente mandato desde el punto indicativo:
+
+           DO FACTURA2.PRG
+
+De este modo ver  la pantalla de introducci¢n de datos y podr  hojear
+los datos ya existentes.
+
+
+
+COMO FUNCIONA
+
+Este ejemplo de Formato de Pantalla con M£ltiples L¡neas de
+Detalle ha sido creado con una plantilla especial programada con
+el lenguaje de plantilla de dBASE IV. Con la ayuda del dise¤ador
+de consultas y el de pantallas, no ha sido necesario escribir ni
+una l¡nea de c¢digo para obtener estos resultados.
+
+En primer lugar hay que crearse una consulta para establecer
+la relaci¢n entre Clientes y Transacc. Esta es la informaci¢n
+que aparece en la cabecera del formato. Una vez dise¤ada la consulta,
+se entra en el dise¤ador de pantallas. Con la Consulta activa, se
+crea la cabecera empleando campos de los dos ficheros de la consulta.
+El siguiente paso es dibujar un recuadro para indicar d¢nde
+aparecer n las l¡neas de detalle en la pantalla. A continuaci¢n
+se debe escribir TABLABROWSE todo con may£sculas encima del lado
+superior del recuadro. La informaci¢n sobre qu‚ fichero y qu‚
+campos se desea que aparezcan en el recuadro se dar  durante la
+fase de generaci¢n de c¢digo, o despu‚s de almacenar el formato.
+Ahora tambi‚n se pueden a¤adir condiciones para validar los
+datos de un campo, cambiar los colores, etc...
+
+Una vez almacenado el formato, entrar  en acci¢n la plantilla
+FORMBROW, que est  en el disco de ejemplos. Para ello es necesario
+teclear desde el DOS el mandato:
+
+SET DTL_FORM=d:\v¡a\FORMBROW.GEN
+
+o tambi‚n
+
+se puede renombrar la plantilla original de formatos de pantalla
+FORM.GEN como FORM.ORG y renombrar a FORMBROW.GEN como FORM.GEN.
+Aseg£rese de renombrar de nuevo estos ficheros adecuadamente cuando
+desee emplear el generador de formatos de pantalla del modo
+original.
+
+La plantilla especial le pedir  cierta informaci¢n antes de
+comenzar a generar c¢digo. Usted debe saber:
+- El nombre del fichero que desee aparezca en el recuadro de l¡neas de detalle
+- El nombre de los campos de enlace de ambos ficheros
+- El nombre de los campos que quiera que aparezcan en la ventana de Browse
+- Las UDFs (funciones definidas por el usuario) que quiera incluir en el
+  c¢digo generado
+
+Analice la Consulta de ejemplo (FACTURA2.qbe) y el formato de ejemplo
+(FACTURA2.scr) para hacerse una idea de todo el proceso.
+
+
+COMO CREAR SUS PROPIAS PANTALLAS
+
+La clave para crearse sus propias pantallas es ser consciente de
+que el fichero que contiene las l¡neas de detalle no es dibujado
+en la pantalla, sino que en su lugar aparece el recuadro que
+delimita a dichas l¡neas. Luego, durante la generaci¢n de c¢digo,
+se le preguntar  el nombre del fichero y de los campos que quiere
+situar en la ventana de Browse.
+
+
+
+COMO MODIFICAR LA PLANTILLA
+
+La plantilla de dBASE IV FORMBROW.COD s¢lo puede ser modificada
+con la Versi¢n de Desarrollo de dBASE IV. Para m s informaci¢n
+sobre el lenguaje de plantilla de dBASE IV consulte la secci¢n
+LENGUAJE DE PLANTILLA del manual dBASE IV para Desarrollo.
+

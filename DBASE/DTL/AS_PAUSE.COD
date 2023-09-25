@@ -1,0 +1,34 @@
+//
+// Module Name: AS_PAUSE.COD
+// Description: Procedure to display a message or errors in a window
+//
+{//
+ // Enum string constants for international translation
+ //
+  enum error_msg1 = "[­Error! - Mensaje: ]+MESSAGE()",
+       error_msg2 = "[Error n§ ]+lc_message",
+       error_wait = " Pulse cualquier tecla para continuar..."
+ ;
+}
+PROCEDURE Pause
+PARAMETER lc_msg
+*-- Par metros : lc_msg = l¡nea de mensajes
+IF TYPE("lc_message")="U"
+   gn_error=ERROR()
+ENDIF
+lc_msg = lc_msg
+lc_option='0'
+ACTIVATE WINDOW Pause
+IF gn_error > 0
+   IF TYPE("lc_message")="U"
+      @ 0,1 SAY {error_msg1}
+   ELSE
+      @ 0,1 SAY {error_msg2}
+   ENDIF
+ENDIF
+@ 1,1 SAY lc_msg
+WAIT "{error_wait}"
+DEACTIVATE WINDOW Pause
+RETURN
+// EOP AS_PAUSE.COD
+

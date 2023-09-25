@@ -1,0 +1,810 @@
+//
+// Module Name: AS_MENU.COD
+// Description: Define Application menus and program structure.
+//
+
+Plantilla para Aplicaciones
+---------------------------
+Versi¢n 1.1e
+Ashton-Tate (c) 1987, 1988, 1989, 1990
+
+{include "applctn.def";
+ include "builtin.def";
+
+ var strng,      // temporary string storage
+     strng1,     // menus to call
+     mainmenu,   // name of main menu
+     mnuname,    // current menu name
+     padmenu,    // padmenu name to deactivate
+     pulldown,   // flag indicating pad is a pulldown
+     mnu_messag, // dBASE message string variable
+     color,      // Used to grab menu colors
+     cnt,        // incremental counter for items in menus
+     count,      // temporary counter
+     prgcnt,     // counter for actions and help
+     muser,      // multi user switch
+     mactions,   // menu actions
+     x,          // temporary numeric variable
+     ask_user,   // string for askuser function
+     appl_name,  // application name
+  default_drive, // dBASE default drive
+     mpath,      // DOS path
+     file,       // DOS file
+     itemdbf,    // flag to indicate whether database changed during a batch
+     exclflg,    // flag for exclusive use of database needed
+     mtype,      // Menu TYPE - converted to a character
+     display,    // monitor display type
+     scrn_size,  // number of rows of monitor display type
+     midentify,  // Identify string for structure pick list
+     windowvar,  // whether to declare lc_window private or not
+     is_popups,  // flag to indicate whether there are popups in the app.
+     is_menus    //       "          "          "      menus       "
+;
+ // Used in as_help.cod
+ var rowpoint,menucnt;
+ // vars below used to compare Menu & Item view/ndx's to open
+ var global_view, global_ndx, global_ord, gc_view, gc_ndx, gc_ord;
+ var itemview, itemndx, itemord, lc_view, lc_ndx, lc_ord;
+ // vars for global use of author, copyright & db Version
+ var author,copyright,dbVersion;
+ // foreach variables
+ var flds,j,k,m,mtree;
+ //
+ // Some initial environment testing follows
+ //
+ display = numset(_flgcolor);
+ if display == ega43 || display == mono43 then
+   scrn_size = 39
+ else
+   scrn_size = 21
+ endif
+ default_drive = STRSET(_defdrive);
+ if FILEDRIVE(Menu_Name) || !default_drive then
+   appl_name=Menu_Name;
+ else
+   appl_name=default_drive + ":" + Menu_Name;
+ endif
+
+ if Menu_Type != app then
+   PAUSE(app_class);
+   GOTO NoGen;
+ endif
+
+ if not FILEEXIST(Menu_Main) then
+   pause(no_main_menu+any_key);
+   return 8; // resource file not found
+ endif
+
+ if fileexist(appl_name+".prg") && NUMSET(_safety) then
+ retry:
+   ask_user =
+ASKUSER("El programa "+appl_name+".PRG ya existe...¨Sustituir? (S/N)?","N",1);
+if not at(upper(ask_user),"SN") then GOTO retry endif
+   if upper(ask_user) == "N" then
+     pause(gen_request+any_key);
+     GOTO NoGen;
+   endif
+ endif
+ //
+ // Initialize some variables
+ //
+ count=1;
+ prgcnt=1;
+ itemdbf=0;
+ muser=0;
+ pulldown=0;
+ mnu_messag="'Situar barra de selecci¢n: '+CHR(27)+CHR(26)+CHR(25)+CHR(24)+'  Seleccionar: '"+
+    "+CHR(17)+CHR(196)+CHR(217)+'  Ayuda: F1'";
+ author=appl_Authr;
+ copyright=appl_cpyrt;
+ dbVersion=Appl_Versn;
+ global_View=Appl_View;  // Set global application dbf/view
+ global_NDX=Appl_NDX;    // Set global application ndx
+ global_Ord=Appl_Order;  // Set global application Order
+ mtype="";
+ padmenu="";
+ //-----------------------------------
+ // Create application startup program
+ //-----------------------------------
+ if not CREATE(appl_name+".PRG") then;
+   PAUSE(fileroot(appl_name)+".PRG"+read_only+any_key);
+   GOTO NoGen
+ endif
+ fileerase(appl_name+".DBO");
+ replicate("*",70)}
+
+* Programa.......: {fileroot(appl_name)}.PRG
+{INCLUDE "AS_HEADR.COD";}
+* Descripci¢n....: Rutina principal para el sistema de men£s
+{replicate("*",70)}
+
+
+*-- Establece el entorno
+SET CONSOLE OFF
+IF TYPE("gn_ApGen")="U"
+   CLEAR WINDOWS
+   CLEAR ALL
+   CLOSE ALL
+   CLOSE PROCEDURE
+   gn_ApGen=1
+ELSE
+   gn_ApGen=gn_ApGen+1
+   IF gn_ApGen > 4
+     Do Pause WITH "Se ha excedido el nivel m ximo de anidamiento en la Aplicaci¢n."
+     RETURN
+   ENDIF
+   PRIVATE gn_oldsize
+   gn_oldsize=gn_scrsize
+   PRIVATE gc_bell, gc_carry, gc_clock, gc_century, gc_confirm, gc_deli,;
+           gc_safety, gc_status, gc_score, gc_talk, gc_key, gc_prognum,;
+           gc_quit, gc_color, gc_display, gl_color, gl_batch, gn_scrsize
+ENDIF
+*-- Almacenamiento de algunos SETs en variables
+gc_bell   =SET("BELL")
+gc_carry  =SET("CARRY")
+gc_clock  =SET("CLOCK")
+gc_color  =SET("ATTRIBUTE")
+gc_century=SET("CENTURY")
+gc_confirm=SET("CONFIRM")
+gc_cursor =SET("CURSOR")
+gc_deli   =SET("DELIMITERS")
+gc_display=SET("DISPLAY")
+gc_safety =SET("SAFETY")
+gc_status =SET("STATUS")
+gc_score  =SET("SCOREBOARD")
+gc_talk   =SET("TALK")
+SET CONSOLE ON
+IF gc_display <> "{display_type()}"
+   gn_error=0
+   ON ERROR {if scrn_size == 39 then}gn_error=ERROR(){else}??{endif}
+   SET DISPLAY TO {display_type()}
+   ON ERROR
+ENDIF
+{if scrn_size == 39 then}
+IF gn_error <> 0
+   gn_error=0
+   ON ERROR gn_error=ERROR()
+   SET DISPLAY TO \
+{  if display == mono43 then }
+EGA43
+{  else }
+MONO43
+{  endif }
+   ON ERROR
+   IF gn_error <> 0
+      ?
+      ? "Imposible cambiar el modo de visualizaci¢n a EGA43 o MONO43"
+          WAIT
+      gn_error=0
+      RETURN
+   ENDIF
+ENDIF
+{endif}
+
+{if !Set_Bell then
+   if Set_BellFR and Set_BellDr then}
+SET BELL TO {Set_BellFR},{Set_BellDr}
+{  endif
+ endif}
+SET BELL {if Set_Bell}OFF{else}ON{endif}
+SET CARRY {if Set_Carry}ON{else}OFF{endif}
+SET CENTURY {if Set_Centry}ON{else}OFF{endif}
+SET CLOCK OFF
+SET CONFIRM {if Set_Confrm}ON{else}OFF{endif}
+{if Run_Drive then}
+SET DEFAULT TO {UPPER(Run_Drive)}
+{endif}
+SET DELIMITERS TO \
+{if not AT(CHR(34),Set_DelChr) then}"{Set_DelChr}"
+{  goto deliok;
+ endif
+ if not AT("'",Set_DelChr) then}'{Set_DelChr}'
+{  goto deliok;
+ endif
+ if !AT("[",Set_DelChr) or !AT("]",Set_DelChr) then}[{Set_DelChr}]
+{  goto deliok;
+ endif
+}
+""
+{deliok:}
+SET DELIMITERS {if Set_Delim}ON{else}OFF{endif}
+SET DEVICE TO SCREEN
+SET ESCAPE {if Set_Escape}OFF{else}ON{endif}
+SET EXCLUSIVE OFF
+SET LOCK ON
+SET MESSAGE TO ""
+{if Run_Path then}
+SET PATH TO {Run_Path}
+{endif}
+SET PRINT OFF
+SET REPROCESS TO 4
+SET SAFETY {if Set_Safety}OFF{else}ON{endif}
+SET TALK OFF
+
+*-- Inicializa las variables globales
+gl_batch=.F.        && se est  ejecutando un proceso secuencial
+gl_color= ISCOLOR() .AND. SET("DISPLAY") <> "CGAMONO"
+gn_error=0          && si no es 0, ha ocurrido alg£n error
+gn_ikey=0           && tecla pulsada devuelta por la funci¢n INKEY()
+gn_scrsize={scrn_size}       && n£mero de l¡neas en pantalla
+gn_send=0           && valor devuelto por los men£s de posicionamiento
+gn_trace=1          && nivel de rastreo. Es necesario cambiar la plantilla
+gc_brdr='1'         && borde empleado para generar recuadros
+gc_dev='CON'        && dispositivo de impresi¢n - Ver Proc. PrintSet
+gc_key='N'          && abandonar la aplicaci¢n
+gc_prognum='  '     && contador interno para manejar el anidamiento de men£s
+gc_quit=' '         && varmem para volver al programa que nos llam¢
+listval='NO_FIELD'  && valor de la lista de opciones
+
+*-- supr¡mase el asterisco para activar el reloj
+* SET CLOCK TO
+
+*-- Limpia la pantalla
+SET COLOR TO
+CLEAR
+SET SCOREBOARD OFF
+SET STATUS OFF
+
+*-- Definici¢n de men£s
+DO MPDEF            && Define todos los men£s del sistema
+
+*-- Ejecuta el men£ principal
+DO WHILE gc_key = 'N'
+   DO {Appl_Menu} WITH "{if !Appl_Type then}B{else} {endif}00"
+   IF gc_quit = 'Q'
+      EXIT
+   ENDIF
+   ACTIVATE WINDOW Exit_App
+   lc_conf=SET("CONFIRM")
+   lc_deli=SET("DELIMITER")
+   SET CONFIRM OFF
+   SET DELIMITER OFF
+   @ 1,2 SAY "¨Desea abandonar la aplicaci¢n?" ;
+         GET gc_key PICT "!" VALID gc_key $ "NS"
+   READ
+   SET CONFIRM &lc_conf.
+   SET DELIMITER &lc_deli.
+   RELEASE lc_conf, lc_deli
+   DEACTIVATE WINDOW Exit_App
+ENDDO
+
+*-- Reestablece el entorno
+DEACTIVATE WINDOW FullScr
+?? Color(gc_color)
+gn_ApGen=gn_ApGen-1
+SET BELL  &gc_bell.
+SET CARRY &gc_carry.
+SET CLOCK &gc_clock.
+SET CENTURY &gc_century.
+SET CONFIRM &gc_confirm.
+SET CURSOR  &gc_cursor.
+SET DELIMITERS &gc_deli.
+SET DISPLAY TO &gc_display.
+SET STATUS &gc_status.
+SET SAFETY &gc_safety.
+SET SCORE  &gc_score.
+SET TALK   &gc_talk.
+
+IF gn_Apgen < 1
+   ON KEY LABEL F1
+   CLEAR WINDOWS
+   CLEAR ALL
+   CLOSE ALL
+   CLOSE PROCEDURE
+   SET ESCAPE ON
+   SET MESSAGE TO ""
+   CLEAR
+ELSE
+   DEFINE WINDOW FullScr FROM 0,0 TO gn_oldsize+3,79 NONE
+   DEFINE WINDOW Savescr FROM 0,0 TO gn_oldsize,79 NONE
+   DEFINE WINDOW Helpscr FROM 0,0 TO gn_oldsize,79 NONE
+   ACTIVATE WINDOW FullScr
+ENDIF
+RETURN
+
+//--------------------------------
+// Add Application Procedure file
+// contains common programs
+//--------------------------------
+//
+{include "as_proc.cod";}
+
+{replicate("*",70)}
+
+* Programa.......: MPDEF
+{include "AS_HEADR.COD";}
+* Descripci¢n....: Define todos los men£s del sistema
+{replicate("*",70)}
+
+PROCEDURE MPDEF
+IF gl_color
+{LMARG(4);}
+SET COLOR OF NORMAL TO {color=color(Clr_Text)}
+SET COLOR OF MESSAGES TO {color(Clr_Messages)}
+SET COLOR OF TITLES TO {color(Clr_Heading)}
+SET COLOR OF HIGHLIGHT TO {color(Clr_Hghlight)}
+SET COLOR OF BOX TO {color(Clr_Box)}
+SET COLOR OF INFORMATION TO {color(Clr_Info)}
+SET COLOR OF FIELDS TO {color(Clr_Fields)}
+{LMARG(1);}
+ENDIF
+CLEAR
+
+{if Disp_Sign then}
+*-- Pantalla de presentaci¢n
+
+//
+// Draw border
+//
+SET BORDER TO
+{if Mnu_Border != 3 then}
+@ {row1()},{col1()} TO {row2()},{col2()}\
+{case Mnu_Border of
+ 0: // Panel}
+ PANEL\
+{2: // Double}
+ DOUBLE\
+{endcase}
+ COLOR {color(Clr_Box)}
+{endif}
+//
+// Display text
+//
+{foreach TEXT_ELEMENT flds}
+@ {row1()+Row_Positn},{col1()+Col_Positn} SAY "{Text_Item}"
+{next flds;}
+@ {row1()+1},{col1()+1} FILL TO {row2()-1},{col2()-1} \
+COLOR {color(Clr_Messages)}
+//
+// Wait for a return key
+//
+@ {scrn_size+3},30 SAY " Pulse "+CHR(17)+CHR(196)+CHR(217)+" para continuar. "
+gn_ikey=INKEY(500)
+
+CLEAR
+
+{endif // if Disp_Sign}
+//
+// default window if none defined for action
+//
+*-- Evita el borrado de los men£s al ejecutarse los mandatos:
+*-- SET STATUS y SET SCOREBOARD
+DEFINE WINDOW FullScr FROM 0,0 TO {scrn_size+3},79 NONE
+*-- Ventana para ejecuci¢n y procesos secuenciales
+DEFINE WINDOW Savescr FROM 0,0 TO {scrn_size},79 NONE
+*-- Ayuda F1
+DEFINE WINDOW Helpscr FROM 0,0 TO {scrn_size},79 NONE
+IF gn_ApGen=1
+   *-- ¨Est  seguro? (salida de la aplicaci¢n)
+   DEFINE WINDOW Exit_App FROM 11,17 TO 15,62 DOUBLE
+   *-- Ventana de mensajes
+   DEFINE WINDOW Pause FROM 15,00 TO 19,79 DOUBLE
+ENDIF
+
+ACTIVATE WINDOW FullScr
+@ {scrn_size+3},00
+@ {scrn_size+2},00 SAY "Cargando..."
+//
+{x=LEN(Menu_Main) - 4;
+ if FILEDRIVE(Menu_Main) || !default_drive then
+   mainmenu=SUBSTR(Menu_Main,1,x);
+ else
+   mainmenu=default_drive + ":" + SUBSTR(Menu_Main,1,x);
+ endif
+ //
+ // Put first menu on black board before fortree loop
+ //
+ newframe(Menu_Main);
+ if not CREATE(mainmenu+".PRG") then;
+   PAUSE(fileroot(mainmenu)+".PRG"+read_only+any_key);
+   GOTO NoGen
+ endif
+ if not CREATE("$$$HELP.TMP") then;
+   PAUSE("$$$HELP.TMP"+read_only+any_key);
+   GOTO NoGen
+ endif
+ fileerase(mainmenu+".DBO");
+}
+//
+{foreach TREE mtree
+ x=1;
+ strng1 = mactions = "";
+ itemview = itemndx = itemord = 0;
+ mnuname=Menu_Name;
+ mtype=STR(Menu_Type);
+ prgcnt=COUNTC(mtree);
+ midentify="";
+
+ LMARG(1);
+ //
+ // Write Menu definition program
+ //
+ APPEND(appl_name+".PRG");}
+SET BORDER TO \
+{case Mnu_Border of
+ 0: // Panel}
+PANEL
+{1: // Single}
+SINGLE
+{2: // Double}
+DOUBLE
+{3: // None}
+NONE
+{endcase
+ case Menu_Type of
+ 2: // Popup define
+   is_popups=1;}
+*-- Men£ de ventana
+DEFINE POPUP {mnuname} FROM {row1()},{col1()} TO {row2()},{col2()} ;
+MESSAGE {if Menu_Prmpt then}"{Menu_Prmpt}"{else}{mnu_messag}{endif}
+//
+{  foreach FLD_ELEMENT flds}
+//
+DEFINE BAR {Row_Positn} OF {mnuname} PROMPT "{Fld_Pictur}" \
+{if Item_Prmpt then}MESSAGE "{Item_Prmpt}"{endif} \
+{if ItemSkipIf then}SKIP FOR\
+ {ItemSkipIf}{else}{if !Menu_Act then} SKIP{endif}{endif}
+{if Item_Ovride == 1 then itemover(flds); endif}
+{  next flds;}
+//
+// set call to action procedure.
+//
+ON SELECTION POPUP {mnuname} DO ACT0{prgcnt}
+//
+// File, Structure and Value pick lists all make use of a variable listval.
+// --------------------------------------------------------------------
+{3: // Files
+   is_popups=1;}
+DEFINE POPUP {mnuname} FROM {row1()},{col1()} TO {row2()},{col2()} \
+PROMPT FILES LIKE {if Pick_File then}{Pick_File} {else}*.* {endif};
+MESSAGE \
+{  foreach FLD_ELEMENT flds
+     strng=Item_Prmpt;
+   next flds;
+ if strng then}
+"{strng}"
+{else
+   if Menu_Prmpt then}
+"{Menu_Prmpt}"
+{  else
+ mnu_messag}
+
+{  endif
+ endif}
+ON SELECTION POPUP {mnuname} DO ACT0{prgcnt}
+{  foreach FLD_ELEMENT flds
+if Item_Ovride == 1 then itemover(flds); endif
+  next flds;
+//
+ 4: // Structure
+   is_popups=1;}
+DEFINE POPUP {mnuname} FROM {row1()},{col1()} TO {row2()},{col2()} \
+PROMPT STRUCTURE ;
+MESSAGE \
+{  foreach FLD_ELEMENT flds
+    strng=Item_Prmpt;
+   next flds;
+ if strng then}
+"{strng}"
+{else}
+{  if Menu_Prmpt then}
+"{Menu_Prmpt}"
+{  else
+ mnu_messag}
+
+{  endif
+ endif}
+ON SELECTION POPUP {mnuname} DO ShowPick
+{  foreach FLD_ELEMENT flds
+ if Item_Ovride == 1 then itemover(flds); endif
+ midentify=PICK_FIELD;
+   next flds;}
+//
+{5: // Values
+   is_popups=1;
+   if !Pick_Value || UPPER(Pick_Value) == "&LISTVAL" then}
+DEFINE POPUP {mnuname} FROM {row1()},{col1()}
+DEFINE BAR 1 OF {mnuname} PROMPT "  Ning£n Campo definido " SKIP
+{  else}
+DEFINE POPUP {mnuname} FROM {row1()},{col1()} TO {row2()},{col2()} \
+PROMPT FIELD {Pick_Value} ;
+MESSAGE \
+{    foreach FLD_ELEMENT flds
+       strng=Item_Prmpt;
+     next flds;
+     if strng then}
+"{strng}"
+{    else
+       if Menu_Prmpt then}
+"{Menu_Prmpt}"
+{      else
+ mnu_messag}
+
+{      endif
+     endif
+   endif}
+ON SELECTION POPUP {mnuname} DO ACT0{prgcnt}
+{  foreach FLD_ELEMENT flds
+ if Item_Ovride == 1 then itemover(flds); endif
+   next flds;
+// --------------------------------------------------------------------
+//
+ 7: // Bar define
+   is_menus=1;}
+*-- Opci¢n
+DEFINE MENU {mnuname} MESSAGE \
+{  if Menu_Prmpt then}
+"{Menu_Prmpt}"
+{  else}
+'Situar barra de selecci¢n: '+CHR(27)+CHR(26)+' - <Return> para seleccionar opci¢n - <F1> Ayuda'
+{  endif
+    x=0;
+    pulldown=0;
+
+    foreach FLD_ELEMENT flds
+      ++x;
+      //
+      // if for some reason there is an entry in the list
+      // without text ie. corrupted data, skip it.
+      //
+      if !Fld_Pictur goto loophpad;}
+//
+// use the menu name and the letter option on each pad
+//
+DEFINE PAD PAD_{x} OF {mnuname} PROMPT "{Fld_Pictur}" \
+AT {Row_Positn+Row1()},{Col_Positn+Col1()} \
+{     if Item_Prmpt then}MESSAGE "{Item_Prmpt}"{endif}
+//
+// if the action is to open a menu then find out whether it's a popup
+//
+{     if Menu_Act == 1 && Open_Type then}
+//
+// if it is a popup is it a pulldown or not.
+//
+ON {if Pldwn_Menu then}SELECTION {endif}\
+PAD PAD_{x} OF {mnuname} \
+{if Pldwn_Menu then}
+DO ACT0{prgcnt}
+{else}
+ACTIVATE POPUP {Open_Menu}
+{endif
+      else
+ if Item_Ovride == 1 then itemover(flds); endif}
+//
+// set call to action procedure.
+//
+ON SELECTION PAD PAD_{x} OF {mnuname} DO ACT0{prgcnt}
+{     endif
+      loophpad:
+    next flds;
+  btch:}
+*-- {mnuname} - proceso secuencial.
+{ otherwise:}
+*-- {mnuname} - objeto no definido a£n.
+{endcase // endcase Menu_Type}
+?? "."
+//-------------------------------------------
+// Create program control loop for each menu.
+//-------------------------------------------
+{
+ APPEND(mainmenu+".PRG");
+
+ replicate("*",70)}
+
+* Programa.......: {mnuname}.PRG
+{include "AS_HEADR.COD";}
+* Descripci¢n....: Acciones de men£
+{replicate("*",70)}
+
+PROCEDURE {mnuname}
+PARAMETER entryflg
+PRIVATE gc_prognum
+gc_prognum="0{prgcnt}"
+{if prgcnt == 1 then}
+SET COLOR OF NORMAL TO {color}
+CLEAR
+PRIVATE lc_ApGen
+lc_ApGen=LTRIM(STR(gn_ApGen))
+{endif}
+{if Menu_Type == s_pick then}
+
+IF LEFT(entryflg,1)="A"
+   DO ACT0{prgcnt}
+   RETURN
+ENDIF
+{endif}
+
+DO SET0{prgcnt // global counter tracks number of procedures}
+IF gn_error > 0
+   gn_error=0
+   RETURN
+ENDIF
+
+*-- C¢digo anterior al men£
+{foreach Menu_Before
+   print(Menu_Before+CHR(10));
+ next
+}
+
+{if Menu_Type == s_pick then}
+lc_fldlst=''
+{  if midentify then}
+SET FIELDS TO {midentify}
+
+{  endif}
+ON KEY LABEL CTRL-W DEACTIVATE POPUP
+IF TYPE("lc_window")="U"
+   DEFINE WINDOW ShowPick FROM 17,0 TO 21,60 DOUBLE
+   ACTIVATE WINDOW ShowPick
+ENDIF
+ACTIVATE SCREEN
+{endif
+ if Menu_Type == btch then // batch process}
+//
+// Perform batch actions
+//
+lc_popmenu="{mnuname}"
+DO ACT0{prgcnt}
+{else}
+//
+// Pick_Value has the field the pick list is based on
+//
+{  if Menu_Type == v_pick then}
+SET BORDER TO \
+{case Mnu_Border of
+ 0: // Panel}
+PANEL
+{1: // Single}
+SINGLE
+{2: // Double}
+DOUBLE
+{3: // None}
+NONE
+{endcase}
+DEFINE POPUP {mnuname} FROM {row1()},{col1()} TO {row2()},{col2()} \
+PROMPT FIELD {if Pick_Value then}{Pick_Value} {else}&listval. {endif}\
+MESSAGE \
+{  foreach FLD_ELEMENT flds
+     strng=Item_Prmpt;
+   next flds;
+ if strng then}
+"{strng}"
+{else
+   if Menu_Prmpt then}
+"{Menu_Prmpt}"
+{  else
+ mnu_messag}
+
+{  endif
+ endif}
+ON SELECTION POPUP {mnuname} DO ACT0{prgcnt}
+SET BORDER TO
+{  endif}
+//
+// Activate the pad menu or popup.
+//
+
+ACTIVATE {if Menu_Type == bar then}MENU {else}POPUP {endif}{mnuname}
+{endif}
+
+{if Menu_Type == bar then
+   if Mnu_Border != 3 then}
+@ {row1()},{col1()} CLEAR TO {row2()},{col2()}
+{  else}
+@ {row1()+1},{col1()+1} CLEAR TO {row2()-1},{col2()-1}
+{  endif}
+
+{endif
+ if Menu_Type == s_pick then}
+IF TYPE("lc_window")="U"
+   DEACTIVATE WINDOW ShowPick
+   RELEASE WINDOW ShowPick
+ENDIF
+ON KEY LABEL CTRL-W
+IF RIGHT(lc_fldlst,1)="," .AND. LASTKEY() <> 27
+   listval=LEFT(lc_fldlst,LEN(lc_fldlst)-1)
+   DO ACT0{prgcnt}
+ENDIF
+
+{endif}
+*-- Tras el men£
+{foreach Menu_After
+   print(Menu_After+CHR(10));
+ next
+}
+
+//
+// if the menu is a file, structure, value or batch,
+// set the key to escape so that the menu is exited.
+//
+{if AT(mtype,"3459") then}
+gn_ikey=27
+{endif}
+RETURN
+*-- EOP {mnuname}
+
+// Setup procedure
+// 1) Set help file to call
+// 2) set colors
+// 3) ? menu level database
+// 4 conditional before code (flag var to handle calls to other menus)
+//
+{include "AS_SETUP.COD"
+ nosub:
+ //
+ // Actions procedure
+ //
+ include "AS_ACTN.COD"
+ //
+ // Help procedure
+ //
+ APPEND("$$$HELP.TMP");
+ //
+ include "AS_HELP.COD"
+
+ next mtree;
+ //
+ // End of fortree loop
+ //
+ APPEND(appl_name+".PRG");
+}
+RETURN
+*-- EOP: MPDEF.PRG
+
+//
+// Top half of help
+//
+PROCEDURE 1HELP1
+ln_key=INKEY()
+ON KEY LABEL F1
+{if is_popups || is_menus then}
+lc_popmenu=\
+{if is_popups && is_menus then}
+IIF( "" = POPUP(), MENU(), POPUP() )
+{else}
+{  if is_popups then}
+POPUP()
+{  endif}
+{  if is_menus then}
+MENU()
+{  endif}
+{endif}
+{endif}
+ACTIVATE WINDOW Helpscr
+SET ESCAPE OFF
+ACTIVATE SCREEN
+@ 0,0 CLEAR TO 21,79
+@ 1,0 TO 21,79 COLOR {color(Clr_Box)}
+@ {scrn_size+3},00
+@ {scrn_size+3},26 SAY "Pulse cualquier tecla para continuar..."
+@ 0,0 SAY ""
+DO CASE
+//
+// end of top half
+//
+{COPY("$$$HELP.TMP");}
+//
+// Bottom half of help
+//
+OTHERWISE
+   @ 2,2 SAY "Nombre de men£ desconocido. Sistema de Ayuda no definido"
+ENDCASE
+ln_key=INKEY(0)
+SET ESCAPE {IF set_escape}OFF{ELSE}ON{ENDIF}
+@ {scrn_size+3},00
+DEACTIVATE WINDOW Helpscr
+ON KEY LABEL F1 DO 1HELP1
+RETURN
+*-- EOP: 1HELP1
+{fileerase("$$$HELP.TMP");
+ pause(gen_complete+any_key);
+//
+ NoGen:
+//
+ return 0;
+//-----------------------------------
+// User defined function include file.
+//-----------------------------------
+ include "as_udf.cod";}
+// EOP AS_MENU.COD
+

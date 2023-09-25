@@ -1,0 +1,99 @@
+//
+// Module Name: AS_SETUP.COD
+// Description: Setup for current menu
+//
+PROCEDURE SET0{prgcnt}
+ON KEY LABEL F1 DO 1HELP1
+//
+// capture the menu level database/view
+//
+{if (not Menu_Ovride) or (not Menu_View) or (global_view == Menu_View) then
+   gc_view = global_view;
+//
+// capture the menu level index(es)
+//
+   if (not Menu_Ovride) or (not Menu_NDX) or (global_ndx == Menu_NDX) then
+     gc_ndx = global_ndx;
+   else
+     gc_ndx = Menu_NDX;
+   endif
+//
+// capture the menu level index order(s)
+//
+   if (not Menu_Ovride) or (not Menu_Order) or (global_ord == Menu_Order) then
+     gc_ord = global_ord;
+   else
+     gc_ord = Menu_Order;
+   endif
+ else
+   gc_view = Menu_View;
+   gc_ndx  = Menu_NDX;
+   gc_ord  = Menu_Order;
+ endif
+}
+{if Menu_Ovride != 2 then}
+
+DO DBF0{prgcnt} && Abre base de datos del nivel de men£
+{endif}
+{if Menu_Type != btch then}
+
+IF gn_error = 0
+{LMARG(4);}
+IF gl_color .AND. .NOT. SET("ATTRIBUTE") = "\
+{
+color(Clr_Text)+","+color(Clr_Hghlight)+",N/N "}"+;
+   CHR(38)+CHR(38)+" \
+{color(Clr_Messages)+","+color(Clr_Heading)+
+","+color(Clr_Box)+","+color(Clr_Info)+","+color(Clr_Fields)
+}"
+{LMARG(7);}
+SET COLOR OF NORMAL TO {color(Clr_Text)}
+SET COLOR OF MESSAGES TO {color(Clr_Messages)}
+SET COLOR OF TITLES TO {color(Clr_Heading)}
+SET COLOR OF HIGHLIGHT TO {color(Clr_Hghlight)}
+SET COLOR OF BOX TO {color(Clr_Box)}
+SET COLOR OF INFORMATION TO {color(Clr_Info)}
+SET COLOR OF FIELDS TO {color(Clr_Fields)}
+{LMARG(4);}
+ENDIF
+{endif}
+//
+// if the pad menu has a box around it, draw it.
+//
+{if Menu_Type == bar then}
+
+SET BORDER TO
+{  if Mnu_Border != 3 then}
+@ {row1()},{col1()} TO {row2()},{col2()}\
+{    case Mnu_Border of}
+{    0:}
+ PANEL\
+{    2:}
+ DOUBLE\
+{    endcase}
+ COLOR {color(Clr_Box)}
+{  endif}
+@ {row1()+1},{col1()+1} CLEAR TO {row2()-1},{col2()-1}
+@ {row1()+1},{col1()+1} FILL TO {row2()-1},{col2()-1} \
+COLOR {color(Clr_Messages)}
+{  foreach FLD_ELEMENT}
+@ {Row_Positn+Row1()},{Col_Positn+Col1()} SAY "{Fld_Pictur}" \
+COLOR {color(Clr_Messages)}
+{  next}
+{endif}
+{if Menu_Type != btch then}
+{LMARG(1);}
+ENDIF
+{endif}
+RETURN
+
+{if Menu_Ovride != 2 then}
+PROCEDURE DBF0{prgcnt}
+CLOSE DATABASES
+*-- Abre base de datos/vista del nivel de men£
+{  dbfOpen(gc_view,gc_ndx,gc_ord,1);}
+RETURN
+
+{endif}
+// EOP AS_SETUP.COD
+

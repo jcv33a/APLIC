@@ -1,0 +1,2747 @@
+
+
+                        CONTENIDO DEL FICHERO LEEME.DOC         17 Julio, 1990
+                        -------------------------------
+     
+     Este fichero contiene informaci¢n SOLO para los usuarios que actualizan
+     el software de la versi¢n 1.0 de dBASE IV.
+     
+     En este fichero se exponen los cambios que deben introducirse en la
+     documentaci¢n en ingl‚s de la versi¢n 1.0 de dBASE IV para actualizarla
+     respecto a la versi¢n 1.1. Se incluyen explicaciones sobre las nuevas
+     funciones, ampliaci¢n de datos sobre las ya existentes, consejos para la
+     ejecuci¢n del programa y correcciones del texto.
+     
+     Este fichero contiene un apartado correspondiente a los siguientes
+     manuales de dBASE IV 1.0:
+     
+        MANUAL
+     
+     1. C¢mo utilizar dBASE IV SQL (Using dBASE IV SQL)
+     
+     2. Lenguaje de plantilla (Template Language)
+     
+     3. Programaci¢n con dBASE IV (Programming with dBASE IV)
+     
+     Dentro de cada apartado, los cambios se presentan agrupados bajo la
+     secci¢n del manual a la que corresponden.
+     
+     
+USING DBASE IV SQL
+     
+     This section contains changes to the Using dBASE IV SQL manual.
+     
+Page 1-5 Switching Between dBASE and SQL Modes
+
+     Add the following Note to this section:
+     
+        NOTE
+        When you switch to SQL mode, any work area that is still open in dBASE
+        mode remains open. To minimize the possibility of running out of work
+        areas during the SQL session, close open files using the CLOSE ALL
+        command in dBASE mode before switching to SQL.
+     
+        - If the SQLHOME command is not set in your Config.db file, entering
+        SET SQL ON displays an error message. Refer to Getting Started.
+          
+     Additional dBASE commands are now available in SQL mode. Delete the third
+     paragraph in this section. Add the following new section:
+     
+     Using dBASE Commands and Functions in SQL Mode
+     
+        SQL commands provide an alternative to using dBASE commands to define
+        and manipulate data. You can use either set of commands, depending on
+        your familiarity with each language and the task that you want to
+        perform.
+        
+        Although you cannot use SQL commands in dBASE mode, you can use most
+        dBASE commands and functions in SQL mode. This includes some dBASE
+        commands that are the equivalent of SQL commands: APPEND, BROWSE,
+        EDIT/CHANGE, CREATE/MODIFY STRUCTURE, and CREATE/MODIFY QUERY.
+     
+        You can use the CREATE/MODIFY STRUCTURE command only for defining
+        dBASE database files, not for defining SQL tables.
+        
+        Refer to the Using the Menu System section in the next chapter for
+        information on using dBASE menu system functions from the Control
+        Center; and to the Using dBASE Commands and Functions section in
+        Chapter 16 for more information about combining dBASE and SQL
+        commands.
+     
+Page 2-8 Re-entering SQL Commands
+
+     Additional dBASE commands are now available in SQL mode. Add the
+     following section after this section:
+     
+     Using the Menu System
+     
+        While in SQL mode, you can use menu system functions from the Control
+        Center much as you can in dBASE mode. (Refer to the Using dBASE
+        Commands and Functions in SQL Mode section in Chapter 1.)
+        
+        You cannot use the menu system to create a SQL table or modify the
+        structure of an existing table. These functions must be performed
+        using the SQL commands described in this chapter. However, you can use
+        the menu system to create and modify dBASE database files that can
+        later be defined as SQL tables (described in Chapter 5 of this
+        manual).
+        
+        Using the Control Center, you can also use table data to:
+        
+        - Create, modify, and print reports and labels
+        
+        - Create and run SQL applications (refer to Chapter 6)
+        
+        - Create dBASE queries
+     
+Page 2-11 Creating a Database
+
+     CREATE DATABASE can be used in a program. Delete the following sentence
+     from the first paragraph in this section:
+     
+        It can only be run in interactive mode.
+     
+Page 2-12 Activating a Database
+
+     SET CATALOG is now supported in SQL mode. Add the following Note after
+     the second paragraph in this section:
+     
+        NOTE
+        Entering START DATABASE adds entries for all of the tables in the
+        database to an open dBASE IV catalog (.cat) file unless SET CATALOG is
+        OFF. SQL system catalogs are not added to the dBASE IV catalog file.
+     
+Page 2-13 Dropping (Deleting) Databases
+
+     You must have exclusive use of a database before deleting it. Add the
+     following sentence to the end of the first paragraph on this page:
+     
+        On a LAN, you cannot drop a database that another user currently has
+        activated.
+     
+     SET CATALOG is now supported in SQL mode. Add the following Note at the
+     end of this section:
+     
+        NOTE
+        Entering DROP DATABASE removes entries for all tables in the database
+        from an open dBASE IV catalog (.cat) file unless SET CATALOG is OFF.
+     
+Page 2-15 Creating Tables
+
+     SET CATALOG is now supported in SQL mode. Add the following Note at the
+     end of this section:
+     
+        NOTE
+        Entering CREATE TABLE adds an entry for the new table to an open dBASE
+        IV catalog (.cat) file unless SET CATALOG is OFF.
+     
+Page 2-19 Dropping (Deleting) Tables
+
+     SET CATALOG is now supported in SQL mode. Add the following Note at the
+     end of this section:
+     
+        NOTE
+        If the table is listed in an open dBASE IV catalog (.cat) file and SET
+        CATALOG is ON, entering DROP TABLE removes the entry for the table
+        from the catalog file.
+     
+Page 2-20 SQL Views
+
+     The definition of an updatable view cannot contain a GROUP BY clause.
+     Change the last sentence in the first paragraph of this section to read:
+     
+        If a view combines rows from a single table and the view definition
+        does not contain a GROUP BY clause, you may be able to use the view to
+        insert and update information in the base table.
+     
+Page 2-25 SQL Indexes
+
+     Naming conventions for <index name> and limits for the <column name>
+     parameter of CREATE INDEX should be provided. Add the following as the
+     next to last paragraph in this section:
+     
+        The name of a SQL index can be up to 10 characters long, must begin
+        with a letter, and can contain letters, numbers, and underscores. You
+        can create an index on up to 10 columns of a table if their combined
+        length does not exceed 100 bytes. If you attempt to include more than
+        10 <column name> specifications, an error message appears.
+        
+Page 2-27 Creating Indexes
+
+     You cannot specify both ASC and DESC with a composite index. Add the
+     following Note after the second paragraph on this page:
+     
+        NOTE
+        If you use more than one column for an index key, you cannot specify
+        both ASC and DESC for the index.
+     
+Page 2-28 Creating Indexes
+
+     Add the following at the end of the last paragraph in this section:
+     
+        Using Order_no in the WHERE clause of a SELECT command is also a very
+        efficient way of retrieving Sales data.
+
+Page 3-5 SELECT with DISTINCT
+
+     Add the following Note at the end of this section:
+     
+        NOTE
+        The following rules apply to using the DISTINCT keyword in a SELECT
+        command:
+     
+        - DISTINCT can be used only once in any SELECT clause, whether it be
+        in the outer query or in an inner query.
+        
+        - If DISTINCT is used in a SELECT clause, it must apply to the first
+        column named in the clause.
+     
+Page 3-11 Expressions in the SELECT Clause
+
+     Change the second sentence of the first paragraph of this section to
+     read:
+     
+        The first lets you use a constant or a memory variable to insert
+        descriptive column information next to a column displayed by a SELECT
+        command.
+     
+     When a SELECT result contains no decimal digits, the decimal point and
+     the two zeros to the right of it are not displayed. Delete them from the
+     example.
+     
+Page 3-12 Expressions in the WHERE Clause
+
+     In the second example, the decimal point and the zeros are not displayed.
+     Delete them from the example.
+     
+Page 3-15 Using Aggregate Functions in a SELECT Clause
+
+     In the example, the decimal point and the two zeros to the right are not
+     displayed. Delete them from the example.
+     
+Page 3-16 Using Aggregate Functions in a SELECT Clause
+
+     Add the following Note before the last paragraph in this section:
+     
+        NOTE
+        If the SELECT clause contains both column names and aggregate
+        functions, the command must include a GROUP BY clause. Refer to the
+        Grouping Records section later in this chapter.
+     
+     In all the examples on this page, delete the decimal points and the two
+     zeros following them.
+     
+Page 3-24 The GROUP BY Clause
+
+     In the example under column SUM1, delete the decimal points and the two
+     zeros following them.
+     
+Page 3-25 The GROUP BY Clause
+
+     In the first example under column COUNT1, and in the second example under
+     column SUM1, delete the decimal points and the two zeros following them.
+     
+Page 3-25 The HAVING Clause
+
+     Add the following as the last sentence in the first paragraph:
+     
+        The condition normally includes the aggregate function specified in
+        the SELECT clause.
+     
+Page 3-27 The UNION Clause
+
+     Add the following Note at the end of the section:
+     
+        NOTE
+        A UNION command cannot include a column with the LOGICAL data type, or
+        a dBASE function or memory variable.
+     
+Page 4-2 Joins
+
+     In the last sentence of the second paragraph, add SAVE TO TEMP...KEEP to
+     the clauses that can be used in a join.
+     
+Page 4-3 Joins
+
+     A SELECT command used to define a join need not contain a WHERE join
+     condition. Add the following as the third item in the second Note on the
+     page:
+     
+        3. If no join condition is supplied in a WHERE clause, every row in
+        each table specified in the FROM clause is joined with every row in
+        the other tables.
+     
+Page 4-8 The GROUP BY and HAVING Clauses
+
+     In both examples under column COUNT1, delete the decimal points and the
+     two zeros following them.
+     
+Page 4-10 Joining a Table with Itself
+
+     Some of the results in the EMP->LASTNAME column are sorted in ascending
+     order rather than descending order (DESC is specified for this example).
+     Change the order of the names as follows:
+     
+        Rolfes
+        Marin
+        McLester
+        Coudray
+        Long
+        Roddick
+        Thomas
+        Sanders
+        Michaels
+     
+Page 4-11 Subqueries
+
+     Add the following as the second paragraph of this section:
+     
+        The SELECT clause of an inner query can contain only one column name.
+        If the EXISTS predicate, discussed later in this chapter, is used in
+        the WHERE clause of the outer query, the * symbol also can be used.
+     
+Page 4-12 Subqueries Returning a Single Value
+
+     Add the following Note after the first example:
+     
+        NOTE
+        In this simple subquery, an error occurs if the = operator in the
+        WHERE condition of the inner query returns more than one value. This
+        is not true for a correlated subquery, discussed later in this
+        chapter.
+     
+Page 4-15 Using the ALL Keyword
+
+     Add the following Note in this section:
+     
+        NOTE
+        If =ALL is used to define an outer WHERE condition, the inner query
+        can return no more than one row.
+     
+Page 5-2 Using dBASE Commands and Functions in SQL Mode
+
+     Additional dBASE commands and functions are now available in SQL mode.
+     Add the following between the third and fourth paragraphs in this
+     section:
+     
+        NOTE
+        You can use additional dBASE commands and functions in SQL mode. For
+        example, you can use:
+        
+        - SET CATALOG and SET TITLE to record and maintain SQL objects in
+        dBASE catalog (.cat) files.
+        
+        - BROWSE, EDIT or CHANGE, and APPEND (without the BLANK option) to
+        display and update data in SQL tables. While using these commands, you
+        can use SET INSTRUCT to control the display of prompts and SET WINDOW
+        to edit memo fields related to non-SQL database files. (SQL system
+        tables are read-only.)
+        
+        - ASSIST to access the Control Center and the menu system.
+        
+        - CREATE/MODIFY APPLICATION, CREATE/MODIFY LABEL, CREATE/MODIFY
+        REPORT, CREATE/MODIFY SCREEN, REPORT FORM, and LABEL FORM to initiate
+        Control Center design and print functions.
+        
+        - SET DESIGN to prevent an application user from accessing the dot
+        prompt or one of the Control Center design screens.
+        
+        - USE and SELECT to access database files, including database files
+        defined as SQL tables.
+        
+        - CREATE/MODIFY STRUCTURE to define and update non-SQL database files.
+        
+        - PROTECT to implement security.
+        
+        - SET to display and change the current values of SET commands.
+        
+        - ALIAS() to return the alias name of a specified work area.
+        
+        - SELECT() to return the number of the highest unused work area.
+        
+        Unlike other dBASE functions, you cannot use ALIAS() or SELECT() in a
+        SQL command.
+        
+        NOTE
+        Although you can enter USE in SQL mode to open a non-SQL database
+        file, you can use only BROWSE, EDIT, CHANGE, or APPEND to access the
+        file.
+        
+        When SET CATALOG is ON, the following SQL commands affect the current
+        dBASE catalog:
+        
+        - START DATABASE -- entries for the database files for all tables in
+        the database are added to the catalog.
+        
+        - DROP DATABASE -- entries for the database files for all tables in
+        the database are removed from the catalog.
+        
+        - SELECT...SAVE TO TEMP -- an entry for the temporary table is added
+        to the catalog. When you change databases or end the SQL session, the
+        entry is removed from the file unless the KEEP option was specified.
+        (Refer to the SAVE TO TEMP Clause section later in this chapter.)
+        
+        - CREATE TABLE -- an entry for the new database file is added to the
+        catalog.
+        
+        - DROP TABLE -- the entry for the database file is removed from the
+        catalog.
+     
+Page 5-3 Using dBASE Commands and Functions in SQL Mode
+
+     Additional dBASE commands are now allowed in SQL mode. Add the following
+     commands to Table 5-1:
+     
+        ACTIVATE SCREEN
+        APPEND (without BLANK)
+        ASSIST
+        BROWSE
+        CHANGE
+        CLEAR GETS
+        CLEAR MEMORY
+        CLEAR MENUS
+        CLEAR POPUPS
+        CLEAR TYPEAHEAD
+        CLEAR WINDOWS
+        CLOSE ALTERNATE
+        CLOSE FORMAT
+        CLOSE PROCEDURE
+        CREATE FROM
+        CREATE/MODIFY APPLICATION
+        CREATE/MODIFY LABEL
+        CREATE/MODIFY QUERY/VIEW
+        CREATE/MODIFY REPORT
+        CREATE/MODIFY SCREEN
+        CREATE/MODIFY STRUCTURE*
+        CREATE VIEW FROM ENVIRONMENT
+        DELETE
+        EDIT
+        EJECT PAGE
+        KEYBOARD
+        LABEL FORM
+        LIST/DISPLAY STRUCTURE
+        PACK
+        RECALL
+        RELEASE <memvar list>
+        REPORT FORM
+        RESTORE SCREEN
+        SAVE SCREEN
+        SELECT WORK AREA
+        SET
+        SET CATALOG ON/OFF
+        SET CATALOG TO
+        SET CURSOR
+        SET DBTRAP
+        SET DESIGN ON/OFF
+        SET DIRECTORY
+        SET INSTRUCT ON/OFF
+        SET NEAR
+        SET REFRESH
+        SET TITLE ON/OFF
+        SET UNIQUE
+        SET VIEW
+        SET WINDOW
+        SORT
+        USE
+     
+        *For use only with non-SQL database files
+     
+Page 5-5 Using dBASE Commands and Functions in SQL Mode
+
+     Additional dBASE functions are now available in SQL mode. Add the
+     following functions to Table 11-2:
+     
+        ALIAS()*
+        CERROR()*
+        KEY()*
+        SELECT()*
+        WINDOW()
+     
+        *Not allowed in SQL commands
+     
+Page 5-7 Using dBASE Functions
+
+     Add the following Note at the end of this section:
+     
+        NOTE
+        In SQL mode, you cannot abbreviate function names as you can in dBASE
+        mode. For example, SQL does not recognize RTRI() or SPAC().
+     
+Page 5-7 The SAVE TO TEMP Clause
+
+     A temporary table is saved in the current database directory. Change the
+     first sentence in this section to read:
+     
+        ...to save the result of SQL queries in the current database
+        directory.
+     
+     SET CATALOG can now be used in SQL mode. Add the following Note after the
+     third paragraph in this section:
+     
+        NOTE
+        Using SAVE TO TEMP adds an entry for the temporary table to an open
+        dBASE IV catalog (.cat) file unless SET CATALOG is OFF. If you do not
+        specify KEEP, the entry is removed when the temporary table is
+        discarded.
+     
+     A temporary table created during program execution is available only
+     until the program returns control to the dot prompt or SQL prompt. In the
+     fourth paragraph, add the following to the end of the first sentence:
+     
+        ..., or until the program returns control to the SQL prompt or the dot
+        prompt.
+     
+Page 5-9 The SAVE TO TEMP Clause
+
+     USE is now supported in SQL mode. Change the second sentence in the first
+     paragraph on the page to read: You can use the dBASE IV report generator
+     by entering the USE command at the SQL prompt to open the database file
+     you've created.
+     
+Page 5-9 Accessing dBASE .dbf and .mdx Files
+
+     Additional dBASE commands are now supported in SQL mode. Change the first
+     sentence of the second paragraph in this section as follows:
+     
+        In dBASE mode or SQL mode, you can use dBASE commands to access most
+        SQL tables without doing any advance conversion or preparation,
+        because SQL tables are already stored as .dbf files. (SQL system
+        tables are read-only.)
+     
+Page 5-11 The DBDEFINE Utility Command
+
+     DBDEFINE no longer creates a text file. In Note 3, delete the first two
+     sentences.
+     
+     Memo files must be in the same directory as the database file before
+     using the DBDEFINE command. Add the following as Note 5:
+     
+        5. DBDEFINE ignores the memo fields associated with a database file.
+        Once you define the database file as a table, you cannot access its
+        memo fields using SQL commands. However, the memo (.dbt) files
+        associated with a database file must be present in the same directory
+        as the database file when you DBDEFINE the file. If they are not, you
+        will receive a 'File open' error message. Although a memo field
+        remains with its database file, no catalog table entry is made for it.
+     
+     In the SQL catalog tables, all table, index, and synonym names are stored
+     in uppercase. Change the SELECT command in the third example to read:
+     
+        WHERE Tbname = "VENDORS";
+     
+     If PROTECT is installed, DBDEFINE encrypts the data in a database file
+     using a SQL encryption key. Add the following Note at the bottom of the
+     page:
+     
+        NOTE
+        If your dBASE system is password-protected (refer to the SQL Security
+        and Authorization section later in this chapter), DBDEFINE encrypts
+        the file using a SQL encryption key so that it is no longer accessible
+        by dBASE commands.
+     
+Page 5-12 The DBCHECK Utility Command
+
+     Add the following section after this section:
+     
+     Updating Catalog Statistics
+     
+        Catalog statistics help SQL to determine the most efficient ways of
+        performing operations on a database. When you create tables and
+        indexes, statistics about these objects are recorded in the catalog
+        tables.
+        
+        As you change the database, use the RUNSTATS command periodically  to
+        update the statistics. Otherwise, the statistics will become outdated.
+        
+        For example, to update the Staff table after using ALTER TABLE to
+        change its structure, after changing more than 10 percent of its rows
+        using INSERT, DELETE, or UPDATE, or after creating a new index for the
+        table, enter:
+        
+        RUNSTATS Staff;
+        
+        To update statistics for all tables and indexes in the Samples
+        database, enter the following without specifying a table name:
+        
+        RUNSTATS;
+     
+Page 5-13 The LOAD Utility Command
+
+     Add the following example at the bottom of the page:
+     
+        For example, to append data from a RapidFile(TM) file to the Staff
+        table, enter:
+        
+        LOAD DATA FROM \RAPID\RFDATA\Salstaff.rpd
+           INTO TABLE Staff
+           TYPE RPD;
+        
+        Note that Salstaff must have the same number of fields as Staff has
+        columns, and that the data type of each field must match that of its
+        corresponding column.
+     
+Page 5-14 The LOAD Utility Command
+
+     Add the following Note at the end of the section:
+     
+        NOTE
+        If dBASE IV is password-protected, you cannot use LOAD DATA to import
+        data from a database file that has been encrypted by SQL or by dBASE
+        IV. Refer to the Data Encryption section later in this chapter.
+     
+Page 5-14 The UNLOAD Utility
+
+     Add the following example after the third paragraph of this section:
+     
+        To export data from Staff to a dBASE database file in the current user
+        directory (not the current database directory), enter:
+     
+        UNLOAD DATA TO C:\BACKUP\Staff2
+           FROM TABLE Staff;
+     
+        The fields in the new database file are created using the column names
+        and definitions of the Staff table.
+     
+Page 5-16 The GRANT Command
+
+     Add the following after the bulleted list:
+     
+        The following guidelines apply to GRANTed privileges:
+        
+        - Only the creator of a table, view, index, or synonym (or the SQLDBA
+        user-ID) can have the privilege of dropping the object.
+        
+        - You can't grant the ALTER, INDEX, or ALL privilege on a view.
+        
+        - A grantor who grants privileges using WITH GRANT OPTION allows a
+        grantee to grant the same privileges to other users. If the original
+        grantor later revokes the privileges from the grantee, they are
+        likewise revoked from those to whom the grantee granted them.
+     
+Page 6-3 dBASE Functions
+
+     dBASE user-defined functions (UDFs) are now allowed in SQL programs.
+     Substitute the following for the second paragraph in this section:
+     
+        You can use a dBASE user-defined function (UDF) in a SQL program file,
+        with the following restrictions:
+        
+        - A UDF can contain only the dBASE IV commands and functions that are
+        allowed in SQL mode. A UDF cannot contain any SQL command.
+        
+        - A UDF cannot be called from within a SQL command.
+        
+        A UDF in a .prs file can call a UDF in a .prg file and vice versa,
+        just as .prs and .prg files can call one another.
+     
+Page 6-3 SQL Status and Error Handling
+
+     Replace the entire section with the following:
+     
+        Use the dBASE ON ERROR command to create specific error-handling
+        routines that are triggered by the error numbers your SQL program
+        returns. Refer to Appendix A of Language Reference for a list of the
+        errors trapped by the ON ERROR command in SQL mode.
+        
+        Use the Sqlcode and Sqlcnt memory variables to signal the status of
+        each SQL operation as it is performed. Sqlcode indicates whether the
+        operation succeeded, failed, or returned no data. Sqlcnt indicates the
+        number of rows affected by the operation.
+        
+        Table 6-1 summarizes Sqlcode and Sqlcnt values for SQL data
+        definition, data manipulation, and cursor commands.
+        
+                          Table 6-1 Sqlcode and Sqlcnt values
+        ______________________________________________________________________
+        
+                               Data Definition Commands
+        
+        (ALTER TABLE, CLOSE, CREATE/DROP DATABASE, CREATE/DROP INDEX, CREATE/
+        DROP SYNONYM, CREATE/DROP TABLE, CREATE/DROP VIEW, DBDEFINE, DECLARE
+        CURSOR, RUNSTATS, and SHOW/STOP/START DATABASE)
+        
+        Status             Sqlcode           Sqlcnt 
+        
+        Succeed            0                 0
+        Fail               -1                0
+        
+                     Data Retrieval and Data Manipulation Commands
+        
+        (DELETE, FETCH, INSERT, OPEN CURSOR, SELECT, and UPDATE)
+        
+        Status             Sqlcode           Sqlcnt 
+        
+        Succeed            0                 Number of rows affected (for
+                                               SELECT INTO, Sqlcnt = 1)
+        Fail*              -1                0
+        
+        No data affected;  100               0
+        or FETCH fetched no rows
+        *For Fail, the value of Sqlcode may be the error number.
+        
+                                    Cursor Commands
+        
+        (DELETE WHERE CURRENT OF and UPDATE WHERE CURRENT OF)
+        
+        Status             Sqlcode           Sqlcnt 
+        
+        Succeed            0                 1
+        Fail               -1                0
+        ______________________________________________________________________
+        
+        Use the value of Sqlcode to determine whether a FETCH command returned
+        any rows that need to be processed. Use the Sqlcnt value following an
+        UPDATE operation to determine whether you should use the RUNSTATS
+        command to update catalog statistics for a table.
+     
+Page 6-4 dBASE IV Work Areas
+
+     An additional work area is not required for each GROUP BY or ORDER BY
+     clause. Delete the third bulleted item.
+     
+     Change the Note to read as follows:
+     
+        NOTE
+        A database file is opened during execution of a SQL command and is
+        closed after execution.
+     
+Page 6-6 Embedding Data Definition Statements
+
+     It is wise to avoid using data definition commands in a program. Change
+     the first paragraph to read as follows:
+     
+        It is not good practice to use data definition commands in a program
+        to define tables, views, synonyms, and indexes that are used by the
+        program. Never execute data definition commands conditionally, using
+        the IF...ELSE program construct.
+        
+        Instead, define objects before program execution, either interactively
+        or in a .prs file that is run before your program is executed. Once
+        objects are defined, you can use data retrieval and data manipulation
+        commands in your program to query and update them.
+        
+        Table 6-2 lists the data definition commands.
+     
+     Add the following data definition commands and explanations to Table 6-2:
+     
+        CREATE DATABASE Create a database to hold tables and related files.
+        
+        DROP DATABASE Remove an existing database.
+        
+        RUNSTATS Update catalog statistics for a single table or all tables in
+        the current database.
+     
+Page 6-9 Returning Multiple Rows
+
+     Add the following as the last sentence in the first bulleted item:
+     
+        In a program, you cannot execute a DECLARE CURSOR command
+        conditionally.
+     
+     Add the following as the second sentence in the fourth bulleted item:
+     
+        In a SQL program file, a CLOSE <cursor name> command must not be
+        placed before a command that references the cursor (for example,
+        within an IF...ELSE program construct) or a compiler error will occur.
+     
+Page 6-14 Multi-User and Transaction Programming
+
+     Replace the text of Note 1 with the following:
+     
+        The following types of SQL commands are not allowed in transactions:
+        data definition commands (see Table 6-2); startup commands (START
+        DATABASE and STOP DATABASE); utility commands (DBCHECK, DBDEFINE, LOAD
+        DATA, UNLOAD DATA, and RUNSTATS); security commands (GRANT and
+        REVOKE).
+     
+     Add the following as the last sentence of Note 2:
+     
+        If the cursor is closed after the transaction is ended, rows are not
+        removed until the cursor is closed.
+     
+Page 6-15 Repeated Definition of SQL Objects with the Same Name
+     
+     It is not advisable to define database objects within a program. If
+     objects are so defined, they should never be defined conditionally.
+     Because the examples in this section violate this precept, the entire
+     section should be deleted.
+
+
+TEMPLATE LANGUAGE
+
+     This section covers changes to Template Language in dBASE IV version 1.1.
+
+Page 3-5 Note
+
+        A different set of files is supplied with dBASE IV, version 1.1
+
+Page 4-7 Loop Commands
+
+     The Command Syntax for the FOREACH ... NEXT command should read:
+
+        FOREACH <loop selector> <cursor var>][IN <cursor var>]
+        <commands>[<cursor var>] NEXT [<cursor var>]
+
+Page 5-7 after COPY()
+
+     Insert the following section for a new function:
+     
+     COUNTC(<CURSOR>)
+        
+        COUNTC() returns the current index of a cursor into a collection.
+
+     Usage
+        
+        This function returns a number representing the current relative
+        position of a cursor.  Cursor is the pointer variable to examine. 
+        Zero indicates the cursor was invalid or uninitialized, or referenced
+        in an empty collection.
+        
+        This function is equivalent to referencing the cursor in most cases.
+
+     Example
+        
+        The following template results in the cursor position being printed:
+
+        {
+        INCLUDE "builtin.def"
+        INCLUDE "form.def"
+        FOREACH FLD_ELEMENT F}
+        FIELD {COUNTC(F)} has picture template\
+        {F.FLD_TEMPLATE}
+        {NEXT F
+        RETURN 0;
+        }
+
+Page 5-8 CREATE <filename>
+
+     Change this section to read:
+
+     Create <expC>
+        
+        CREATE() creates and opens a text file.  If you do not CREATE() and
+        name an output file, or APPEND() to an existing text file, text output
+        from the template program goes to a default file named Text.out.
+
+     Usage
+        
+        This function allows you to specify the text file for the output of
+        the template.  This function returns 1 for  TRUE, when the file is
+        successfully opened, or 0 for FALSE, when the file cannot be opened
+        for any reason.  <expC> is the name of the new file to be opened, and
+        it can include a full drive and path prefix.  If the named file
+        exists, it will be overwritten.
+
+     Example
+
+        {INCLUDE "Builtin.def"
+        ENUM OUTFILE = "Quick.fox"
+        GREATE(OUTFILE);
+        }
+        The quick brown fox jumped over the lazy dog.
+        
+        This template creates the output file Quick.fox and writes the text
+        following the closing brace to it.  Note the use of an enumerated
+        symbolic constant as the argument to CREATE().  Also note the use of a
+        semicolon after the  create function.  This function returns a value
+        which would have been printed before the text string.  The semicolon
+        discards the numeric value returned by the function.
+
+Page 5-9  DEBUG(<expN>)
+
+     The list of trace levels should read:
+
+        0 = Quiet	 Odometer only
+        1 = Talk	 Odometer + display generated text, interrupt off
+        2 = Examine	 Odometer + display generated text + interrupt on
+        3 = Trace	 Examine with display of source code
+        4 = Walk	 Trace with keystroke wait on each source line
+        5 = Animate	 Trace + Stack trace + Opcode trace
+        6 = Step	 Animate with keystroke wait on each opcode.
+     
+     When DEBUG() is waiting for a keystroke, the input key causes execution
+     to advance.  If the key is a number from 0 to 6, the debug level is reset
+     to the indicated level.  Otherwise, the keystroke is discarded.  This
+     function always returns a null string.
+
+Page 5-14 GETENV(<expC>)
+
+     The example section for this function should read:
+
+     Example
+        
+        Path returning template.
+
+        {include "Buitin.def"; Print(getenv("PATH"))}
+        {RETURN 0;}
+
+Page 5-15 after IIDC() and before LEN()
+
+     Insert the following section for a new function:
+
+     IMPORT(<expC1>,<expC2>,<expN>)
+        
+        IMPORT() changes a dBASE schema object file into a template language
+        layout object.
+
+     Usage	
+        
+        This function converts four types of dBASE screen objects into
+        template layout objects.  expC1 is the name of the dBASE input file
+        you want to import.  expC2 is the name of the template output file. 
+        expnN is a number representing the type of dBASE file you are
+        importing.  The supported file types are:
+        ___________________________________________________________________
+
+        <expN>	        Object file type
+
+        1		.qbe file, a dBASE read-only query object
+
+        2		.upd file, a dBASE update query object
+
+        3		.dbf file, a dBASE database file
+
+        4		.cat file, a dBASE catalog file
+
+        ___________________________________________________________________
+
+     		Example
+
+        {IMPORT("Parts.dbf","Parts.dto",3)}
+        
+        This imports the dBASE database file into a new template object file
+        called Parts.dto.
+
+Page 5-18 after MIN() and before NEWFRAME()
+
+     Insert the following section for a new function:
+
+     NAMETOKEN(<expC,><expN>)	
+        
+        NAMETOKEN() parses a string for valid dBASE variable names.
+
+     Usage
+        
+        This function provides parsing support for strings that contain dbase
+        variables.  <expN> allows you to pass one of the option codes to this
+        function.
+
+        ___________________________________________________________________
+        
+        <expN>	        Option
+
+        -1		Validate <expC> as a variable name
+
+        0		Count the name and no name tokens in <expC>
+
+        1...n		Return the nth token in <expC>
+
+        ___________________________________________________________________
+
+      Example
+
+        {nametoken("_Wr*ngname",-1)}
+        
+        returns 0, indicating an invalid variable name.
+
+Page 5-22 POKE(<expC>,[<expC> ...])
+
+     Amend the section on the POKE() function to read:
+
+     POKE(<expN>|<expC>|<cursor>|[,<expN>|<expC>|<cursor> ...])
+        
+        POKE() inserts a specified character expression into the text without
+        any formatting.  
+
+        <expN> is a number argument which is converted into a string before
+        being output.  <expC> is a character string to be output without
+        modification.  <cursor> is an argument which is converted to the
+        cursor position before being output.
+
+     Usage
+        
+        This function is useful for sending escape sequences to the printer,
+        or for creating binary files.  Any CHR(10) linefeeds sent with POKE()
+        are not counted by the CURLINE() function.
+        
+     The example remains the same.
+
+Page 5-22 PRINT(<expC>)
+
+     Amend this function as follows:
+
+     PRINT(<expN>|<expC>|<cursor>|[,<expN>|<expC>|<cursor> ...])
+     
+     and add the following paragraph to Usage:
+
+     <expN> is a number argument which is converted to a string before being
+     output.  <expC> is a character string to be output without modification. 
+     <cursor> is a cursor argument which is converted to the cursor position
+     before being output.
+
+Page 6-1 The Template Language Compiler - Command Syntax
+
+     There is now a new argument for the DTC command.  Add  a new section
+     before The Template Language Interpreter:
+
+     -z	
+
+        This option reduces the template .gen file by 30 percent and increases
+        the execution speed of the template.  If the -z option is used, you
+        cannot see your template source code in the Template Language
+        debugger, because the line number information used to find the code is
+        not output.
+        
+        Use the -z option after a template program is completely debugged and 
+        correct.
+
+Page 6-3 The Debugger
+
+     Replace the sections explaining the DEBUG() and BREAKPOINT() functions
+     with the following:
+
+     DEBUG(<expN>)
+        
+        This function turns on the debugger within Dgen.exe at a specified
+        level of diagnostics.  The level is a number from 0 to 6.  Levels
+        above 1 are ignored by dBASE IV internal code generator.
+
+        Debugging template programs occurs during several different stages in
+        program development.  First is during compilation.  Dtc.exe will give
+        error messages for most basic syntax errors.
+
+        Next, you add the debugging commands BREAKPOINT() and DEBUG() to the
+        template source code file, and recompile the source code.  Dgen.exe
+        uses the debugging commands to display information on the screen.  If
+        the template you are debugging is a text-handling template and
+        produces no dBASE code, then the debugging can occur entirely out of
+        dBASE.  If the template produces dBASE code, then compile this
+        template-generated dBASE code in dBASE.  The dBASE internal compiler
+        will catch the syntax errors in the generated code.
+        
+        The DEBUG() command must be present in any file before BREAKPOINT()
+        can be activated.  When DGEN encounters the DEBUG() function,
+        depending on the level set with the numeric argument of DEBUG(), it
+        may pause and let you step through the code, or animate.  BREAKPOINT()
+        displays the value of <expC> at the message line of the screen. 
+        Breakpoint messages are written to the log file if the -l option is
+        used with DGEN.
+        
+        BREAKPOINT() and DEBUG() are also described in Chapter 5.
+
+
+PROGRAMMING WITH dBASE IV
+
+     This section contains changes to the Programming with dBASE IV manual.
+
+Page 1-1 First paragraph under What is dBASE Programming?
+
+     The instructions in brackets should be deleted:
+
+        (Use the command DO......from the Applications panel.)
+
+Page 1-3 Sample code
+
+     The command after IF .NOT. FOUND should read:
+
+        ?? CHR(7)
+
+     The following two commands should be transposed:
+
+        SET PRINTER OFF
+        WAIT
+
+Page 1-5 Last bullet point at bottom of the page
+
+     This point should read:
+
+        - If the program uses the printer, failing to connect or turn on the
+        printer.
+
+Page 1-6 First sentence under the heading
+
+     Add another sentence to this line, before the bullet points:
+
+        After pressing a key to continue:
+
+Page 1-6 Sample code
+
+     The following commands should be transposed:
+
+        SET PRINTER OFF
+        WAIT
+
+Page 1-6 After sample code
+
+     This paragraph should commence:
+
+        Check your entries.  Save and run the modified application ...
+
+Page 1-7 Point 2 under Understanding the Sample Program
+
+     This should read:
+
+        The CLEAR ALL command closes any open dBASE files and releases memory
+        variables.  The CLEAR command clears the screen
+
+Page 1-7 Point 12 under Understanding the Sample Program
+
+     The command for sounding the warning bell should be:
+
+        ?? CHR(7)
+
+Page 1-8 Point 16 under Understanding the Sample Program
+
+     Delete the following sentence from this point:
+
+        The City, State and Zip fileds are separated by a single space.
+
+     Insert the following at the end of this point:
+
+        If your laser printer does not eject your printout without pressing
+        the manual formfeed button, add the line:
+
+        _padvance
+
+        immediately before the SET PRINTER OFF command.  This will eject the
+        printed page from the laser printer.
+
+Page 1-8 Points 18 and 19 under Understanding the Sample Program
+
+     These two points should be transposed, corresponding to the transposition
+     of the commands in the sample program.
+
+Page 1-9 Figure 1-4, Procedure List_box on right-hand side
+
+     Insert the following command between DO Zip_name and ENDIF:
+
+        SET PRINTER OFF
+
+Page 1-10 Under Programming Conventions
+
+     Delete the third, fourth and fifth bullet points:
+
+Page 1-11 Last bullet point under Programming Conventions
+
+     Delete this reference to a program footer
+
+Page 3-1 After the first bullet point under What This Chapter Covers
+
+     Insert a new bullet point:
+
+        - Naming memory variables
+
+Page 3-2 Figure 3-1, the top right-hand box
+
+     The contents of this box should be:
+
+         "Zambini"
+
+        (or any other name you prefer, but not spaces)
+
+Page 3-4 First paragraph under Initializing Memory Variable Arrays
+
+     At the end of this paragraph, insert the following sentence:
+
+        An array can have up to 1,169 elements.
+
+Page 3-4 Under Figure 3-2, the second paragraph 
+
+     This paragraph should read:
+
+        Reference an array element with the name of the array, followed by the
+        coordinates in square brackets.  One-dimensional arrays have one
+        coordinate (row); two-dimensional arrays have two coordinates (row and
+        column), separated by a comma.
+        
+Page 3-4 Under the first box of sample code - DECLARE ...
+
+     Insert the following paragraph:
+
+        You can STORE different types of data TO different elements in a
+        single array.  Each element has a data type, but the array as a whole
+        does not.
+
+Page 3-5  Table 3-2
+
+     Insert a READ command after the @ ... SAY command in all examples in this
+     table, except the first.  In the "Hold data for computation" example,
+     only one READ is required, after the second @ ... SAY, and the two GET
+     commands should have a PICTURE clause, viz:
+
+        GET amnt_.... PICTURE "99999.99"
+
+Page 3-6 First paragraph
+
+     This should read:
+
+        The following example stores the part number and cost for each record
+        in the Goods database file to an array and displays their values.
+
+Page 3-6 Sample code
+
+     After the SCAN command, the next two commands should read:
+
+        cost_aray[rrow,1] = Part_id
+        cost_aray[rrow,2] = Cost
+
+Page 3-6 First paragraph under Public and Private Variables
+
+     Delete the text in brackets towards the end of this paragraph:
+
+        (A memory variable array cannot be private.)
+
+Page 3-7 After the first paragraph
+
+     Insert the following text and example:
+
+        Arrays are public by default.  To create a private array, you must
+        make the array name private before you declare the array:
+
+        PRIVATE cost_aray
+        DECLARE cost_aray[33,2]
+
+Page 3-10 Heading(s)
+
+     At the top of the page, the heading should read:
+
+     Filename Substitution
+
+     The note (&&) half-way down the page should be replaced by a heading:
+
+     Macro Substitution
+
+Page 3-10 First paragraph (under Filename Substitution)
+
+     This should read:
+
+        Wherever a dBASE command expects a filename, you can substitute a
+        memory variable enclosed in parentheses or an expression containing at
+        least one operator or function.  This is known as filename
+        substitution.  For example, you can GET a filename into a memory
+        variable and then USE the variable:
+
+Page 3-10 The first box of sample code
+
+     The second line should read:
+
+        @ 10,10 SAY "Enter filename: " GET filename
+
+Page 3-10 The second box of sample code
+
+     The second line should read:
+
+        tag = "Emp_id"
+
+Page 3-10 The third box of sample code
+
+     This should be replaced by:
+
+        myear = RIGHT(DTOC(DATE(),2))
+	COPY TO "orders" + myear
+
+Page 3-10 The first paragraph under Macro Substitution
+
+     Before the last sentence, insert the following:
+
+        Use a period (.) to signal the end of a macro.
+
+Page 3-10 The line before the last sample code box on the page
+
+     This should read:
+
+        For use in Run Time, replace the second line with:
+
+Page 5-3 Under Procedures and Procedure Files
+
+     The last sentence on the page should read:
+
+        This section shows you how dBASE IV supports structured programming
+        with procedures, user-defined functions and procedure files.
+
+Page 5-4 The first paragraph
+
+     The last two sentences (including the one in brackets) should be replaced
+     by:
+
+        Each procedure can have up to 65,520 bytes of generated code.
+
+Page 5-4 The paragraph after the first sample code box
+
+     Delete the second sentence:
+
+        Procedure files may contain.....
+
+Page 5-5 Top of the page, before && Compiling Program Code
+
+     Insert the following section:
+
+     User-Defined Functions
+
+        Like the internal dBASE functions, user-defined functions (UDFs)
+        consist syntactically of the function name followed by parentheses,
+        which sometimes contain a list of parameters.  Unlike the dBASE
+        functions, you code UDFs yourself.
+
+        UDF procedures always begin with the command FUNCTION <function name>
+        and end with RETURN <expression>. The FUNCTION command distinguishes
+        the UDF from an ordinary procedure, which begins with the PROCEDURE
+        command.  Note that you must specify a RETURN expression in a UDF,
+        whereas you may not do so in an ordinary procedure.
+
+        Prof_mgn() is a simple user-defined function from Orders.prg that
+        calculates profit margins:
+
+        FUNCTION Prof_mgn
+           PARAMETERS cost, price
+           margin = ROUND((price-cost)/PRICE*100,1)
+        RETURN margin
+
+        You cannot include certain commands such as BROWSE and EDIT in a UDF
+        (see the User-Defined Functions section in Chapter 1 of Language
+        Reference for a list).  Don't give a UDF the same name as a dBASE
+        function, since, if you do, dBASE IV will execute its own function
+        rather than the UDF.
+
+Page 5-5 Under Parameter Passing
+
+     After the first two sentences of the second paragraph, the text (In this
+     case, ....) should be replaced with the following:
+
+        While the calling program may use different names for the parameters
+        than does the procedure, the order in which the parameters are passsed
+        must correspond to their order in the PARAMETERS command.
+
+     Insert the following command line at the beginning of the sample code:
+
+        mtotal = 0
+
+Page 5-7 Under DOing a Procedure
+
+     The second sentence of the first paragraph should commence as follows:
+
+        When dBASE IV encounters the DO command, .......
+
+Page 5-8 The second sample code box at the bottom of the page.
+
+        After order_pt = 5, this example should read:
+
+        IF Qty_onhand <= order_pt
+           IF do_report
+              REPORT FORM Ord_form NEXT 1 TO PRINTER
+           ENDIF
+        ELSE
+           DO Stok_now
+        ENDIF
+
+Page 5-10 After Figure 5-5
+
+     Delete the paragraph commencing:
+
+        Don't confuse ..........
+
+Page 5-10 The paragraph at the bottom of the page
+
+     The last sentence should be replaced with the following text:
+
+        This construct automatically SCANs the entire file and stops when the
+        end of file is reached.  SCAN is always used with an open database
+        file, whereas DO WHILE can be used without database files.
+
+Page 5-11 First box of sample code
+
+     The command line between SCAN and ENDSCAN should read:
+
+        ? Part_id, Part_name AT 15, Descript
+
+Page 5-11 Second box of sample code
+
+     The command line between SCAN and ENDSCAN should read:
+
+        ? Lastname, Firstname, Address1, City
+
+Page 5-11 Under Program Interrupts
+
+     The first sentence should read:
+
+        dBASE IV provides a useful set of program interrupts to interrupt
+        program execution when certain events occur (see Figure 5-6).
+
+Page 5-12 First paragraph
+
+     The lase sentence in this paragraph should be replaced by:
+
+        ON KEY LABEL will trap any key the user presses.  ON KEY alone does
+        not trap the key.
+
+Page 5-12 Second box of sample code
+
+     The DO WHILE command in this example should read:
+
+        DO WHILE .NOT. UPPER(choice) $ "PS"
+
+Page 5-14 First paragraph
+
+     After the first sentence this should read:
+
+        The CASE statement controls what happens when the user picks bar 17
+        (the Index database option) from the Option menu.  The outer IF
+        attempts to put the database file in exclusive use if the program is
+        running on a network.  If the outer IF is successful, the inner IF
+        calls the Indexer procedure to create the index, and then reopens the
+        file for shared use.  The ELSE portion of the outer IF executes when
+        the program is not running on a network.  It simply calls Indexer,
+        since exclusive use isn't necessary to create indexes on single-user
+        dBASE IV.
+ 
+Page 5-14 Sample code box
+
+     The example given should be changed to that supplied below:
+
+        DO CASE
+        *	<other case statements>
+        	CASE BAR() = 17
+        	IF NETWORK()
+        		old_tag = ORDER()
+        		USE(dbf) EXCLUSIVE
+        		IF net_choice  <>27
+        			 DO Indexer
+        
+        			 SET EXCLUSIVE OFF
+        			 USE(dbf) ORDER(old_tag)
+        		ENDIF
+        
+        	ELSE
+        		DO Indexer
+        	ENDIF
+
+        *	<more case statements>
+        ENDCASE
+
+Page 6-1 First paragraph
+
+     This should read as follows:
+
+        The program setup code establishes the working environment and
+        initializes global memory variables used throughout the program.  It
+        also displays the main menu and calls the subprograms activated by it.
+
+Page 6-1 Tip
+
+     Remove this section completely
+
+Page 6-1 Under What this Chapter Covers
+
+     The first bullet point should read:
+
+        - Program headers
+
+     The heading below the bullet points should also be changed to read:
+
+     Program Headers
+
+Page 6-2 Table 6-1
+
+     The entry for the SET SAFETY OFF command should read as follows:
+
+        Suppress warning messages before overwriting files     SET SAFETY OFF
+
+     After the last operation on this page (Suppress redisplay of command
+     lines), the following new operation should be added:
+
+        Specify line number for messages		       SET MESSAGE TO
+
+Page 6-3 Table 6-1
+
+     After the command SET NEAR OFF, insert a new operation:
+
+        Select destination for printer output	SET PRINTER TO
+
+     Remove the notes at tjhe end of the table.
+
+Page 6-3 After SET DEFAULT TO
+
+      insert a new operation:
+
+        Set the default drive and directory	SET DIRECTORY TO
+
+Page 6-4 Note at bottom of page
+
+     Delete this note
+
+Page 6-5 First box of sample code
+
+     SET ESCAPE ON should read SET ESCAPE OFF.
+
+Page 6-5 Initializing Memory Variables
+
+     Change the section heading to:
+
+     Initializing Global Memory Variables
+
+Page 6-5 First box of sample code under Initializing Memory Variables
+
+     The first command line should be replaced by the following:
+
+        PUBLIC erased, not_valid, rec_is_dup, filters_on
+        PUBLIC lookup_ok, choice, record_num, net_choice
+        PUBLIC target, lock_dbf, matchchar, scanfield
+
+     The last line should be changed to:
+
+        STORE 0 TO record_num, net_choice
+
+Page 6-5 At the bottom of the page
+
+     The paragraph under the sample code and the subsequent example should be
+     deleted
+
+Page 6-8 Program Footer
+
+     Delete this section completely.
+
+Page 7-3 First paragraph
+
+     Add the following sentence to the end of the paragraph:
+
+        To see the figure in color, select VENDORS from the Business
+        application main menu.
+
+Page 7-6 Under Activating the Screen
+
+     The first sentence of the second paragraph should read:
+
+        Certain commands, such as ?/??, LIST or CLEAR can cause the screen to
+        scroll.
+
+Page 7-9 First box of sample code
+
+     The coordinates for the @ command should be @ 17,14 and the DEFINE WINDOW
+     command should read:
+
+        DEFINE WINDOW memo_windo FROM 7,4 TO 19,75 PANEL COLOR &c_list
+
+Page 7-10 The paragraph before the sample code box
+
+     Add the following sentence before the last remark in brackets:
+
+        The numbers are the ASCII values for the characters to appear.
+        
+Page 7-12 First line
+
+     This should read:
+
+        This excerpt from the Set_env procedure in Library.prg...
+
+Page 7-12 Sample code box
+
+     In the first PUBLIC command, add "c_fields," after c_data, and do the
+     same in the first STORE command.
+
+     After the line commencing c_data = ..., the following command line should
+     be added:
+
+        c_fields = "B/BG"
+
+Page 7-12 The STORE command line immediately following the ELSE command
+
+     This should read as follows:
+
+        STORE "W+/N, N/W" TO c_standard, c_data, c_fields, c_popup, c_alert,
+        c_list
+
+Page 7-13 First box of sample code
+
+     The last line should read:
+
+        <@. ... SAYs defining screen background>
+
+Page 8-2 Second paragraph of Warning
+
+     All references to .gen files should be replaced by .prg files in this
+     paragraph.
+
+Page 8-2 Last line on page
+
+     This should read:
+
+        creates . prg files ....
+
+Page 8-4 Sample code under Specifying Menu Actions 
+         (including that on the top of the next page)
+
+     After the command DO eraser, the code should be replaced by:
+
+         CASE BAR() = 6		&&Next record
+        	 DO Skip_rec WITH 1
+         CASE BAR() = 7	        &&Previous record
+        	 DO Skip_rec WITH -1
+         CASE BAR() = 8	        &&Top record, in active index order
+        	 GO TOP
+         CASE BAR() = 9	        &&Bottom record
+        	 GO BOTTOM
+         <additional CASE statements>
+         ENDCASE
+        .
+        .
+        .
+        RETURN
+
+Page 8-5 Second box of sample code under Activating the Pop-up Menu
+
+     Insert the following command line after DO Bar_def:
+
+        ON SELECTION POPUP main_mnu DO Barpop
+
+Page 8-6 Sample code 
+
+     Remove the parentheses at the end of the command line:
+
+        CASE BAR() = 19
+
+Page 8-7 Table 8-1
+
+     Remove the note at the bottom of the page:
+
+        * Use ON PAD ...
+
+Page 8-9 Defining a List
+
+     The third bullet point should read:
+
+        - Value lists, containing the contents of a field in each record
+
+Chapter 9 Note:
+
+     The @ ... SAY command should have co-ordinates in all examples in this
+     chapter.
+
+Page 9-2 Third paragraph
+
+     The first sentence should end:
+
+        ...that is, to a position relative to the current coordinates
+Page 9-2 Sample code box
+
+     Remove the quotes around <exp1> and <exp2>.
+
+Page 9-3 Under figure 9-1
+
+     This sentence should read:
+
+        The screen procedure in Vendors.prg contains custom code...
+
+Page 9-5 Last paragraph before the Note
+
+     The first sentence should commence:
+
+        When you use SET FORMAT TO <.fmt filename>, the full-screen commands
+        ...
+
+     Delete the sentence:
+
+        BROWSE is also formatted by the active .fmt file ...
+
+Page 9-5 Under Getting Data from an Array
+
+     The REPLACE command referenced here should be REPLACE FROM ARRAY
+
+Page 9-6
+
+     Delete this page
+
+Page 9-7 Under Setting Intensity, Delimiters and Color
+
+     The last sentence of the second paragraph should read:
+
+        You can use SET DELIMETERS to specify characters surrounding the GETs.
+
+Page 9-7 First paragraph of Displaying a Memo Field in a Window
+
+     Add the following sentence to the end of this paragraph:
+
+        Note that the memo window will not be displayed if the @ ... SAY ...
+        GET command is issued in another active window, because only one
+        window can be active at a time.
+
+Page 9-7 Sample code
+
+     After the DEFINE WINDOW command, delete the lines:
+
+        DO Screen
+        PROCEDURE Screen
+
+Page 9-8 Bottom of the page
+
+     Delete from the last sentence the final phrase after the comma:
+
+        ..., a reference file that the user cannot edit.
+
+Page 9-11 Tip
+
+     This should read:
+
+        You can STORE a PICTURE clause in a memory variable and then use the
+        variable in an @ ... SAY command.
+
+     and the sample code for this tip should read:
+
+        money = "@$ 999,999.99"
+        @ 10,10 SAY debit PICTURE money
+        @ 11,10 SAY credit PICTURE money
+
+Page 9-11 Last paragraph on the page
+
+     Delete this paragraph after the bullet points:
+
+        Some of the ...........types of functions.
+
+Page 9-12 && User-defined Functions
+
+     Delete this whole section, up to the next heading.
+
+Page 9-13 Under the second box of sample code
+
+     The first sentence should end:
+
+        ... to read VALID .NOT. " " $ mpart_id.
+
+     In the next paragraph, the second sentence should read:
+
+        The user's entry is accepted only if the quantity ordered is greater
+        than zero and less than or equal to the quantity on hand.
+
+Page 9-13 Third box of sample code
+
+     The VALID command line should read:
+
+        VALID mquantity >0 .AND. mquantity <= Goods->Qty_onhand
+
+Page 9-14 Using @...SAY...GET WHEN
+
+     The first sentence of this section should read:
+
+        The more global WHEN option controls whether users may access a field
+        at all.
+
+Page 9-15 Checking against a Database File
+
+     The second sentence should be replaced by:
+
+        The routine below checks whether the part number entered by the user
+        is in the Goods database file.  A more generalised version of this
+        example is in the Orders.prg and the Lookupid user-defined function in
+        Library.prg
+
+Page 9-16 Sample text
+
+     The first line of code should read:
+
+        USE Orders ORDER Order
+
+Page 9-16 Checking for Duplication
+
+     The first two paragraphs of this section should be replaced by the
+     following:
+
+        Your program may need to prevent users from entering duplicate records
+        into the database file.  One way to check for duplicates is
+        demonstrated by the following procedure, New_emp.  The DO WHILE loop
+        repeats until the user either enters nothing, or enters an employee ID
+        number  that is not already on the file.  If nothing is entered, the
+        procedure RETURNS to its caller.  If a new, unique ID number is
+        entered, a blank record is added to the file, the contents of the
+        Emp_id field are REPLACEd with the new ID number, and the record is
+        EDITed.
+
+        PROCEDURE New_emp
+        USE Employee ORDER Emp_id
+        CLEAR
+        DO WHILE .T.
+          memp_id = SPACE(11)
+          @ 8,10 SAY "Employee ID Number for the new employee";
+                 GET memp_id PICTURE "999-99-9999"
+          READ
+          IF "" = TRIM(memp_id)
+            RETURN
+          ENDIF
+          IF SEEK(memp_id)
+            ?? chr(7)
+            @ 9,10 SAY "Employee "+memp_id+" is already on file"
+          ELSE
+            EXIT
+          ENDIF
+        ENDDO
+        
+        APPEND BLANK
+        REPLACE Emp_id with memp_id
+        EDIT NEXT 1
+        RETURN
+
+        The New_emp procedure requires that the user supply a unique ID number
+        in order to add an employeee to the file.  This guarantees that the
+        record will be unique when it is added to the file.  However, New_emp
+        does not prevent users from introducing duplicate records by changing
+        the Emp_id field during the EDIT NEXT 1 command.  This could be
+        corrected by activating a format file that does not allow editing the
+        Emp_id field, or by using @...SAY...GET commands to collect the
+        remaining fields.
+
+        The next example, from Goods.prg and Library.prg, checks for
+        duplicates when records are added or edited.  It uses the VALID clause
+        of the @...GET command with a user-defined function, which causes the
+        VALID to fail if the user enters an existing part number.
+
+Page 9-17 Sample code
+
+     The @...SAY command lines should read as follows:
+
+        @ 6,4 SAY "Part #: " GET mpart_id FUNCTION "!";
+            VALID Duplicat(mpart_id);
+            ERROR "Duplicate part number, please re-enter";
+            MESSAGE "Enter a part number, or Esc to quit"
+
+Page 9-19 Last paragraph on page
+
+     This should read:
+
+        Helper.prg is a typical help program (see Sample Programming Code)
+        that provides help for all of the menus in the Business application
+
+Page 9-20 Sample code
+
+     The ON KEY command should read:
+
+        ON KEY LABEL F1
+
+Page 9-22 First paragraph
+
+     At the end of this paragraph, add the following sentence:
+
+        Fields are not carried forward with the APPEND BLANK command.
+
+Page 9-22 Note
+
+     This should be made an ordinary paragraph, and should say simply:
+
+        Issuing SET CARRY TO automatically SETs CARRY ON.
+
+Page 9-23 First paragraph
+
+     The third sentence should read:
+
+        Then it calls Get_data, which displays the fileds on the screen form
+        ...
+
+PAge 9-23 Sample code
+
+     In the third line, replace "DO screen" with:
+
+        DO Get_data 
+
+     At the end of the Sav_data procedure, after DEACTIVATE WINDOW alert, the
+     code should read:
+
+           IF choice = "Y"
+        	IF PROMPT() = "Add record"
+        	     APPEND BLANK
+         	     record_num = RECNO()
+        	ELSE
+        	     GO record_num
+        	ENDIF
+                DO Repl_fld
+           ELSE
+        	GO record_num
+           ENDIF
+        RETURN
+
+Page 9-24 Tip
+
+     In the second sentence "or PgUp" should be deleted.
+
+     In the last line the command should be READ, not READ SAVE.
+
+Page 9-24 && Working with Large Files
+
+     After the first paragraph, replace the rest of the section wht the
+     following:
+
+        Purchase a disk optimizer program and periodically optimize your disk
+        to improve performance.
+
+Page 9-24 Deleting Data from the Database
+
+     The first sentence of the last paragraph should read:
+
+        For improved program efficiency, the PACK command is located in the
+        Sub_ret procedure in Library.prg.
+
+Page 9-27 Second paragraph
+
+     The second from last sentence should commence:
+
+        The command KEYBOARD CHR(27) ends the Browse session ...
+
+Page 9-27 Sample code
+
+     After the comment *Display and exit Browse table automatically, delete
+     the line:
+
+        RESTORE MACROS FROM Invoice2
+
+     and replace the line "PLAY MACRO exit_brow" with:
+
+        KEYBOARD CHR(27)
+
+Page 9-28 Third paragraph
+
+     The first sentence should read:
+
+        The first CASE traps the F9 key.
+
+     and after the second sentence, which is correct, the text for this
+     paragraph should be:
+
+        The F9 key is defined in the initial ON KEY statement to place a
+        Ctrl-W (CHR(23)) and the letter L into the type-ahead buffer.  The
+        CHR(23) terminates the READ, leaving the letter L in the type-ahead
+        buffer.  The INKEY() function after the READ stores the l in gn_inkey.
+
+Page 9-29 Sample code
+
+     After DO CASE, the next command line should read:
+
+        CASE gn-inkey = ASC("L")		&& F9
+
+Page 9-29 On the first line of code and towards the end of the Lineitem
+          procedure
+
+     The ON KEY command line should read as follows:
+
+        ON KEY LABEL F9 KEYBOARD CHR(23) + "L"
+
+Chapter 10 Note:
+
+     The @ ... SAY command should have co-ordinates in all examples in this
+     chapter.
+
+Page 10-2 Table 10-1
+
+     The first example should read:
+
+        ? LEN(Part_name)
+
+     The second example should read:
+
+        ?AT ("Tue","Monday, Tuesday ...")
+
+     The second from last task should read:
+
+        Compare strings by value
+
+     Delete the note with the asterisk at the bottom of this table:
+
+        * Assume terms.....
+
+Page 10-3 The paragraph under the fourth box of sample code
+
+     The first sentence should read:
+
+        The following example uses AT(), LEFT() and SUBSTR() to print the
+        items in a list.
+
+Page 10-3 The fifth box of sample code
+
+     The DO ... WHILE loop in this example should read:
+
+        DO WHILE "," $mfilelist
+           ? LEFT(mfilelist,AT(",",mfilelist)-1)
+           mfilelist = SUBSTR(mfilelist,AT(",",mfilelist)+1)
+        ENDDO
+
+Page 10-5 Table 10-2
+
+     Delete the last example for Sum values:
+
+        TOTAL ON Part_id TO Part_tot
+
+     After Average Values, the next task should read:
+
+        Compute standard deviation and variance
+
+        instead of "Compute distribution"
+
+Page 10-6 First box of sample code
+
+     After STORE 0 TO ... and before USE ..., the following command should be
+     inserted:
+
+        mcust = SPACE(6)
+
+     Delete the command:
+
+        mcust = Cust_id
+
+Page 10-6 Handling Date Data
+
+     Delete the following from the end of the first sentence of the first
+     paragraph:
+
+        ... in the form CCYY/MM/DD (Year/Month/Day).
+
+     In the second bullet point, the command should read:
+
+           SET CENTURY ON
+
+Page 10-7 Table 10-3
+
+     After Check for blank date, insert the following extra task and example:
+
+        Check for non-blank date		?.NOT.{} = mdate
+
+     The last task in this table should read:
+
+        Find days between two dates
+
+Page 10-7 The first box of sample code
+
+     This should read:
+
+        USE Orders
+        COUNT FOR LIKE("03/??/88",DTOC(Date_trans)) TO March_cnt
+
+Page 10-7 After this box of sample code
+
+     The second sentence of the paragraph should read:
+
+        The routine issues a reminder letter if the account is between 30 and
+        45 days past due, and a stronger letter if the account is 45 or more
+        days past due.
+
+Page 10-7 The last box of sample code
+
+     After . outdate = indate + .25, the following command lines should be
+     deleted:
+
+        07/01/1988
+        .  ? indate
+        07/01/1988
+        .  ? outdate
+
+Page 10-8 The first block of sample code
+
+     The first command line of this example should read:
+
+        . ? DTOC(indate) = DTOC(outdate)
+
+Page 10-8 The Note in Handling Time Data
+
+     The second sentence should read:
+
+        SET CLOCK OFF does not suppress the clock display in BROWSE and EDIT.
+
+Page 10-8 After the Note
+
+     The first sentence should read:
+
+        TIME() always returns a character string in 24-hour format.
+
+Page 10-8 In the last sample code box on the page
+
+     The @ ... GET command should read:
+
+        @ 10,10 GET ....
+
+Page 10-9 First paragraph on the page
+
+     The third sentence in this paragraph should read:
+
+        The next line subtracts the equivalent number of seconds from mdiff.
+
+Page 10-9 The sample code box
+
+     After IF mdiff > 0, the code should read as follows:
+
+            mhours = INT(mdiff/3600)
+            mdiff = mdiff - mhours*3600
+            mminutes = INT(mdiff/60)
+            mseconds = mdiff - mminutes*60
+        ENDIF
+        mhours = RIGHT(STR(mhours+100,3),2)
+        mminutes = RIGHT(STR(mminutes+100,3),2)
+        mseconds = RIGHT(STR(mseconds+100,3),2)
+        @ 12,10 SAY "The time difference is " + mhours + " :" + mminutes +
+        " :" + mseconds
+
+Page 10-9 Under Handling Memo Field Data
+
+     The first sentence of this section should read:
+
+        Memo fields are actually character data, but dBASE IV maintains them
+        in a separate database text file (.dbt).
+
+     The first sentence in the second paragraph should read:
+
+        Memo fields can contain up to 64K. 
+
+Page 10-14 Table 10-5
+
+     The example for converting character to date should read:
+
+        Order_date = CTOD("09/12/88")
+
+     The example for converting date to string (for indexing) should read:
+
+        INDEX ON DTOS(Date_trans)+Cust_id;
+           TAG Orders
+
+     The last two conversions should be reversed, viz:
+
+        Memo to character	 REPLACE mstring WITH mmemo
+        Character to memo	 REPLACE mmemo WITH mstring
+
+Page 11-2 Second paragraph under Figure 11-1
+
+     Delete the last sentence of this paragraph
+
+        You can open ...... types at once.
+
+     and add the following sentence to the end of the third paragraph:
+
+        In addition to the production index, you can open up to 10 .mdx and
+        .ndx files at once.
+
+Page 11-3 First paragraph
+
+     The end of the first sentence should read:
+
+        ...or a combination of fields of various types.
+
+Page 11-3 Controlling Duplicate Keys
+
+     The first sentence of this section should read:
+
+        If the database file contains more than one record with the same key
+        value, ...
+
+     In the second sentence, delete the words "and SEEK".
+
+     After this section, insert a new section, before Indexing in Descending
+     Order:
+
+Page 11-3 Conditional Indexing
+
+        If you regularly work with a subset of records in a database file, you
+        can create a conditional index by including a FOR clause in the INDEX
+        command.  A conditional index contains entries only for those records
+        which satisfy the FOR clause conditions.
+
+        For example, in an accounts payable database file you may be concerned
+        with unpaid invoices most of the time.  Add a FOR clause to the INDEX
+        command to select only unpaid invoices:
+
+        INDEX ON Inv_no TAG Unpaid FOR .NOT. Paid
+
+        When you access the database file through the index, paid invoices are
+        suppressed.  Although you can accomplish the same thing with SET
+        FILTER TO .NOT. Paid, the conditional index can be much faster.
+
+Page 11-6 Controlling the Display Order
+
+     Delete the last sentence of the last bullet point in this section:
+
+        SET INDEX TO also ..... the production index.
+
+Page 11-6 Table 11-1
+
+     Delete the "?" marks before each command/function in the list.
+
+Page 11-7 Estimating the Index File Size
+
+     Delete the last sentence of the second paragraph in this section:
+
+        Finally, it prompts ..... space is inadequate.
+
+     Insert the following at the end of the last sentence of the third
+     paragraph:
+
+        ...,and that you are not creating a UNIQUE or conditional index.
+
+Page 11-8 Sample code
+
+     After the READ, delete the instruction:
+
+        klength = LEN(TRIM(&mfield.))
+
+     After CASE TYPE(mfield) = "C", delete the instruction:
+
+        klength = klength + MOD(klength,4)
+
+     and insert the following:
+
+            klength = LEN(&mfield)
+            klength = CEILING(klength/4)
+
+     Insert a RETURN command before ENDCASE
+
+     and delete the command line:
+
+        @ 22,15 SAY "Change disks or erase files"
+
+Page 12-2 Beneath Figure 12-1
+
+     The second sentence should read:
+
+        LOCATE uses the first method, searching the database file.
+
+Page 12-3 Searching an Indexed Field
+
+     In the first paragraph, the second sentence should commence:
+
+        FIND and SEEK search the index file, ......
+
+     The second paragraph should read:
+
+        FIND and SEEK are similar, but not identical.  SEEK is the more
+        powerful of the two and is used most frequently in programs.  FIND is
+        used primarily at the dot prompt, where it can save keystrokes.  Table
+        12-1 summarizes their major differences.
+
+Page 12-3 Table 12-1
+
+     Delete the first point (Used mainly ...) under each column.
+
+     Under the SEEK column, the fourth point should read:
+
+        May not omit delimiters with character data:
+
+     and delete the example:
+
+        		SEEK 250
+
+Page 12-3 Sample code
+
+     After USE Employee ORDER Names, the following two command lines should be
+     inserted:
+
+        mlast = SPACE(5)
+        mfirst = SPACE(10)
+
+     then the code should read:
+
+        @ 10,10 SAY "Enter last name: " GET mlast
+        @ 12,10 SAY "Enter first name: " GET mfirst
+        READ
+        IF " " <>TRIM(mlast+mfirst)
+           IF SEEK(TRIM(mlast+mfirst))
+        	? Lastname, Firstname, Department, Speciality
+           ENDIF
+        ENDIF
+
+Page 12-5 First block of sample code
+
+     The line SCAN ALL WHILE vendor_id = mvend_id should read:
+
+        SCAN WHILE vendor_id = mvend_id
+
+     The LIST command line should read:
+
+        LIST OFF NEXT 10 Part_id, Part_name, Cost ;
+          WHILE Vendor_id = mvend_id
+
+Page 12-6 && Searching a Memo Field
+
+     Delete this section
+
+Page 12-7 Table 12-2
+
+     LIST OFF, where used, should be replaced by LIST.
+
+     The last line of the third example should read:
+
+        		WHILE Date_hired < {06/01/86}
+Page 12-7 Table 12-3
+
+     LIST OFF, where used, should be replaced by LIST.
+
+     The USE command in the first query expression (to find employees from
+     Nevada etc.) should read:
+
+        USE Employee
+
+Page 12-8 First block of sample code
+
+     The LIST command should read:
+
+        LIST OFF Vendor_id, Part_id WHILE Vendor_id = mvend_id; TO PRINTER
+
+Page 12-9 Search Tips
+
+     Delete point 2. completely (including sample code), and renumber other
+     points accordingly.
+
+Page 12-9 Current point 4
+
+     Insert before the cross-reference to Chapter 10:
+
+        ..., usually character
+
+Page 12-9 Current point 5
+
+     The last sentence before the sample code should end thus:
+
+        ...and LISTs 10 records.
+
+Page 12-9 Sample code
+
+     On the last line of the page, delete the comment:
+
+        		&& Can also use BROWSE NEXT 10
+
+Page 12-10 Sample code
+
+     Insert the following comment after PARAMETERS vend_id
+
+        *Check for vendor ID in Vendors database during data entry/editing
+
+     After answer = " " down to DEACTIVATE WINDOW look, the code should read
+     as follows:
+
+           similar = .F.
+           SELECT Vendors
+           GO TOP
+           DO WHILE .NOT (EOF() .OR. answer $ "rR")
+        *Show list of vendors having identical first character in vendor_id
+           @0,0 SAY " DATA ENTRY ERROR: VENDOR ID WAS INVALID "
+           @1,0 SAY "  This is a list of similar Vendor ID's  "
+           listcount = 0
+           SCAN FOR LIKE(LEFT(vend_id,1)+"*",vendor_id) ;
+        	WHILE listcount <=5
+              ?vendor_id,vendor 	&& Display vendor
+              listcount = listcount +1  && Increment counter
+              similar = .T.		&& Data found and listed
+           ENDSCAN
+
+           DO CASE
+              CASE similar = .F.	&& No similar data found
+                 @ 1,1 SAY "Entered Vendor ID does not exist"
+        	 ?
+        	 WAIT "No vendor IDs are similar -" ;
+           	      " press R to  return to screen" TO answer
+              CASE similar=.T. .AND. listcount>0 && Similar data found
+        	 WAIT "Press spacebar to continue list or" ;
+        	      " R to return to screen." TO answer
+           ENDCASE
+           CLEAR
+        ENDDO
+
+Page 13-5 Relating a File to Itself
+
+     Delete this whole section, including the text on the next two pages, up
+     to Using Relations
+
+Page 13-7 Sample code
+
+     The print (?) commands for the heading should all have the AT clause at
+     the end, viz:
+
+        ? "Part ID................Vendor ID" AT 30
+        ? "=======................=========" AT 30
+
+Page 13-7 Last paragraph
+
+     The first sentence under the sample code should commence:
+
+        The next example, based on procedures in Orders.prg, shows how ......
+
+Page 13-8 Sample code
+
+     In the SET RELATION TO command line, Part_id, Cust_id and Emp_id should
+     all commence with a capital letter.
+
+     Delete the MESSAGE between @ 6,4 SAY and @ 10,4 SAY, viz, delete:
+
+        ;MESSAGE; "Enter a six digit customer ID beginning with a letter - Esc
+        to quit"
+
+Page 13-10 Sample code
+
+     The @...SAY commands should have coordinates specified.
+
+     After DO WHILE order_ok, the next two command lines should read:
+
+        @12,10 SAY "Enter customer name: " GET Customer
+        @12,13 SAY "Enter part quantity: " GET Part_qty
+
+     After SKIP mskip, the command should read:
+
+            @ 20,1
+
+Page 13-11 After the second sample code box
+
+     The first sentence should commence:
+
+        You can use the * and ? wildcard characters with dBase IV....
+
+Page 13-12 Second block of sample code
+
+     The last command line should read:
+
+        SET FILTER TO Invoiced .AND. Goods->Part_name="BOOKCASE"
+
+Page 13-12 Variation - Filtering Large Files
+
+     This paragraph should read:
+
+        Working with very large files is often more efficient if you create a
+        conditional index containing only the desired records.  You can do
+        this with the INDEX...FOR command:
+
+        INDEX ON Yrs_exper TAG Yrs_exper FOR Yrs_exper  5 .AND. Salary < 25000
+
+Page 13-13
+
+     Delete first sentence and first box of sample code.
+
+Page 13-13 Paragraph under the first box of sample code
+
+     The last two sentences should read:
+
+        The YEAR() function extracts the year, and subtracts 3.  Finally, the
+        condition concatenates the two strings and converts them back to
+        date.  Note that the date must be set to MDY or DMY format.  ANSI and
+        JAPAN formats will not work.
+
+Page 13-13 Second box of sample code
+
+     The COPY command line(s) should read:
+
+        COPY TO Archive ;
+           WHILE Date_hired <= CTOD(LEFT(DTOC(DATE()),6) +;
+           SUBSTR(STR(YEAR(DATE())-3,4),3,2)
+
+Page 13-15 First paragraph
+
+     Delete the last two sentences of this paragraph.
+
+Page 13-15 && Queries and SET EXACT
+
+     After the first sentence, the paragraph should read:
+
+        If you are incorporating query code directly into a program, include
+        the following lines in your program to restore the original EXACT
+        status:
+
+Page 14-2 Before Specifying the Output Device
+
+     Insert the section entitled Streaming Output from pages 14-3 and 14-4,
+     and delete it from its current position.
+
+Page 14-3 Second paragraph
+
+     This should commence:
+
+        SET DISPLAY TO <type> allows you ....
+
+Page 14-3 && Using a Serial Printer
+
+     After the first sentence, the first paragraph should read:
+
+        If you use a serial printer, you can redirect LPT1 output to the
+        serial communications port (see the MODE command in your DOS reference
+        manual).
+
+     In the second paragraph, the end of the first sentence should be:
+
+        ...operates at 1200 baud, and uses no parity, 8 data bits and 1 stop
+        bit.
+
+     The last two sentences of this paragraph should be replaced by:
+
+        The P parameter at the end of the line causes a continuous retry on
+        printer device errors.  The second line redirects LPT1 output to the
+        serial printer connected to COM1.
+
+Page 14-3 Sample code
+
+     The first line should read:
+
+        MODE COM1:=1200,N,8,1,P
+
+     The last paragraph of this section should read:
+
+        If you put these lines in the Autoexec.bat file in the root directory,
+        the commands will run automatically when you start your computer.  You
+        may not want to do this if you have a modem on COM1.
+
+Page 14-4 Providing a Destination Menu
+
+     The last sentence of the first paragraph should read:
+
+        This procedure and Bar_def, the menu definition code, are from
+        Library.prg.
+
+Page 14-5 Sample code
+
+     The SET DEVICE TO FILE command should be replaced by:
+
+        SET ALTERNATE TO (answer)
+        SET ALTERNATE ON 	
+
+     and the SET DEVICE TO SCREEN command should be replaced by:
+
+        CLOSE ALTERNATE
+
+     The GO TOP command should be deleted.
+
+Page 14-8 First block of sample code
+
+     After SET CENTURY ON, the following command should be inserted::
+
+        SET TALK OFF
+
+Page 14-9 Printing Tips
+
+     Delete point 2 of the third bullet point, and renumber accordingly.
+
+     Insert "or ???{null}" after ???CHR(0) in the fourth bullet point
+
+Page 15-1 What this Chapter Covers
+
+     Insert three more bullet points:
+
+        - Outputting unformatted data
+        
+        - Handling print jobs
+        
+        - Printing memo fields and long expression results
+
+Page 15-2 Top of the page
+
+     Delete the rest of the section on Ordering the Database File, up to
+     Filtering Output
+
+Page 15-2 Filtering output
+
+     Delete the ? command from the first block of sample code, viz delete:
+
+        ? "City" AT 0, "State" AT 15, "Zip" AT 21
+
+Page 15-7 Beneath Figure 15-2
+
+     The last sentence of the first paragraph under the figure should read:
+
+        These are the default settings.
+
+Page 15-9 Sample code
+
+     Move the command line near the end of this print job, commencing:
+
+        ON PAGE AT LINE .......
+
+     to after SET PRINTER ON at the beginning of the code.
+
+Page 15-10 Report Title
+
+     The last sentence of this paragraph should commence:
+
+        The "B" and "BU" in the ? commands ....
+
+Page 15-13 The first block of sample code
+
+     Insert the following command before RETURN:
+
+            GO TOP
+
+Page 15-13 Report Detail
+
+     In the second paragraph of this section, delete the last two sentences.
+
+Page 15-15 Sample code
+
+     The first line of code should read:
+
+        mem_width = MIN(_rmargin - _lmargin,35)
+
+Page 15-17 First sample code box
+
+     The second command line should read:
+
+        USE Names ORDER Name
+
+     After the SCAN WHILE command line, the next line should read:
+
+        ?Lastname, Firstname, Phone
+
+Page 15-21 Sample code
+
+     Towards the end of this example, the print (??) command for the old
+     balance should be:
+
+        ?? LTRIM(TRANSFORM(Oldbalance, "@$999,999.99")),"."
+
+Page 15-23 Sample code
+
+     Delete the final RETURN
+
+Page 15-24 Printing reports
+
+     After the first sentence of the last paragraph in this section, replace
+     the remaining text and sample code with the following:
+
+        Print settings such as pitch or page length are defined in the report
+        code using system memory variables (see Environmental Setup and Page
+        Layout sections.)
+
+Page 16-3 Bottom paragraph
+
+     The third sentence should commence:
+
+        Then the FIELD() function in the WHILE condition returns...
+
+Page 16-5 First block of sample code
+
+     The LOCATE command line should read:
+
+        LOCATE FOR SUBSTR(Dir_line,10,3) = "DBT"
+
+     Insert before the LOCATE command:
+
+        GO 5
+
+Page 16-5 Second block of sample code
+
+     In the last sentence of text before the code, change "SORT" to "COPY".
+
+     In the code replace the word "sort", wherever used, with "copy", viz:
+
+        @10,10 SAY "Not enough room on disk to copy this file"
+
+     and
+
+        COPY TO Temp
+
+Page 16-6 Backing up Data
+
+     The end of the second sentence of the first paragraph should read:
+
+        ....will backup database files from their operating system.
+
+Page 16-6 Saving Data to Disk
+
+     The end of the second sentence of the first paragraph should read:
+
+        ....dBASE IV only updates the disk file and directory (the operating
+        system file access table) periodically.
+
+Page 16-8 Sample code
+
+     After the first DEFINE WINDOW command, insert the following command line:
+
+        mpath = "C:\DBASE\SAMPLES\"
+
+Page 16-9 Second box of sample code
+
+     Insert at the beginning a new command line:
+
+        SET DEFAULT TO A
+
+Page 17-2 Accessing the Debugger
+
+     Add to the end of the first bullet point:
+
+        ..., unless an ON ERROR command is active.
+
+Page 17-5 Note 
+
+     Add the following sentence to the note.
+
+        Setting breakpoints will also cause the program to execute more
+        slowly.
+
+Page 17-5 Stepping through a Program
+
+     The end of the first paragraph should read:
+
+        ...to step through a program one command at a time.  (The debugger
+        skips comment lines.)
+
+Pages 17-6 to 17-10 Sample Debugging Session
+
+     The example given here does not apply to the dBase IV version 1.1 sample
+     code.
+
+Page 18-1 At the bottom of the page
+
+     Insert the following Note
+
+        NOTE
+        dBASE IV version 1.0 object files are not compatible with dBASE IV
+        version 1.1.  Be sure to recompile your programs with version 1.1 when
+        you distribute version 1.1 Run Time to your customers.
+
+Page 18-3 Run Time Restrictions
+
+     Add the following extra commands to the restricted list:
+
+        DEBUG
+
+        LIST/DISPLAY HISTORY
+
+        MODIFY COMMAND/FILE
+
+        RESUME
+
+Page 18-4 How to Use RunTime
+
+     At the end of the last paragraph of this section, add the following
+     sentence:
+
+        You cannot rename the .dbo file after it is compiled.
+
+Page 18-4 DBLINK
+
+     In the first paragraph, delete the sentence:
+
+        Use BUILD if you need ...
+
+     and delete the first bullet point
+
+Page 18-5 The paragraph after the Note
+
+     The middle sentence in this paragraph gives the limitations.  The maximum
+     number of procedures per .dbo file should be 963.
+
+Page 18-5 The /D Option
+
+     This sentence should read:
+
+        This option displays progress messages on the screen.
+
+Page 18-6 Using BUILD
+
+     The first sentence should commence:
+
+        BUILD is a utility program run from the operating system that uses
+        dBASE IV to automatically compile ....
+
+Page 18-6 Getting Ready
+
+     Delete the sentence at the end of this bullet point in this section, viz:
+
+        If you exceed these limits ...... in this chapter.
+
+Page 18-9 Second paragraph
+
+     After the first sentence, the paragraph should read:
+
+        Screen is the default.  The File option sends messages to the file
+        Build.txt.  The Printer option sends the messages to the printer. 
+        Both Printer and File echo messages to the screen.
+
+Page 18-12 Build Output
+
+     The last sentence of the first paragraph should commence:
+
+        If linked, the .dbo file...
+

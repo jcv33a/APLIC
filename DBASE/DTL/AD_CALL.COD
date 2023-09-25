@@ -1,0 +1,12 @@
+//
+// Module Name: AD_CALL.COD - Menu_Act = 22
+// Selectors  : Bin_File, Bin_Parms
+// Description: to issue the dBASE CALL command
+// Syntax     : CALL <module name> [WITH <expc>/<memvar>]
+//
+*-- Desc:  Carga y ejecuta el programa - {Bin_File}
+LOAD {Bin_File}
+CALL {Bin_File}{if Bin_Parms} WITH "{Bin_Parms}"{endif}
+//
+// EOP AD_CALL.COD
+

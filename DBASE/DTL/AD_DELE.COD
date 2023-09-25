@@ -1,0 +1,19 @@
+//
+// Module Name: AD_DELE.COD - Menu_Act = 10
+// Selectors  : Scope, For_Expr, While_Exp
+// Description: to issue dBASE DELETE command.
+// Syntax     : DELETE [<scope>] [FOR <expL>] [WHILE <expL>]
+//
+lc_say='Marcando registros para borrado...'
+DO info_box WITH lc_say
+SET TALK ON
+//
+DELETE\
+{if Scope} {upper(Scope)} {endif}\
+{if For_Expr} FOR {For_Expr}{endif}\
+{if While_Exp} WHILE {While_Exp}{endif}\
+
+SET TALK OFF
+//
+// EOP AD_DELE.COD
+

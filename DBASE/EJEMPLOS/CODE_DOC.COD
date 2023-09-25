@@ -1,0 +1,227 @@
+//
+// Nombre del M¢dulo: CODE_DOC.COD
+//
+Generador de Tablas de Procedimientos para la documentaci¢n de programas
+------------------------------------------------------------------------
+Version 1.1.1  10/09/1989
+Escrito por Kirk J. Nason. Traducido por D. del Val
+
+Notas:
+
+
+
+- Esta plantilla puede ser ejecutada SOLO con el int‚rprete aut¢nomo de
+  lenguaje de plantilla DGEN.EXE. Sint xis: C>dgen -t code_doc.gen
+
+- Este m¢dulo hace uso del programa del DOS SORT.EXE. Aseg£rese de que su
+  sentencia PATH del DOS contiene el subdirectorio en el que est  SORT.EXE.
+
+- Este programa soporta s¢lo los c¢digos de impresi¢n de las impresoras
+  Epson y HP LaserJet II. A¤ada si es necesario los c¢digos de su propia
+  impresora a la udf "printer_setup()", situada al final de esta plantilla
+
+- El fichero de salida generado por este programa tiene el mismo nombre que
+  el de entrada con la extensi¢n ".otl". Por ejemplo, de Form.cod se obtiene
+  Form.otl.                   DISFRUTELO - Kirk
+
+{
+ include "builtin.def";  // Funciones incorporadas
+
+ var cod_filename, temp, line_counter, crlf, laser, page, page_length,
+     sort_column, sort_string, start_print, end_print, set_printer, reset,
+     first_time, total_lines;
+
+ crlf = chr(10)
+ line_counter = 0
+ page = 1
+ first_time = 1
+ cod_filename = askuser("Introduzca el nombre del programa que desee documentar",cod_filename,12)
+ laser = " "
+ do while at( upper(laser), "SN") == 0
+    laser = upper(askuser("¨Quiere imprimir el informe en una HP Laser? (S/N)","S",1))
+ enddo
+
+ Printer_setup()
+
+ // Determina n£mero de columna para el programa del DOS SORT
+ sort_column = fileroot(upper(cod_filename)) == "PRG" ? "10" : "1";
+ page_length = 78
+
+ if (!cod_filename or !Textopen(cod_filename)) then goto nogen;
+
+ if !create(fileroot(cod_filename)+".tm1") then goto nogen; endif
+
+ Process_table_of_contents()
+
+ cls()
+
+ Sort_table_of_contents()
+ Page_Header();
+}
+
+
+Tabla de Procedimientos de {cod_filename}
+-------------------------------------------------------------------------------
+
+{
+ Print_table_of_contents();
+}
+
+Listado del programa:
+---------------------
+
+
+{
+ Print_cod_file()
+ nogen:
+ return 0;
+//---------------------------------------------------------------------------
+// Funciones definidas por el usuario (UDF)
+//---------------------------------------------------------------------------
+
+define process_table_of_contents()
+ cls()
+ say_center(13, "Encontrado el procedimiento:")
+ do
+    temp = textgetl();
+    while temp != eof
+        line_counter = line_counter + 1
+
+        nmsg("Procesando la l¡nea: " + alltrim(str(line_counter)))
+
+        if db_proc() or cod_proc() then
+
+           say(15, 0, space(80))
+           say(16, 0, space(80))
+           say_center(15, temp)
+
+           pmsg("Procedimiento encontrado en la l¡nea: " + alltrim(str(line_counter)))
+           if cod_proc() then
+                   temp = substr(temp,at("DEFINE ",temp)+8)
+                   print(alltrim(substr(temp,1,73)))
+           else
+                   print(alltrim(substr(temp,1,73)))
+           endif
+           tabto(75)
+           print(line_counter + crlf)
+        endif
+ enddo
+ total_lines = line_counter
+enddef
+
+define sort_table_of_contents()
+ // Prepararaci¢n para ordenar la Tabla de Procedimientos
+ create(fileroot(cod_filename)+".tm3")
+ sort_string = "SORT /+" + sort_column + " <" +
+               fileroot(cod_filename) + ".tm1 >" +
+               fileroot(cod_filename)+".tm2"
+ // Ejecuta el programa SORT del DOS
+ exec(sort_string)
+ create(fileroot(cod_filename)+".otl")
+ print(reset + set_printer + crlf)
+enddef
+
+define page_Header()
+   pageject()
+   first_time = 0
+   print(alltrim(date()))
+   tabto(35)
+   print(upper(cod_filename))
+   tabto(68)
+   print("P gina: " + alltrim(str(page)) + crlf + crlf)
+   return
+enddef
+
+define print_table_of_contents()
+  // Procesando el fichero ordenado para que tenga cabecera de p gina
+  textopen(fileroot(cod_filename)+".tm2")
+  line_counter = 0
+  pmsg("Procesando la Tabla de Procedimientos ordenada")
+  do
+      temp = textgetl();
+      while temp != eof
+          if curline() > page_length then
+             page += 1
+             Page_Header()
+          endif
+          line_counter = line_counter + 1
+          nmsg("Procesando la l¡nea: "+alltrim(str(line_counter)))
+          print(alltrim(temp) + crlf)
+  enddo
+  textclose()
+  exec("DEL " + fileroot(cod_filename) + ".tm? > nul")
+  // Comienza el listado del programa fuente en la siguiente p gina
+  page += 1
+  Page_Header()
+enddef
+
+define print_cod_file()
+  Textopen(cod_filename)
+  nmsg(" ")
+  pmsg("Numerando las l¡neas de "+ cod_filename + " ")
+  line_counter = 0
+  do
+     temp = textgetl();
+     while temp != eof
+         if curline() > page_length then
+            page += 1
+            Page_Header()
+         endif
+         line_counter = line_counter +1
+         print(line_counter)
+         tabto(5)
+
+         if db_proc() or cod_proc() then
+             print(" "+substr(temp,1,at(" ",temp)))
+             print(start_print +
+                   rtrim(substr(temp,at(" ",temp)+1)) + end_print + crlf)
+         else
+             print(" "+rtrim(temp)+crlf)
+         endif
+  enddo
+  textclose()
+  print(reset + pageject())
+enddef
+
+define cod_proc()
+   if ( ( at("DEFINE ",upper(temp)) >= 1 and at("DEFINE ",upper(temp)) <= 6)
+              and (at("*", upper(temp)) != 1 or at("NOTE ", upper(temp)) != 1)
+              and at("BOX ", upper(temp)) == 0
+              and at("WINDOW ", upper(temp)) == 0
+              and at("POPUP ", upper(temp)) == 0
+              and at("BAR ", upper(temp)) == 0
+              and at("PAD ", upper(temp)) == 0
+              and at("MENU ", upper(temp)) == 0
+              and fileroot(upper(cod_filename)) != "PRG"
+      ) then
+             return 1
+     else
+             return 0
+     endif
+enddef
+
+define db_proc()
+   if at("PROCEDURE ", upper(temp)) == 1 or at("FUNCTION ", upper(temp)) == 1 then
+         return 1
+     else
+         return 0
+     endif
+enddef
+
+define printer_setup()
+  if laser == "S" then
+     // HP Laser Jet II
+     reset = "E" // Inicializaci¢n
+     set_printer = "&k2G&a5L&k4S&l8D" //  Fin de l¡nea, margen izq. de 5 columnas, 8 lpp y 12 cpp
+     start_print = "&k0S"+"(s3B" // Negrita, 10cpp
+     end_print   = "&k4S"+"(s0B" // Desactiva Negrita, 12cpp
+ else
+     // Epson
+     reset = "@" // Reset
+     set_printer = "l0M" // Margen izq. de 5 columnas, 8lpp, Elite
+     start_print = "W1E"   // Expandida, Negrita
+     end_print   = "W0FM" // Desactiva Expandida y Negrita. 12cpp
+ endif
+enddef
+}
+

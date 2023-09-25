@@ -1,0 +1,1211 @@
+//
+// Module Name: LABEL.COD
+// Description: Define label program structure.
+//
+
+Plantilla para Programas de Etiquetas (.lbg)
+--------------------------------------------
+Versi¢n 1.1e
+Ashton-Tate (c) 1987
+
+{include "label.def";
+ include "builtin.def";
+ //
+ // Enum string constants for international translation
+ //
+ enum wrong_class = "Imposible usar LABEL.GEN en objetos que no sean etiquetas. ",
+      label_empty = "Dise§o de etiqueta vac°o.  ",
+     more_samples = "®Desea m†s muestras? (S/N)";
+ //
+ if frame_class != label then
+   pause(wrong_class + any_key);
+   return 0;
+ endif
+
+ //---------------------------
+ // Declare working variables
+ //---------------------------
+ var lblname,       // Name of label file program
+     lblpath,       // Path to write label file
+     default_drive, // dBASE default drive
+     crlf,          // line feed
+     line,          // Line counter for outputing number of "?'s"
+     isfirst,       // Logical work variable
+     mrows,         // Number of rows that the label uses
+     mcolumns,      // Number of columns in label
+     lbl_vspace,    // Lines between labels
+     lbl_wide,      // Label width
+     lbl_hspace,    // Number of spaces between labels
+     lbl_offset,    // Label left offset
+     lbl_top,       // Label top margin
+     lbl_bottom,    // Label bottom margin
+     lbl_advance,   // Label forms advance  (linefeed or formfeed)
+     lbl_widow,     // Determine whether a label will fit on a page
+     numflds,       // Number of fields used in label
+     style,         // Style attribute assigned to the field/text
+    current_column, // Current column number
+     first_combine, // text or field is first in the chain of combined data
+     combine,       // combine fields flag
+     new_line,      // is the next field on a new line
+ i, j, x, temp, ni, // temporary usage variables
+     first_item,    // relative element number when repeating columns
+     item_number,   // current item number
+     count,         // number of text and field items
+    last_row,
+    temp_row,
+   current_row,
+  previous_row,
+   blank_line,
+  printed_lines,
+ previous_element,
+number_of_blankable_lines,
+ current_element,
+    response,
+   long_line,       // calculated expression possibly exceeds line
+ left_delimiter,
+ right_delimiter,
+   delimit_flag
+;
+ //-------------------------------------------------
+ // Assign starting values to some of the variables
+ //-------------------------------------------------
+ crlf = chr(10);
+ current_element=2;
+ item_number = isfirst = mcolumns = first_combine = new_line = 1;
+ count = line = mrows = numflds = current_column = combine = long_line = 0;
+ lbl_vspace = nul2zero(LABEL_VSPACE);
+ lbl_wide = LABEL_WIDE;
+ lbl_hspace = nul2zero(LABEL_HSPACE);
+ lbl_offset = nul2zero(LABEL_LMARG);
+ lbl_advance = lbl_bottom = lbl_top = 0;
+ lbl_widow = 1;
+
+ blank_line = 1;
+ current_row = 0;
+ previous_row = -1;
+ printed_lines = 0;
+ previous_element = 0;
+ number_of_blankable_lines=0;
+ left_delimiter="\""
+ right_delimiter="\""
+ delimit_flag=0;
+
+ foreach ELEMENT ecursor
+   if COUNTC(ecursor) > 1 && !eoc(ecursor) then
+     temp_row = previous_row = current_row = nul2zero(Row_Positn);
+     do while !eoc(ecursor)
+       if Row_Positn > previous_row then
+         number_of_blankable_lines=number_of_blankable_lines+blank_line;
+         blank_line=1;
+         previous_element=0;
+         previous_row=Row_Positn;
+         ++printed_lines;
+       endif
+       if blank_line then
+         if FLD_VALUE_TYPE == 78 then
+           if not AT("Z",FLD_PICFUN) then
+             blank_line=0;
+           endif
+         else
+           if Text_Item && !previous_element then
+             blank_line=0;
+           endif
+           if ELEMENT_TYPE == @Fld_Element && FLD_VALUE_TYPE != 67 then
+             blank_line=0;
+           endif
+         endif
+       endif
+       if ELEMENT_TYPE == @Fld_Element && FLD_VALUE_TYPE == 67 ||
+       (FLD_VALUE_TYPE == 78 && AT("Z",FLD_PICFUN)) then
+         previous_element=1;
+       else
+         previous_element=0;
+       endif
+       ++ecursor;
+     enddo
+     number_of_blankable_lines=number_of_blankable_lines+blank_line;
+     ++printed_lines;
+     --ecursor;
+     previous_row=Row_Positn+1;
+     last_row=Row_Positn;
+   endif
+ next
+ blank_line=0;
+
+ default_drive = STRSET(_defdrive);
+ lblname = FRAME_PATH + NAME;
+ lblpath = FRAME_PATH;
+ if not FILEOK(lblname) then
+   if FILEDRIVE(NAME) || !default_drive then
+     lblname=NAME;
+     if FILEDRIVE(NAME) then
+       lblpath=FILEDRIVE(NAME)+":"+FILEPATH(NAME);
+     else
+       lblpath=FILEPATH(NAME);
+     endif
+   else
+     lblname=default_drive + ":" + NAME;
+     lblpath=default_drive + ":";
+   endif
+ endif
+
+ if not CREATE(lblname+".LBG") then;
+   PAUSE(fileroot(lblname)+".LBG"+read_only+any_key);
+   return 0;
+ endif
+
+if getenv("DTL_LBLOPT") then
+  cursor_pos(0,0);
+  cput(" Formato   Medidas   Campos   Texto   Desplazar   Imprimir   Salir");
+  cursor_pos(1,10);
+  cput("…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª");
+  cursor_pos(2,10);
+  cput("∫  Margen superior          { 0}  ∫");
+  cursor_pos(3,10);
+  cput("∫  Margen inferior          { 0}  ∫");
+  cursor_pos(4,10);
+  cput("∫  Avance de p†gina  POR OMISION  ∫");
+  cursor_pos(5,10);
+  cput("∫  Comprobar tama§o           SI  ∫");
+  cursor_pos(6,10);
+  cput("∫                                 ∫");
+  cursor_pos(7,10);
+  cput("∫          < CONFIRMAR >          ∫");
+  cursor_pos(8,10);
+  cput("»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº");
+
+  extended_label_options();
+endif
+}
+* Programa...........: {cap_first(fileroot(lblname))}.LBG
+* Fecha..............: {LTRIM(SUBSTR(DATE(),1,8))}
+* Versi¢n............: dBASE IV, Etiquetas {FRAME_VER}.1
+*
+* Especificaciones de las etiquetas:
+*   Anchura  - {lbl_wide}
+*   Altura   - {label_tall}
+*   Sangrado - {nul2zero(label_lmarg)}
+*   N£mero por l°nea - {label_nup}
+*   Espacios entre columnas - {lbl_hspace}
+*   L°neas entre etiquetas  - {lbl_vspace}
+*   L°neas en blanco     - {number_of_blankable_lines}
+*   Impresi¢n formateada - {printed_lines}
+*
+PARAMETER ll_sample
+*-- Establece los par†metros de impresi¢n para este procedimiento s¢lamente
+PRIVATE {if lbl_advance then}_padvance, {endif}_peject, _wrap
+
+*-- Comprueba si se ha llegado al final del fichero
+IF EOF()
+   RETURN
+ENDIF
+
+IF SET("TALK")="ON"
+   SET TALK OFF
+   gc_talk="ON"
+ELSE
+   gc_talk="OFF"
+ENDIF
+gc_space = SET("SPACE")
+SET SPACE OFF
+gc_time=TIME()      && tiempo del sistema para el campo predefinido
+gd_date=DATE()      && fecha del sistema   "   "    "       "
+gl_fandl=.F.        && indicador de primer y £ltimo registro
+gl_prntflg=.T.      && indicador de continuar impresi¢n
+gn_column=1
+gn_element=0
+gn_line=1
+gn_memowid=SET("MEMOWIDTH")
+SET MEMOWIDTH TO 254
+gn_page=_pageno     && captura el n£mero de p†gina; gesti¢n de copias m£ltiples
+{if lbl_advance then}
+{  case lbl_advance of}
+{  1:}
+_padvance="LINEFEEDS"
+{  2:}
+_padvance="FORMFEED"
+{  endcase}
+{endif}
+_plineno=0
+_wrap = .F.
+
+*-- Establece el entorno
+ON ESCAPE DO Prnabort
+{if lbl_top || lbl_bottom || lbl_advance then}
+gn_atline=_plength - {lbl_bottom+1}*_pspacing
+ON PAGE AT LINE gn_atline \
+{  if lbl_top then}
+DO Pagebrk
+{  else}
+EJECT PAGE
+{  endif}
+{endif}
+
+{numflds=FRAME_NUM_OF_FIELDS;}
+{if LABEL_NUP > 1 then}
+*-- Inicializa las matrices para {LABEL_NUP} columna(s) de etiquetas
+DECLARE isfound[{LABEL_NUP-1}]
+{  if numflds then}
+DECLARE tmp4lbl[{LABEL_NUP-1},{numflds}]
+{  endif}
+{endif}
+{//if number_of_blankable_lines then}
+DECLARE gn_line2[{label_nup}]
+{//endif}
+
+PRINTJOB
+
+{x=0;}
+{foreach FLD_ELEMENT k}
+//
+// only if there is a fieldname assigned to the calculated field
+//
+{if FLD_FIELDTYPE == Calc_data && FLD_FIELDNAME then}
+{  if !x then}
+*-- Inicializa las variables calculadas
+{  endif}
+{lower(FLD_FIELDNAME)}=\
+{case FLD_VALUE_TYPE of}
+{68: // Date   }CTOD(SPACE(8))
+{70: // Float  }FLOAT(0)
+{76: // Logical}.F.
+{78: // Numeric}INT(0)
+{otherwise:}""
+{endcase}
+{  ++x;}
+{endif}
+{next k;}
+
+*-- Establece el n£mero de p†gina para copias m£ltiples
+_pageno=gn_page
+{if lbl_top then}
+DO WHILE _plineno < {lbl_top}
+   ?
+ENDDO
+{endif}
+
+IF ll_sample
+   DO Sample
+   IF LASTKEY() = 27
+      RETURN
+   ENDIF
+ENDIF
+
+DO WHILE FOUND() .AND. .NOT. EOF() .AND. gl_prntflg
+{LMARG(4);}
+{if LABEL_NUP > 1 then}
+{isfirst=1;}
+{x=1;}
+STORE .F. TO \
+{init_array:}
+{if isfirst then}
+{  isfirst=0;}
+{else}
+,\
+{endif}
+isfound[{x}]\
+{++x;}
+{if x < LABEL_NUP then goto init_array endif}
+
+{x=0;}
+{i=1;}
+{arcopy:}
+{  if x then}
+IF FOUND() .AND. .NOT. EOF()
+{    LMARG(7);}
+{  endif}
+{  calcflds();}
+//
+{foreach FLD_ELEMENT i}
+tmp4lbl[{x+1},{i}]=\
+{case FLD_FIELDTYPE of}
+{Tabl_data:}
+{  if FLD_VALUE_TYPE == 77 then}
+MLINE({cap_first(FLD_FIELDNAME)},1)
+{  else}
+{    cap_first(FLD_FIELDNAME)}
+
+{  endif}
+{Calc_data:}
+{  if FLD_FIELDNAME then}
+{    lower(FLD_FIELDNAME)}
+
+{  else}
+{    foreach FLD_EXPRESSION exp in i}
+{      FLD_EXPRESSION}\
+{    next}
+
+{  endif}
+{Pred_data:}
+{  case FLD_PREDEFINE of}
+{  0: // Date}
+gd_date
+{  1: // Time}
+gc_time
+{  2: // Recno}
+RECNO()
+{  3: // Pageno}
+_pageno
+{  endcase}
+{endcase}
+{next i;}
+//
+{  if x then}
+isfound[{x}]=.T.
+{  endif}
+CONTINUE
+{  if x then}
+{    LMARG(4);}
+ENDIF
+{  endif}
+{  ++x;}
+{  if x < LABEL_NUP-1 then
+     goto arcopy;
+   endif
+}
+IF FOUND() .AND. .NOT. EOF()
+{LMARG(7);}
+{calcflds();}
+isfound[{x}]=.T.
+{LMARG(4);}
+ENDIF
+{else}
+{calcflds();}
+{endif}
+
+{x=0;
+ do while x < temp_row}
+?
+{  ++x;
+ enddo
+}
+gn_line={temp_row}
+*-- Comprueba l°neas en blanco
+DO Chk4null WITH {temp_row}, {last_row+1}, {(last_row-temp_row+1)*label_nup}
+
+DO WHILE gn_line < {label_tall+lbl_vspace}
+   ?
+   gn_line=gn_line+1
+ENDDO
+CONTINUE
+{if (lbl_top || lbl_bottom) && lbl_widow then}
+{  if LABEL_TALL + lbl_vspace - 1 then}
+IF .NOT. EOF() .AND. _plineno+{LABEL_TALL + lbl_vspace - 1} > gn_atline
+   EJECT PAGE
+ENDIF
+{  endif}
+{endif}
+{LMARG(1);}
+ENDDO
+
+IF .NOT. gl_prntflg
+   SET MEMOWIDTH TO gn_memowid
+   SET SPACE &gc_space.
+   SET TALK &gc_talk.
+   ON ESCAPE
+   RETURN
+ENDIF
+
+{if lbl_top || lbl_bottom || lbl_advance then}
+ON PAGE
+{endif}
+
+ENDPRINTJOB
+
+{if lbl_top || lbl_bottom || lbl_advance then}
+IF _plineno <> 0
+   EJECT PAGE
+ENDIF
+{endif}
+
+SET MEMOWIDTH TO gn_memowid
+SET SPACE &gc_space.
+SET TALK &gc_talk.
+ON ESCAPE
+RETURN
+* EOP: {cap_first(fileroot(lblname))}.LBG
+
+PROCEDURE Prnabort
+gl_prntflg=.F.
+RETURN
+* EOP: Prnabort
+
+//
+// Main loop (inner loop to handles fields on each line by # of columns)
+//
+{foreach ELEMENT k}
+{  if ELEMENT_TYPE == @Band_Element then}
+{    ++k; ++item_number;}
+{    if eoc(k) then}
+{      exit;}
+{    endif}
+{    temp_row=Row_Positn;}
+{  endif}
+{  ++count;}
+{  LMARG(1);}
+{  blank_line=0;}
+//
+{
+   if number_of_blankable_lines then
+
+     long_line=0;
+     blank_line=1;
+     current_element=COUNTC(k);
+     previous_element=0;
+     previous_row=Row_Positn;
+
+     do while !eoc(k);
+       if Row_Positn > previous_row then
+         exit
+       endif
+       if blank_line then
+         if FLD_VALUE_TYPE == 78 then
+           if not AT("Z",FLD_PICFUN) then
+             blank_line=0;
+           endif
+         else
+           if Text_Item && !previous_element then
+             blank_line=0;
+           endif
+           if ELEMENT_TYPE == @Fld_Element && FLD_VALUE_TYPE != 67 then
+             blank_line=0;
+           endif
+         endif
+       endif
+       if !blank_line then
+         exit
+       endif
+       if ELEMENT_TYPE == @Fld_Element && FLD_VALUE_TYPE == 67 ||
+       (FLD_VALUE_TYPE == 78 && AT("Z",FLD_PICFUN)) then
+         previous_element=1;
+       else
+         previous_element=0;
+       endif
+       ++k;
+     enddo
+     if eoc(k) then
+       --k;
+     endif
+
+     do while COUNTC(k) > current_element;
+       --k;
+     enddo
+
+   endif}
+//
+//---------------------
+// Process blank lines
+//---------------------
+{  line=temp_row+1;}
+{  do while line < Row_Positn}
+{    x=1;}
+{    do while x <= LABEL_NUP}
+FUNCTION ___{line}{x}
+ll_output=.T.
+RETURN .F.
+
+{      ++x;}
+{    enddo}
+{    ++line;}
+{  enddo}
+//--------------------
+// End of blank lines
+//--------------------
+//
+{  mrows = 0;}
+{  first_item = item_number;}
+{  line = temp_row;}
+//
+{  repeat:}
+//
+{  if new_line then}
+FUNCTION ___{nul2zero(Row_Positn)}{mrows+1}
+lc_ret=.F.
+{    if mrows then}
+*-- Columna {mrows+1}
+IF isfound[{mrows}]
+{LMARG(4);}
+{    endif}
+{    if blank_line then}
+{      if mrows then}
+{        conditional_if_for_blank_line(k,7);}
+{      else}
+{        conditional_if_for_blank_line(k,4);}
+{      endif}
+{    else}
+ll_output=.T.
+{    endif}
+{    if first_combine then}
+_pcolno = {Col_Positn+lbl_offset+(mrows*(lbl_wide+lbl_hspace))}
+{    endif}
+?? \
+{  else}
+{    if long_line then}
+?? \
+{      long_line=0;}
+{    else}
+,\
+{    endif}
+{  endif}
+//
+{ni=0;}
+{  case ELEMENT_TYPE of}
+//
+{  @Text_Element:}
+//
+{x=Col_Positn;}
+{i=LEN(Text_Item);}
+{if i == 237 then}
+{  foreach Text_Item fcursor in k}
+{    if ni then}
+{      i=i+LEN(Text_Item);}
+{      temp=Text_Item;}
+{    endif}
+{    ++ni;}
+{  next}
+{endif}
+{current_column=x+i;}
+//
+{  @Fld_Element:}
+//
+{x=Col_Positn;}
+{i=FLD_REPWIDTH;}
+{if i > 237 then}
+{  foreach FLD_TEMPLATE fcursor in k}
+{    if ni then}
+{      temp=FLD_TEMPLATE;}
+{    endif}
+{    ++ni;}
+{  next}
+{endif}
+{current_column=x+i;}
+//
+{  endcase}
+//
+// is the next element on the same line
+//
+{  line=Row_Positn;}
+{  ++k;}
+{  if (not EOC(k)) && line == Row_Positn then}
+{    new_line=0;}
+//
+// is the next element flush with previous element
+//
+{    if current_column == Col_Positn then}
+{      combine=1;}
+{    else}
+{      combine=0;}
+{    endif}
+{  else}
+{    new_line=1;}
+{  endif}
+{  --k;}
+//-----------------------------------------------
+// Determine what type of data we are processing
+//-----------------------------------------------
+{  case ELEMENT_TYPE of}
+//
+{  @Text_Element:}
+//
+{if blank_line then}
+IIF(LEN(TRIM(\
+{  --k;}
+{  if FLD_VALUE_TYPE == 78 then}
+TRANSFORM(\
+{  endif}
+{  if mrows+1 < LABEL_NUP then}
+tmp4lbl[{mrows+1},{mcolumns-1}] \
+{  else}
+{    putfld(k);}
+{  endif}
+{  if FLD_VALUE_TYPE == 78 then}
+,"@{FLD_PICFUN}")\
+{  endif}
+{  ++k;}
+)) > 0,\
+{  long_line=1;
+ endif}
+//
+{if substr(Text_Item,1,1) == "\"" then
+   left_delimiter = "["
+   right_delimiter = "]"
+   delimit_flag = 1;
+ endif}
+{if i > 70 then}
+;
+{  seperate(Text_Item);}
+{  if ni then}
++ {left_delimiter}{temp}{right_delimiter};
+{  endif}
+{else}
+{left_delimiter}{Text_Item}{right_delimiter} \
+{endif}
+//
+{if blank_line then}
+,"" ) \
+{endif}
+//
+{if delimit_flag then
+   left_delimiter="\""
+   right_delimiter="\""
+   delimit_flag=0;
+ endif}
+{  @Fld_Element:}
+//
+{    if mrows+1 < LABEL_NUP then}
+tmp4lbl[{mrows+1},{mcolumns}] \
+{    else}
+{      putfld(k);}
+{    endif}
+{    ++mcolumns;}
+{  endcase}
+//
+{  if ELEMENT_TYPE == @Fld_Element then}
+//
+{    if !FLD_FIELDTYPE || FLD_FIELDTYPE == Calc_data ||
+        (FLD_FIELDTYPE == Pred_data && FLD_PREDEFINE > 1) then}
+//
+{      if FLD_VALUE_TYPE == 67 then
+         j=FLD_TEMPLATE+temp;
+         if FLD_LENGTH == FLD_REPWIDTH && j == REPLICATE("X",FLD_LENGTH) then
+           j="";
+         endif
+       else
+         j="1";
+       endif}
+//
+{      if FLD_PICFUN || j then}
+PICTURE \
+{      endif}
+//
+{      if FLD_PICFUN then}
+"@{FLD_PICFUN}\
+{        if j then}
+ \
+{        else}
+" \
+{        endif}
+{      endif}
+//
+{      if j then}
+{        if i > 70 then}
+{          if FLD_PICFUN then}
+"+;
+{          else}
+;
+{          endif}
+{          seperate(FLD_TEMPLATE);}
+{          if ni then}
++ "{temp}";
+{          endif}
+{        else}
+{          if !FLD_PICFUN then}
+"\
+{          endif}
+{FLD_TEMPLATE}" \
+{        endif}
+{      endif}
+{    endif}
+//
+{  endif}
+//
+{  if FLD_STYLE then}
+{    style=getstyle(FLD_STYLE);}
+STYLE "{style}" \
+{  endif}
+{  if first_combine then}
+AT {Col_Positn+lbl_offset+(mrows*(lbl_wide+lbl_hspace))} \
+{    if combine then}
+{      first_combine=0;}
+{    endif}
+{  else}
+{    if not combine then first_combine=1; endif}
+{  endif}
+//
+// position to next element
+//
+{  temp_row=Row_Positn;}
+{  ++k; ++item_number;}
+//
+{  if !new_line || (!EOC(k) && temp_row == Row_Positn) then
+     if !new_line then}
+{      if long_line then}
+,
+{      else}
+;
+{      endif}
+{    else}
+,
+{      long_line=0;}
+{    endif
+     if !EOC(k) then
+       goto repeat;
+     endif}
+{  else}
+{    long_line=0;}
+{  endif}
+//
+{  combine=0;}
+{  first_combine=1;}
+//
+{  if LABEL_NUP-1 > mrows then}
+,
+{    if blank_line && mrows then}
+{      LMARG(4);}
+{    else}
+{      LMARG(1);}
+{    endif}
+{    if blank_line then}
+{      if temp_row != last_row then}
+ELSE
+   lc_ret=.T.
+{      endif}
+ENDIF
+{    endif}
+{    if mrows then}
+{      LMARG(1);}
+ENDIF
+{    endif}
+RETURN lc_ret
+
+{    ++mrows;}
+{    do while item_number > first_item}
+{      --k; --item_number;}
+{      if ELEMENT_TYPE == @Fld_Element then}
+{        --mcolumns;}
+{      endif}
+{    enddo}
+{    new_line=1;}
+{    goto repeat;}
+{  else}
+
+{    if mrows then}
+{      LMARG(4);}
+{    else}
+{      LMARG(1);}
+{    endif}
+{    if blank_line then}
+{      if temp_row != last_row then}
+ELSE
+   lc_ret=.T.
+{      endif}
+ENDIF
+{    endif}
+{    if mrows then}
+{      LMARG(1);}
+ENDIF
+{    endif}
+RETURN lc_ret
+
+{    mrows=0;}
+{    --k; --item_number;}
+{  endif}
+//
+{next k;}
+
+PROCEDURE Chk4null
+*-- Par†metros:
+*
+*-- 1) n£mero de l°nea en la superficie de dise§o
+*-- 2) n£mero m†ximo de l°neas imprimibles
+*-- 3) par†metro 2 multiplicado por el n£mero de columnas de etiquetas
+*
+PARAMETERS ln_line, ln_lastrow, ln_element
+gn_element=0
+{    x=1;
+     do while x <= label_nup}
+gn_line2[{x}]=ln_line
+{      ++x;
+     enddo}
+lc_temp=SPACE(7)
+ll_output=.F.
+DO WHILE gn_element < ln_element
+   gn_column=1
+   ll_output=.F.
+   DO WHILE gn_column <= {label_nup}
+      IF gn_line2[gn_column] < ln_lastrow
+         lc_temp=LTRIM(STR(gn_line2[gn_column]))+LTRIM(STR(gn_column))
+         DO WHILE ___&lc_temp.()
+            gn_element=gn_element+1
+            gn_line2[gn_column]=gn_line2[gn_column]+1
+            lc_temp=LTRIM(STR(gn_line2[gn_column]))+LTRIM(STR(gn_column))
+         ENDDO
+         gn_element=gn_element+1
+         gn_line2[gn_column]=gn_line2[gn_column]+1
+      ENDIF
+      gn_column=gn_column+1
+   ENDDO
+   IF ll_output
+     ?
+     gn_line=gn_line+1
+   ENDIF
+ENDDO
+RETURN
+* EOP: Chk4null
+{if lbl_top then}
+
+PROCEDURE Pagebrk
+EJECT PAGE
+DO WHILE _plineno < {lbl_top}
+   ?
+ENDDO
+RETURN
+* EOP: Pagebrk
+{endif}
+
+PROCEDURE Sample
+PRIVATE x,y,choice
+DEFINE WINDOW w4sample FROM 15,23 TO 17,57 DOUBLE
+choice="S"
+x=0
+DO WHILE choice = "S"
+   y=0
+   DO WHILE y < {LABEL_TALL}
+      x=0
+      DO WHILE x < {LABEL_NUP}
+         ?? REPLICATE("X",{LABEL_WIDE})\
+{if LABEL_HSPACE then}
++SPACE({LABEL_HSPACE})
+{else}
+
+{endif}
+         x=x+1
+      ENDDO
+      ?
+      y=y+1
+   ENDDO
+{if LABEL_VSPACE then}
+   x=0
+   DO WHILE x < {LABEL_VSPACE}
+      ?
+      x=x+1
+   ENDDO
+{endif}
+   ACTIVATE WINDOW w4sample
+   @ 0,3 SAY "{more_samples}";
+   GET choice PICTURE "!" VALID choice $ "NS"
+   READ
+   DEACTIVATE WINDOW w4sample
+   IF LASTKEY() = 27
+      EXIT
+   ENDIF
+ENDDO
+RELEASE WINDOW w4sample
+RETURN
+* EOP: Sample
+{if !count then pause(label_empty + any_key); endif}
+{return 0;}
+//--------------------------------
+// End of main template procedure
+// User defined function follows
+//--------------------------------
+{
+ define getstyle(mstyle);
+  var outstyle;
+  outstyle="";
+  if Bold        & mstyle then outstyle=outstyle+"B"; endif
+  if Italic      & mstyle then outstyle=outstyle+"I"; endif
+  if Underline   & mstyle then outstyle=outstyle+"U"; endif
+  if Superscript & mstyle then outstyle=outstyle+"R"; endif
+  if Subscript   & mstyle then outstyle=outstyle+"L"; endif
+  if User_Font   & mstyle then
+    if  1 & mstyle then outstyle=outstyle+"1"; endif
+    if  2 & mstyle then outstyle=outstyle+"2"; endif
+    if  4 & mstyle then outstyle=outstyle+"3"; endif
+    if  8 & mstyle then outstyle=outstyle+"4"; endif
+    if 16 & mstyle then outstyle=outstyle+"5"; endif
+  endif
+return outstyle;
+enddef;
+}
+{define putfld(cursor);
+ var value,value2;
+ value=cursor.FLD_FIELDTYPE;}
+{       if mrows+1 < LABEL_NUP then}
+tmp4lbl[{mrows+1},{mcolumns}] \
+{       else}
+{case value of}
+{Tabl_data:}
+{  if cursor.FLD_VALUE_TYPE == 77 then}
+MLINE({cap_first(cursor.FLD_FIELDNAME)},1)\
+{  else}
+{    cap_first(cursor.FLD_FIELDNAME)}\
+{  endif}
+{Calc_data:}
+{  if cursor.FLD_FIELDNAME then}
+{    lower(cursor.FLD_FIELDNAME)}\
+{  else}
+{    foreach FLD_EXPRESSION exp in cursor}
+{      FLD_EXPRESSION}\
+{    next}
+ ;
+{    long_line=1;}
+{  endif}
+{Pred_data:}
+{  value2=cursor.FLD_PREDEFINE;}
+{  case value2 of}
+{  0: // Date}
+gd_date\
+{  1: // Time}
+gc_time\
+{  2: // Recno}
+RECNO()\
+{  3: // Pageno}
+_pageno\
+{  endcase}
+{endcase}
+ \
+{       endif}
+{return;
+enddef;
+}
+{
+ define conditional_if_for_blank_line(cursor2, page_offset);
+ var field_flag, current_row;
+}
+*-- Prueba si hay l°nea en blanco
+IF LEN(TRIM( \
+{
+       current_element=COUNTC(cursor2);
+       current_row=cursor2.Row_Positn;
+       do while !eoc(cursor2) && cursor2.Row_Positn == current_row}
+{        if cursor2.ELEMENT_TYPE == @Fld_element then
+           if field_flag then}+ \
+{          else
+             field_flag=1;
+           endif
+         endif
+         if cursor2.FLD_VALUE_TYPE == 78 then}
+TRANSFORM(\
+{          putfld(cursor2);}
+,"\
+{          if cursor2.FLD_PICFUN then}
+@{cursor2.FLD_PICFUN} \
+{          endif}
+{cursor2.FLD_TEMPLATE}") \
+{//
+         else
+           if cursor2.ELEMENT_TYPE == @Fld_element then
+             putfld(cursor2);
+           endif
+         endif
+         if cursor2.ELEMENT_TYPE == @Fld_element then
+           ++mcolumns;
+         endif
+         ++cursor2;
+       enddo
+       do while eoc(cursor2) || COUNTC(cursor2) > current_element;
+         --cursor2;
+         if cursor2.ELEMENT_TYPE == @Fld_element then
+           --mcolumns;
+         endif
+       enddo}
+)) > 0
+{LMARG(page_offset);}
+ll_output=.T.
+{  return;
+ enddef
+}
+{define calcflds();}
+{foreach FLD_ELEMENT k}
+{  if FLD_FIELDNAME && FLD_FIELDTYPE == Calc_data then}
+{lower(FLD_FIELDNAME)}=\
+{foreach FLD_EXPRESSION j in k}
+{FLD_EXPRESSION}
+{next}
+
+{  endif}
+{next k;}
+{return;}
+{enddef}
+{
+ define seperate(string);
+ var x,y,length;
+ x=1;
+ length=LEN(string);
+ moreleft:
+ if x < length then
+   if x != 1 then}
++ \
+{  endif
+   if x+70 <= length then y=70; else y=length-x+1; endif}
+"{SUBSTR(string,x,y)}";
+{  x=x+70;
+   goto moreleft;
+ endif
+ return;
+ enddef
+}
+{
+ define extended_label_options()
+ var curopt,ikey,row,col,lval,rval;
+ curopt=5;
+ rval=0;
+ do while rval != 1 && rval != 117
+   if !rval then
+     nmsg( "Situar cursor: "+chr(25)+chr(24)+
+       " Seleccionar: "+chr(17)+chr(196)+chr(217)+
+       " Aceptar todas las opciones: CTRL-END/ESC");
+   endif
+   case curopt of
+   1:
+     pmsg("N£mero de l°neas f°sicas desde el comienzo de la p†gina.");
+     cursor_pos(2,40);
+   2:
+     pmsg("N£mero de l°neas f°sicas hasta el final de la p†gina.")
+     cursor_pos(3,40);
+   3:
+     pmsg("Avance POR OMISION (Men£ Imprimir), por SALTOS de LINEA o SALTO de PAGINA");
+     cursor_pos(4,30);
+   4:
+     pmsg("Comprobar si la etiqueta cabe en la p†gina o no.");
+     cursor_pos(5,40);
+   5:
+     pmsg("Aceptar la configuraci¢n actual.");
+     cursor_pos(7,22);
+   endcase
+   ikey=CGET(); rval=ikey >> 16; lval=ikey & 0xFFFF;
+   if lval == 32 && (curopt == 3 || curopt == 4) then
+     rval=13;
+   endif
+   case rval of
+   13:
+;
+     case curopt of
+     1:
+       lbl_top=enter_number(lbl_top,2);
+       rval=0;
+     2:
+       lbl_bottom=enter_number(lbl_bottom,3);
+       rval=0;
+     3:
+       lbl_advance=change_advance_by(lbl_advance);
+     4:
+       lbl_widow=change_widow(lbl_widow);
+     5:
+       rval=1;
+     endcase
+;
+   72:
+     --curopt;
+   80:
+     ++curopt;
+   endcase
+   if curopt > 5 then
+     curopt=1;
+   endif
+   if curopt < 1 then
+     curopt=5;
+   endif
+ enddo
+ cursor_pos(23,00);
+ return;
+ enddef
+
+ define enter_number(number,row)
+ var leftnum, rightnum, entry, rvalue, lvalue, tempnum;
+ if number > 9 then
+   leftnum=substr(str(number),1,1);
+   rightnum=substr(str(number),2,1);
+ else
+   leftnum="0";
+   rightnum=substr(str(number),1,1);
+ endif
+ nmsg("Aumentar o disminuir valor: "+CHR(24)+CHR(25)+
+   "  Aceptar: "+CHR(17)+CHR(196)+CHR(217)+
+   "  Cancelar: Esc");
+ pmsg("Especifique el tama§o del margen en l°neas (0-99)");
+ do while rvalue != 1 && rvalue != 13 && rvalue != 117
+   entry=CGET(); rvalue=entry >> 16; lvalue=entry & 0xFFFF;
+   if !rvalue then
+     if lvalue > 47 && lvalue < 58 then
+       leftnum=rightnum;
+       rightnum=str(lvalue-48);
+       cursor_pos(row,39);
+       cput(leftnum+rightnum);
+       cursor_pos(row,40);
+       tempnum=(val(leftnum)*10) + val(rightnum);
+     endif
+   endif
+   if rvalue == 72 || rvalue == 80 then
+     case rvalue of
+     72:
+       tempnum=tempnum+1;
+     80:
+       tempnum=tempnum-1;
+     endcase
+     if tempnum > 99 then
+       tempnum=0
+     endif
+     if tempnum < 0 then
+       tempnum=99;
+     endif
+     if tempnum > 9 then
+       leftnum=substr(str(tempnum),1,1);
+       rightnum=substr(str(tempnum),2,1);
+     else
+       leftnum="0";
+       rightnum=substr(str(tempnum),1,1);
+     endif
+     cursor_pos(row,39);
+     if !tempnum then
+       cput(" 0");
+     else
+       if tempnum < 10 then
+         cput(" ");
+       endif
+       cput(str(tempnum));
+     endif
+     cursor_pos(row,40);
+   endif
+ enddo
+ if rvalue != 1 then
+   number=(val(leftnum)*10) + val(rightnum);
+ endif
+ cursor_pos(row,39);
+ if !number then
+   cput(" 0");
+ else
+   if number < 10 then
+     cput(" ");
+   endif
+   cput(str(number));
+ endif
+ cursor_pos(row,40);
+ return number;
+ enddef
+
+ define change_widow(woption)
+ ++woption;
+ if woption > 1 then
+   woption=0;
+ endif
+ case woption of
+ 0:
+   cput("NO");
+ 1:
+   cput("SI");
+ endcase
+ cursor_pos(5,40);
+ return woption;
+ enddef
+
+ define change_advance_by(aoption)
+ ++aoption;
+ if aoption > 2 then
+   aoption=0;
+ endif
+ case aoption of
+ 0:
+   cput(" POR OMISION");
+ 1:
+   cput("SALTOS LINEA");
+ 2:
+   cput("SALTO PAGINA");
+ endcase
+ cursor_pos(4,31);
+ return aoption;
+ enddef
+}
+// EOP: LABEL.COD
+

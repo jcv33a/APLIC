@@ -1,0 +1,62 @@
+//
+// Module Name: AD_REPT.COD - Menu_Act = 4
+// Selectors  : FRM_Dest, FRM_File, FRM_Headng, FRM_Plain, FRM_Eject,
+//            : FRM_Summry, Flter_Cond, Scope, For_Expr, While_Exp
+// Description: Call to REPORT
+// Syntax     : REPORT FORM <report form file>/?
+//                  [PLAIN] [SUMMARY] [NOEJECT] [HEADING <expC>]
+//                  [<scope>] [FOR <expL>] [WHILE <expL>]
+//                  [TO [PRINT]/[FILE <expFN>]]
+//
+*-- Desc: Informes
+//
+{if Flter_Cond then}
+SET FILTER TO {Flter_Cond}
+GOTO TOP
+{endif}
+//
+{case FRM_Dest of}
+{0: // Printer}
+SET PRINT ON
+{1: // File}
+SET ALTERNATE TO {FRM_File}.prt
+SET ALTERNATE ON
+{3: // Ask at runtime}
+gn_pkey = 0
+DO PrintSet
+IF gn_pkey <> 27  && esc
+   \
+{endcase}
+{if !Item_Prmpt && FRM_Dest == 1 then}
+SET MESSAGE TO "Imprimiendo en el fichero {FRM_File}.PRT"
+{endif}
+REPORT FORM {FRM_File}\
+{if not FRM_Plain} PLAIN {endif}\
+{if FRM_Headng} HEADING "{FRM_Headng}"{endif}\
+{if FRM_Eject} NOEJECT {endif}\
+{if FRM_Summry} SUMMARY {endif}\
+{if Scope} {upper(Scope)} {endif}\
+{if For_Expr} FOR {For_Expr}{endif}\
+{if While_Exp} WHILE {While_Exp}{endif}\
+
+{case FRM_Dest of}
+{0:}
+SET PRINT OFF
+{1:}
+CLOSE ALTERNATE
+{2:}
+WAIT
+{3:}
+   DO Cleanup
+ENDIF
+{endcase}
+//
+{if !Item_Prmpt && FRM_Dest == 1 then}
+SET MESSAGE TO
+{endif}
+{if Flter_Cond then}
+SET FILTER TO
+{endif}
+//
+// EOP AD_REPT.COD
+

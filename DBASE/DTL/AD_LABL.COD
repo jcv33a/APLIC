@@ -1,0 +1,53 @@
+//
+// Module Name: AD_LABL.COD - Menu_Act = 5
+// Selectors  : LBL_File, Scope, For_Expr, While_Exp, LBL_Sample,
+//            : LBL_Dest, Flter_Cond
+// Description: Call LABEL FORM
+// Syntax     : LABEL FORM <expFN>/? [<scope>] [SAMPLE]
+//                  [FOR <expL>] [WHILE <expL>]
+//                  [TO PRINTER] [TO FILE <expFN>]
+//
+*--  Desc: Utiliza el fichero de formato de etiquetas {LBL_File}
+//
+{if Flter_Cond then}
+SET FILTER TO {Flter_Cond}
+GOTO TOP
+{endif}
+//
+{case LBL_Dest of}
+{0: // Printer}
+SET PRINT ON
+{1: // File}
+SET ALTERNATE TO {LBL_File}.prt
+SET ALTERNATE ON
+{3: // Ask at runtime}
+gn_pkey = 0
+DO PrintSet
+IF gn_pkey <> 27  && esc
+   \
+{endcase}
+//
+LABEL FORM {LBL_File}\
+{ if Scope} {upper(Scope)} {endif}\
+{ if For_Expr} FOR {For_Expr}{endif}\
+{ if While_Exp} WHILE {While_Exp}{endif}\
+{ if !LBL_Sample} SAMPLE {endif}\
+
+{case LBL_Dest of}
+{0:}
+SET PRINT OFF
+{1:}
+CLOSE ALTERNATE
+{2:}
+WAIT
+{3:}
+   DO Cleanup
+ENDIF
+{endcase}
+//
+{if Flter_Cond then}
+SET FILTER TO
+{endif}
+//
+// EOP AD_LABL.COD
+

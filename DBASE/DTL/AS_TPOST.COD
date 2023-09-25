@@ -1,0 +1,27 @@
+//
+// Module Name: AS_TPOST.COD
+// Selectors  : Postn_Menu, Seek_Cond, Goto_Reco, Locate_for, Locate_whl
+// Description: Record positioning (Ask at runtime)
+//
+// No positioning menu
+{if Postn_Menu == 0}
+{ if Seek_Cond}
+SEEK {Seek_Cond}
+{ endif}
+{ if Goto_Reco}
+GOTO {Goto_Reco}
+{ endif}
+{ if Locate_Scp || Locate_for || Locate_whl then}
+LOCATE\
+{   if Locate_Scp} {Locate_Scp}{endif}\
+{   if Locate_for} FOR {Locate_for}{endif}\
+{   if Locate_whl} WHILE {Locate_whl}{endif}\
+
+{ endif}
+{endif}
+// DO positioning menu
+{if Postn_Menu == 1}
+Do Position
+{endif}
+// EOP AS_TPOST.COD
+

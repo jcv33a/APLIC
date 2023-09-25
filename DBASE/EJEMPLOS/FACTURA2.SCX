@@ -1,0 +1,13 @@
+********************************************************************************
+*-- Nombre: C:\DBASE\EJEMPLOS\FACTURA2.SCX - Fichero de datos para l¡neas de detalle en dBASE IV
+*-- Fecha: 10-09-90  9:44p
+*-- Creado a partir de: C:\DBASE\EJEMPLOS\FACTURA2.SCR
+*-- Usado para ampliar informaci¢n del dise¤o de: C:\DBASE\EJEMPLOS\FACTURA2.PRG
+********************************************************************************
+TABLABROWSE=existen
+CAMPOTABLA=cod_ped
+CAMPOENLACE=cod_ped
+CAMPOSBROWSE=cod_art,nom_art/12,descrip/20,can,coste_uni,total=coste_uni*can
+TECLAFUNCION=F9
+FICHERO_UDF=
+LISTACAMPOS=COD_ART,NOM_ART,DESCRIP,CAN,COSTE_UNI,TOTAL=COSTE_UNI*CAN

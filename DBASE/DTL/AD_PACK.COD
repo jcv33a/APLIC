@@ -1,0 +1,20 @@
+//
+// Module Name: AD_PACK.COD - Menu_Act = 12
+// Description: Delete and pack
+// Syntax     : PACK
+//
+lc_say='Buscando registros BORRADOS...'
+DO info_box WITH lc_say
+//
+LOCATE FOR DELETED()
+IF .NOT. EOF()
+   lc_say='Eliminando registros BORRADOS...'
+   DO info_box WITH lc_say
+   SET TALK ON
+   PACK
+   SET TALK OFF
+   GO TOP
+ENDIF
+//
+// EOP AD_PACK.COD
+

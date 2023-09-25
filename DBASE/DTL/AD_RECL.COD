@@ -1,0 +1,19 @@
+//
+// Module Name: AD_RECL.COD - Menu_Act = 11
+// Selectors  : Scope, For_Expr, While_Exp
+// Description: Recall Records marked for deletion.
+// Syntax     : RECALL [<scope>] [FOR <expL>] [WHILE <expL>]
+//
+lc_say='Quitando marca de borrado de los registros...'
+DO info_box WITH lc_say
+SET TALK ON
+//
+RECALL\
+{if Scope} {upper(Scope)} {endif}\
+{if For_Expr} FOR {For_Expr}{endif}\
+{if While_Exp} WHILE {While_Exp}{endif}\
+
+SET TALK OFF
+//
+// EOP AD_RECL.COD
+

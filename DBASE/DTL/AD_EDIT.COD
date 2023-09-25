@@ -1,0 +1,50 @@
+//
+// Module Name: AD_EDIT.COD - Menu_Act = 3
+// Selectors  : Edit_Frez, Edit_Lock, Edit_Width, Edit_Follw, Edit_Dele
+//            : Edit_Appd, Edit_Menu, Edit_Init, Edit_Edit, Edit_Compr
+//            : Edit_FMT, Brow_Clear Flter_Cond,Item_View, Field_List
+//            : For_Expr, While_Exp, Scope
+// Description: to issue the dBASE EDIT/APPEND command
+// Syntax     : EDIT [<scope>] [FIELDS <field name list>]
+//                 [WHILE <expL>] [FOR <expL>]
+//                 [NOFOLLOW] [NOAPPEND] [NOMENU] [NOCLEAR]
+//                 [NOINIT] [NODELETE] [NOEDIT] [<expN>]
+//
+{if Flter_Cond then}
+SET FILTER TO {Flter_Cond}
+GOTO TOP
+{endif}
+//
+{if Edit_FMT}
+*-- Desc: utiliza el fichero de formato de pantalla {Edit_FMT}
+SET FORMAT TO {Edit_FMT}
+{endif}
+{if Edit_Mode == 0}
+APPEND
+{else}
+EDIT \
+{if Scope}{upper(Scope)} {endif}\
+{if Field_list}FIELDS {lower(Field_list)} {endif}\
+{if While_Exp}WHILE {While_Exp} {endif}\
+{if For_Expr}FOR {For_Expr} {endif}\
+{ if Edit_Follw == 1}NOFOLLOW {endif}\
+{ if Edit_Appd == 1}NOAPPEND {endif}\
+{ if Edit_Menu == 1}NOMENU {endif}\
+{ if Edit_Init == 1}NOINIT {endif}\
+{ if Edit_Dele == 1}NODELETE {endif}\
+{ if Edit_Edit == 1}NOEDIT {endif}\
+{ if Edit_Clear == 1}NOCLEAR {endif}\
+{endif // if Edit_Mode == 0}
+
+//
+{if Flter_Cond then}
+SET FILTER TO
+{endif}
+{if Edit_FMT}
+*-- cierra el fichero de formato de pantalla para no afectar
+*-- a los mandatos READ
+SET FORMAT TO
+{endif}
+//
+// EOP AD_EDIT.COD
+

@@ -1,0 +1,181 @@
+#                                |col 34
+*AMT
+AMT 250                          AMT.PR2
+#                                |col 34
+*Apple
+LaserWriter                      POSTSCRI.PR3
+# extract both POSTSCRI.PR3 and POSTSCRI.DLD for this printer.
+#                                |col 34
+*Anadex
+6000                             ANA6000.PR2
+9625B (Silent Scribe)            ANA9625B.PR2
+#                                |col 34
+*ASCII
+Texto ASCII                      ASCII.PR2
+#                                |col 34
+*Brother
+HR-15                            HR15.PR2
+HR-25                            HR15.PR2
+#                                |col 34
+*Canon
+A2                               CANA2_15.PR2
+LBP-4                            CANONLBP.PR2
+LBP-8 Mark III                   CANONLBP.PR2
+#                                |col 34
+*C-Itoh
+1550A                            CI1550A.PR2
+1550B                            CI1550A.PR2
+1550BPI                          CI1550A.PR2
+1550S                            CI1550S.PR2
+715                              CI715_2.PR2
+815 (modo P351)                  CI815.PR2
+8510A                            CI8510A.PR2
+8510B                            CI8510A.PR2
+8510BPI                          CI8510A.PR2
+8510S                            CI8510S.PR2
+3500 modelo 20                   CI3520.PR2
+Prowriter Jr.                    FX80_1.PR2
+#                                |col 34
+*Data South
+180                              DS180.PR2
+220                              DS220.PR2
+#                                |col 34
+*DataProducts
+P-80                             DP_P80.PR2
+P-132                            DP_P80.PR2
+SPG-8050                         DP_8050.PR2
+SPG-8070                         DP_8050.PR2
+#                                |col 34
+*Diablo
+(Xerox) 630 API                  DIAB630A.PR2
+#                                |col 34
+*Epson
+DX-10                            DX10.PR2
+DX-20                            DIAB630A.PR2
+DX-35                            DIAB630A.PR2
+FX-80                            FX80_1.PR2
+FX-80 PLUS                       FX80_1.PR2
+FX-80 con 8177                   EPSN8177.PR2
+FX-85                            FX85_1.PR2
+FX-86E                           FX86E_1.PR2
+FX-100                           FX80_1.PR2
+FX-100 PLUS                      FX80_1.PR2
+FX-100 con 8177                  EPSN8177.PR2
+FX-185                           FX85_1.PR2
+GQ-3500                          GQ35_150.PR2
+JX-80                            JX80_2.PR2
+JX-80  con 8177                  EPSN8177.PR2
+LQ-800                           LQ800_2.PR2
+LQ-1500                          LQ1500_1.PR2
+LX-80                            LX80.PR2
+LX-90                            LX80.PR2
+MX-80                            GENERIC.PR2
+MX-80  con Graftrax PLUS         MX80G.PR2
+MX-100                           GENERIC.PR2
+MX-100 con Graftrax PLUS         MX80G.PR2
+RX-80                            FX80_1.PR2
+RX-80  con 8177                  EPSN8177.PR2
+RX-100                           FX80_1.PR2
+RX-100 con 8177                  EPSN8177.PR2
+SQ-1500                          LQ1500_1.PR2
+#                                |col 34
+*Facit                  
+4512                             FAC4512.PR2
+#                                |col 34
+*Fujitsu
+DotMax 9f                        FX80_1.PR2
+DotMax 9i                        IBMGP.PR2
+DotMax 24i                       FUJ24I.PR2
+DotMax 24c                       FUJ24C.PR2
+#                                |col 34
+*Gen‚rica         
+Tabla gen‚rica                   GENERIC.PR2
+#                                |col 34
+*HP
+DeskJet     (HP 2276)            HPDSK150.PR2
+LJ 6.5 lpp                       HPLAS100.PR2
+LJ 6 lpp                         HPLAS60.PR2
+LJ apaisado 6.5 lpp              HPLASL.PR2
+LJ apaisado 6   lpp              HPLASL45.PR2
+LJII 6.5    lpp                  HPLAS2I.PR2
+LJII 6 lpp                       HPLAS260.PR2
+LJII apaisado 6 lpp              HPLS2L45.PR2
+LJIID2 6.5  lpp 2-caras          HPLAS2ID.PR2
+LJIID2 6    lpp 2-caras          HPLASD60.PR2
+LJIID1 6.5  lpp 1-cara           HPLAS2I.PR2
+LJIID1 6    lpp 1-cara           HPLAS260.PR2
+LJIID1 la 6 lpp 1-cara apaisado  HPLS2L45.PR2
+PaintJet                         HPPAINT.PR2
+QuietJet                         HPQJET1.PR2
+ThinkJet                         HPJET.PR2
+#                                |col 34
+*IBM
+Color JetPrinter (monocromo)     IBMCJET2.PR2
+Graphics Printer                 IBMGP.PR2
+ProPrinter                       IBMPRO_1.PR2
+QuietWriter Modelo 1             IBMQUIET.PR2
+QuietWriter Modelo 2             IBMQ2_1.PR2
+QuietWriter Modelo 3             IBMQ3_1.PR2
+WheelPrinter                     IBMWHEEL.PR2
+#                                |col 34
+*NEC
+Pinwriter P2                     IBMGP.PR2
+Pinwriter P3 (a)                 IBMGP.PR2
+Pinwriter P5 (a)                 NECP5.PR2
+Spinwriter 3550                  NEC3550.PR2
+Spinwriter 7710                  NEC7710.PR2
+Spinwriter 8850                  NEC8850.PR2
+#                                |col 34
+*OKIDATA
+Microline 80                     GENERIC.PR2
+Microline 82                     GENERIC.PR2
+Microline 82A con Okigraph       OKI82AGR.PR2
+Microline 83A                    GENERIC.PR2
+Microline 83A con Okigraph       OKI82AGR.PR2
+Microline 84                     OKI84.PR2
+Microline 92                     OKI92_2.PR2
+Microline 92  con Plug 'n Play   OKI92PNP.PR2
+Microline 93                     OKI92_2.PR2
+Microline 93  con Plug 'n Play   OKI92PNP.PR2
+Microline 182                    OKI182.PR2
+Microline 182 con Plug 'n Play   OKI182PN.PR2
+Microline 183                    OKI182.PR2
+Microline 183 con Plug 'n Play   OKI182PN.PR2
+Microline 192                    OKI192_2.PR2
+Microline 192 con Plug 'n Play   OKI92PNP.PR2
+Microline 193                    OKI192_2.PR2
+Microline 193 con Plug 'n Play   OKI92PNP.PR2
+Okimate-20                       IBMGP.PR2
+Pacemark 2350                    OKI2410.PR2
+Pacemark 2410                    OKI2410.PR2
+#                                |col 34
+*Qume
+LetterPro 20                     QUME11.PR2
+Sprint 11 Plus                   QUME11.PR2
+#                                |col 34
+*Ricoh
+6000 Vertical                    RIC6K10.PR2
+6000 Apaisado                    RIC6K10L.PR2
+#                                |col 34
+*Star Micronics
+Gemini-10x                       GEM10.PR2
+Gemini-15x                       GEM10.PR2
+#                                |col 34
+*Tandy Corporation
+CGP-220                          CGP220.PR2
+#                                |col 34
+*Texas Instruments
+855                              TI855.PR2
+865                              TI855.PR2
+#                                |col 34
+*Toshiba America
+P321                             P351.PR2
+P341                             P351.PR2
+P351                             P351.PR2
+P1340                            P1340.PR2
+P1351                            P1340.PR2
+PageLaser12                      TOSLAS15.PR2
+#                                |col 34
+*Xerox Corporation
+(Diablo) 630 API                 DIAB630A.PR2
+

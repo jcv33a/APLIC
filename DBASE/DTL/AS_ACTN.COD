@@ -1,0 +1,466 @@
+//
+// Module Name: AS_ACTN.COD
+// Description: Menu item actions (taken out of AS_MENU.COD)
+//
+PROCEDURE ACT0{prgcnt}
+//
+// display the appropriate menu type on the comment line
+//
+*-- Acciones del men£ de \
+{ case Menu_Type of}
+{popup:}VENTANA \
+{f_pick:}FICHEROS \
+{s_pick:}ESTRUCTURA \
+{v_pick:}VALORES \
+{bar:}LINEA \
+{btch:}PROCESOS SECUENCIALES \
+{ endcase}
+{Menu_Name}
+*-- (elemento anterior, acci¢n, y elemento posterior)
+*
+//
+// if the menu type is not a file, structure, value or batch
+// include the dBASE case structure in the code.
+//
+PRIVATE lc_new, lc_dbf
+lc_new=' '
+lc_dbf=' '
+{if not AT(mtype,"3459") then}
+DO CASE
+{else}
+{  if Menu_Type != s_pick then}
+listval=PROMPT()
+{  endif}
+{  if Menu_Type == btch then}
+PRIVATE gl_batch
+gl_batch=.T.
+{  endif}
+{endif}
+{cnt=0;
+ count=1;
+ windowvar=1;
+}
+{ foreach FLD_ELEMENT k}
+//
+// increment the choice number
+//
+{   ++cnt;}
+//
+// Initialize to multi user flags to false.
+//
+{muser=0;}
+{exclflg=0;}
+//
+// NOT a line of text in the menu OR NOT an action (Text no act.), skip it
+//
+{   if (not AT(mtype,"3459")) && (!Fld_Pictur || !Menu_Act) goto newact endif}
+//
+// if the menu type is not a file, structure, value or batch,
+// include the dBASE case statement in the code.
+//
+{     if not AT(mtype,"3459") then}
+{       LMARG(1);}
+//
+{       if Menu_Type == bar then}
+CASE "PAD_{cnt}" = PAD()
+{       else}
+CASE BAR() = {Row_Positn}
+{       endif}
+//
+// if the menu is a popup associated with a pulldown set the margin.
+//
+{       LMARG(4);}
+{     else}
+//
+// if the menu is a batch object comment the action number
+//
+{       if Menu_Type == btch then}
+{         replicate("*",20)} Acci¢n n§ {cnt} {replicate("*",20)}
+{       endif}
+{     endif}
+//
+// item before actions (batch object)
+//
+{   if Menu_type == btch then
+      foreach Item_Befor m in k
+        if Item_Befor then
+          print(rtrim(Item_Befor)+CHR(10));
+        endif
+      next m;
+    endif
+}
+//
+// This section covers multi user actions
+//
+// Set the the muser variable to 1 for true.
+//
+{case Menu_Act of}
+{appd:}
+{  muser=1;}
+{rcopy:}
+{  muser=1;}
+{repl:}
+{  if Scope || While_Exp || For_Expr then}
+{    muser=1;}
+{  endif}
+{dele:}
+{  if Scope || While_Exp || For_Expr then}
+{    muser=1;}
+{  else}
+{    muser=2;}
+{  endif}
+{reca:}
+{  muser=1;}
+{pack:}
+{  exclflg=1;}
+{indx:}
+{  muser=1;}
+{rndx:}
+{  exclflg=1;}
+{sort:}
+{  muser=1;}
+{impt:}
+{  muser=1;}
+{expt:}
+{  muser=1;}
+{endcase}
+//
+// if the action requires exclusive use of the database
+//
+{if exclflg then}
+SET EXCLUSIVE ON
+{endif}
+//
+// Open item level view/database, if there is one.
+//
+{       if Item_View or Item_NDX or Item_Order then}
+//
+// capture the item level database/view
+//
+{if (not Item_Ovride) or (not Item_View) or (gc_view == Item_View) then
+   lc_view = gc_view;
+//
+// capture the menu level index(es)
+//
+   if (not Item_Ovride) or (not Item_NDX) or (gc_ndx == Item_NDX) then
+     lc_ndx = gc_ndx;
+   else
+     lc_ndx = Item_NDX;
+   endif
+//
+// capture the menu level index order(s)
+//
+   if (not Item_Ovride) or (not Item_Order) or (gc_ord == Item_Order) then
+     lc_ord = gc_ord;
+   else
+     lc_ord = Item_Order;
+   endif
+ else
+   lc_view = Item_View;
+   lc_ndx  = Item_NDX;
+   lc_ord  = Item_Order;
+ endif
+}
+{if Item_Ovride != 2 then}
+*-- Abre base de datos/vista del nivel del elemento e indexa
+CLOSE DATABASES
+lc_dbf='Y'
+{         dbfOpen(lc_view,lc_ndx,lc_ord,0);}
+{         itemdbf=1;}
+{else}
+{  if exclflg then}
+CREATE VIEW Current FROM ENVIRONMENT
+SET VIEW TO Current
+{  endif}
+{endif}
+{       else}
+{if Item_Ovride != 2 then}
+//
+// if the menu type is batch or exclusive use is required
+// reopen the menu level database.
+//
+{         if (Menu_Type == btch && itemdbf) or exclflg then}
+{           dbfOpen(gc_view,gc_ndx,gc_ord,0);}
+{           itemdbf=0;}
+{         endif}
+{else}
+{  if exclflg then}
+CREATE VIEW Current FROM ENVIRONMENT
+SET VIEW TO Current
+{  endif}
+{endif}
+{       endif}
+//
+{     if muser then}
+*-- Bloqueo de ficheros multiusuario
+DO Lockit WITH "{muser}"
+IF gn_error <> 0
+   gn_error=0
+   RETURN
+ENDIF
+{     endif}
+//
+// if the exclusive flag is set turn exclusive usage off
+//
+{    if exclflg then}
+SET EXCLUSIVE OFF
+{    endif}
+//
+{if NDX_ORDER then}
+ON ERROR DO Pause WITH LTRIM(STR(ERROR()))+" "+MESSAGE()
+SET ORDER TO {NDX_ORDER}
+ON ERROR
+{endif}
+{if postn_menu then}
+ON KEY LABEL F1 DO Postnhlp
+ACTIVATE WINDOW Savescr
+{endif}
+{include "AS_TPOST.COD";}
+{if postn_menu then}
+DEACTIVATE WINDOW Savescr
+ON KEY LABEL F1 DO 1HELP1
+{endif}
+//
+// item before actions (not a batch object)
+//
+{   if Menu_type != btch then
+      foreach Item_Befor m in k
+        if Item_Befor then
+          print(rtrim(Item_Befor)+CHR(10));
+        endif
+      next m;
+    endif
+}
+//
+// define window if specified
+//
+{if Wndow_Name}
+{if Wndow_Char && Wndow_Bord != 3 then}
+SET BORDER TO \
+{case Wndow_Bord of}
+{1:} DOUBLE\
+{2:} PANEL\
+{4:} NONE\
+{endcase}
+
+SET BORDER TO {Wndow_Char}
+{endif}
+DEFINE WINDOW {Wndow_Name} FROM {nul2zero(Wndow_X1)},{nul2zero(Wndow_Y1)} TO\
+ {nul2zero(Wndow_X2)},{nul2zero(Wndow_Y2)}\
+{case Wndow_Bord of}
+{1:} DOUBLE\
+{2:} PANEL\
+{3:} {Wndow_Char}\
+{4:} NONE\
+{endcase}
+{if Wndow_Clrs then}
+ COLOR {Wndow_Clrs}
+
+{else}
+
+{endif}
+{if Wndow_Char && Wndow_Bord != 3 then}
+SET BORDER TO
+{endif}
+ACTIVATE WINDOW {Wndow_Name}
+{if windowvar then}
+PRIVATE lc_window
+{  windowvar=0;
+ endif}
+lc_window="{Wndow_Name}"
+{else}
+{  if Menu_Type != btch && Menu_Act && Menu_Act != open &&
+   Menu_Act != retu && Menu_Act != quit then}
+IF .NOT. gl_batch
+   DO BefAct
+ENDIF
+{  endif}
+{endif}
+{if AT(STR(Menu_Act)+",","2,3,7,19,20,") then}
+SET SCOREBOARD ON
+{endif}
+//
+// This is a comment which can be placed in
+// the code to reveal the the action number
+// of a particular action. (refer to the
+// enum statement in AS_MENU.COD)
+//
+//*-- Acci¢n del men£ del generador de aplicaciones n£mero {Menu_Act}
+//
+{  if Menu_Act && Menu_Act != open &&
+   Menu_Act != retu && Menu_Act != quit then
+     if Item_Prmpt then}
+SET MESSAGE TO "{alltrim(Item_Prmpt)}"
+{    else}
+SET MESSAGE TO
+{    endif
+   endif}
+{case Menu_Act of}
+{case textno:}
+{case open:}
+{if Menu_Type != btch then  // not equal to batch process}
+lc_new='Y'
+{endif}
+DO {Open_Menu} WITH "{if !Open_Type then}B{else} {endif}0{prgcnt}"
+{case brow: include "ad_brow.cod";}
+{case edit: include "ad_edit.cod";}
+{case rept: include "ad_rept.cod";}
+{case labl: include "ad_labl.cod";}
+{case disp: include "ad_list.cod";}
+{case appd: include "ad_apnd.cod";}
+{case rcopy: include "ad_copy.cod";}
+{case repl: include "ad_repl.cod";}
+{case dele: include "ad_dele.cod";}
+{case reca: include "ad_recl.cod";}
+{case pack: include "ad_pack.cod";}
+{case indx: include "ad_ndx.cod";}
+{case rndx: include "ad_rndx.cod";}
+{case sort: include "ad_sort.cod";}
+{case impt: include "ad_imp.cod";}
+{case expt: include "ad_exp.cod";}
+{case fcopy: include "ad_fcopy.cod";}
+{case dodB: include "ad_prog.cod";}
+{case indB: include "ad_inln.cod";}
+{case xdos: include "ad_xdos.cod";}
+{case call: include "ad_call.cod";}
+{case retu:}
+*-- Volver al programa desde el que fuimos llamados
+{case quit:}
+*-- Salir de dBASE
+{case batch:}
+*-- Proceso secuencial
+DO {Batch_Name} WITH " "
+{case plmac:}
+*-- Macro
+PLAY MACRO {Macro_Name}
+{otherwise:}
+*-- ¨Qu‚? ({Fld_Pictur}, acci¢n = {Menu_Act})
+// end of menu actions
+//
+{   endcase}
+// end of case Menu_Act
+//
+{if AT(STR(Menu_Act)+",","2,3,7,19,20,") then}
+SET SCOREBOARD OFF
+{endif}
+//
+// if window specified deactivate and release it.
+//
+{if Wndow_Name}
+DEACTIVATE WINDOW {Wndow_Name}
+RELEASE WINDOW {Wndow_Name}
+{endif}
+//
+// item after action
+//
+{   foreach Item_After m in k
+      if Item_After then
+        print(rtrim(Item_After)+CHR(10));
+      endif
+    next m;}
+//
+// if the multi user flag is set unlock the database
+//
+{   if muser then}
+IF NETWORK()
+   UNLOCK
+ENDIF
+{   endif}
+//
+{if !Wndow_Name}
+{  if Menu_Type != btch && Menu_Act && Menu_Act != open &&
+   Menu_Act != retu && Menu_Act != quit then}
+IF .NOT. gl_batch
+   DO AftAct
+ENDIF
+{  endif}
+{endif}
+//
+{case Menu_Act of}
+{case retu:}
+gc_quit='Q'
+{  if Menu_Type != btch then}
+{    if Menu_Type == popup then}
+IF LEFT(entryflg,1) <> "B"
+   \
+{    endif}
+DEACTIVATE {if Menu_Type == bar then}MENU {else}POPUP {endif}&& {mnuname}
+{    if Menu_Type == popup then}
+ELSE
+   DEACTIVATE MENU
+ENDIF
+{    endif}
+{  endif}
+{  if not AT(mtype,"3459") then}
+RETURN
+{  else}
+IF .T.
+   RETURN
+ENDIF
+{  endif}
+{case quit:}
+CLOSE DATABASES
+QUIT
+{   endcase}
+{   newact:  // get a new action}
+{ next k;}
+// end of loop field
+//
+//
+// if the menu is not a file, structure, value or batch,
+// include the dBASE ENDCASE statment and set the choice to none.
+//
+{if not AT(mtype,"3459") then}
+{  LMARG(1);}
+{  if Menu_Type == bar then}
+OTHERWISE
+   @ {scrn_size+3},00
+   @ {scrn_size+3},21 SAY "Este elemento no tiene acci¢n. Pulse una tecla."
+   x=INKEY(0)
+   @ {scrn_size+3},00
+{  endif}
+ENDCASE
+{else}
+//
+// if the menu is a batch object draw a line of 40 asterisks
+//
+{  if Menu_Type == btch then}
+gl_batch=.F.
+{    replicate("*",40)}
+
+{  endif}
+{endif}
+SET MESSAGE TO
+{  if Menu_Type != btch then}
+IF gc_quit='Q'
+   IF LEFT(entryflg,1) = "B"
+      DEACTIVATE MENU
+   ELSE
+      DEACTIVATE \
+{if Menu_Type == bar then}
+MENU \
+{else}
+POPUP \
+{endif}
+&& {mnuname}
+   ENDIF
+ENDIF
+{  endif}
+//
+{if Menu_Type != btch then  // not equal to batch process}
+IF lc_new='Y'
+   lc_file="SET"+gc_prognum
+   DO &lc_file.
+ENDIF
+{  if Menu_Ovride != 2 then}
+{    if itemview+itemndx+itemord then}
+IF lc_dbf='Y' .AND. .NOT. lc_new='Y'
+   lc_file="DBF"+gc_prognum
+   DO &lc_file.
+ENDIF
+{    endif}
+{  endif}
+{endif}
+RETURN
+// EOP AS_ACTN.COD
+

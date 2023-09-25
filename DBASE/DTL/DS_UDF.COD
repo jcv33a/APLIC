@@ -1,0 +1,276 @@
+//
+// Module Name: DS_UDF.COD
+// Description: UDF's used in the system
+//
+{
+define scrndump()
+
+  // This udf dumps the object image to the output stream with a ruler line.
+
+  cnt = 0
+  forflag = barflag = 1; // same as .T.
+}
+Imagen en Pantalla:
+   0         10        20        30        40        50        60        70
+  >.....+....|....+....|....+....|....+....|....+....|....+....|....+....|....+.
+{if graph_prt then
+  // call graphics screen dump.
+  include "ds_box.cod";
+else
+  // call ascii screen dump.
+   do while cnt < scrn_size
+     line = SCREEN(cnt)
+     if cnt < 10 then
+       linecnt = "0"+str(cnt)
+     else
+       linecnt = str(cnt)
+     endif
+     print(substr(linecnt+":"+line,1,80)+crlf);
+     ++cnt;
+   enddo
+ endif // if graph_prt
+ print("  >.....+....|....+....|....+....|....+....|....+....|....+....|....+....|....+."+crlf);
+ return;
+enddef
+
+define endofpage()
+
+  // This udf checks for End of Page. It uses the curline() and pageject() to
+  //  determine if more than 59 lines have been output to the file.  Once
+  //  pageject() is called curline() is reset to zero.  On each new page we
+  //  output a page number and date.
+
+  if curline() > 59 then
+    pagecnt=pagecnt+1
+    pageject()
+    print(crlf+"P gina: "+str(pagecnt)+"  Fecha: "+ltrim(date())+crlf+crlf)
+  endif
+  return;
+enddef
+
+define db_inlin()
+
+  // This udf is used for processing Inline dBASE code.
+
+  endofpage()
+  foreach Inline_Do l in flds
+    if Inline_Do then
+       print("  "+rtrim(Inline_Do)+crlf)
+       endofpage()
+    endif
+  next l
+  endofpage()
+  lmarg(2)
+ return;
+enddef
+
+define color(getcolor)
+
+ // This udf is used for processing colors from the generator.
+ //  The foreground and background colors are stored in one byte.
+ //  The formulas below show how to get the foreground and background color
+ //  out of the variable passed in.
+
+ var blink, forground, background, enhanced, incolor;
+
+ forground = background = enhanced = 0
+
+ if getcolor != 255 then                      // black on black?
+   blink = getcolor >> 7                      // high order bit set?
+   if blink then
+     getcolor = getcolor - 128                // set high order bit to zero
+   endif
+   background = getcolor >> 4                 // getcolor divided by 16
+   forground  = getcolor - (background << 4)  // (background times 16)
+   if forground > 7 then                      // high intensity?
+     enhanced = 1
+     forground = forground - 8
+   endif
+ endif
+
+ // Set your dBASE manual for an explanation of the colors below
+ case forground of
+  0: incolor = "N"
+  1: incolor = "B"
+  2: incolor = "G"
+  3: incolor = "BG"
+  4: incolor = "R"
+  5: incolor = "RB"
+  6: incolor = "GR"
+  7: incolor = "W"
+ endcase
+
+ if blink then incolor = incolor + "*" endif
+ if enhanced then
+   incolor = incolor + "+/"
+ else
+   incolor = incolor + "/"
+ endif
+
+ case background of
+  0: incolor = incolor + "N"
+  1: incolor = incolor + "B"
+  2: incolor = incolor + "G"
+  3: incolor = incolor + "BG"
+  4: incolor = incolor + "R"
+  5: incolor = incolor + "RB"
+  6: incolor = incolor + "GR"
+  7: incolor = incolor + "W"
+ endcase
+ return incolor;
+enddef
+
+define get_box_text(line,linecnt,textline,col_post)
+  // Used for procesing the lines between top and bottom of a graphics screen
+  // dump.
+
+  if Menu_Type == bar then
+    if barflag then
+       if col_post-1 <= 0 then
+         mspace=""
+       else
+         mspace = space(col_post-1)
+       endif
+    else
+      mspace = space(col_post-( len(line)-col1() ))
+    endif
+  else
+     line = space(col1())
+     mspace = space(col_post-1)
+  endif
+  case Mnu_Border of
+   0: // panel box
+     if Menu_Type != bar then
+       line = line + chr(219) + mspace + Textline
+       mspace2 = space((col2()-len(line)))
+       line = line + mspace2 + chr(219)
+     else
+        if barflag then
+          line = line + chr(219) + mspace + Textline
+        else
+          line = line + mspace + Textline
+        endif
+     endif
+
+   1: // single line box
+     if Menu_Type != bar then
+       line = line + chr(179) + mspace + Textline
+        mspace2 = space((col2()-len(line)))
+        line = line + mspace2 + chr(179)
+     else
+        if barflag then
+          line = line + chr(179) + mspace + Textline
+        else
+          line = line + mspace + Textline
+        endif
+     endif
+
+   2: // double line box
+     if Menu_Type != bar then
+       line = line + chr(186) + mspace + Textline
+       mspace2 = space((col2()-len(line)))
+       line = line + mspace2 + chr(186)
+     else
+       if barflag then
+         line = line + chr(186) + mspace + Textline
+       else
+         line = line + mspace + Textline
+       endif
+     endif
+
+   3: // no line box
+     if Menu_Type != bar then
+       line = line + " " + mspace + Textline
+       mspace2 = space((col2()-len(line)))
+       line = line + mspace2 + chr(186)
+     else
+       if barflag then
+         line = line + " " + mspace + Textline
+       else
+         line = line + mspace + Textline
+       endif
+     endif
+  endcase
+
+  if cnt < 10 and barflag then
+    linecnt = "0"+str(cnt)
+  else
+    if barflag then // bar flag test for processing a bar menu
+      linecnt = str(cnt)
+    endif
+  endif
+
+  if Menu_Type != bar then
+    print(substr(linecnt+":"+line,1,80)+crlf);
+    ++cnt;
+  else
+    barflag = 0
+  endif
+
+ return;
+enddef
+
+define message(message);
+  // Message(<chrC>): expects a string to be passed & display's a message
+  //                  centered on line 23 or 42
+  pmsg(center(message))
+  cget()
+  return;
+enddef
+
+
+define center(message);
+   // Center(<chrC>): expects a string to be passed in
+   //           and returns the string centered between 80 columns
+   var mspace;
+   mspace = space((40-(len(message)/2)))
+   message = mspace + message
+   return message;
+ enddef
+
+ define get_item(miid,mhead,mline,mcursor)
+  //
+  // This udf is used for processing item level text.
+  //
+  endofpage()
+  print_head=1
+  foreach miid getext in mcursor
+     if getext.miid then
+        if print_head then
+           print(crlf+mhead+crlf+mline+crlf)
+           lmarg(4)
+           Print_head=0
+        endif
+        print(rtrim(getext.miid)+crlf)
+        endofpage()
+     endif
+  next getext
+  endofpage()
+  lmarg(2)
+ return;
+enddef
+
+define get_frame(miid, mhead, mline);
+  //
+  // This udf is used for processing frame level text.
+  //
+  endofpage()
+  print_head=1
+  foreach miid getext
+     if getext.miid then
+        if print_head then
+           print(crlf+mhead+crlf+mline+crlf)
+           lmarg(2)
+           Print_head=0
+        endif
+        print(rtrim(getext.miid)+crlf)
+        endofpage()
+     endif
+  next getext
+  endofpage()
+  lmarg(0)
+ return;
+enddef
+}
+// EOP DS_UDF.COD
+

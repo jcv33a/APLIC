@@ -1,0 +1,18 @@
+//
+// Module Name: AD_FCOPY.COD - Menu_Act = 18
+// Selectors  : File_from, File_To
+// Description: to issue the dBASE COPY FILE command
+// Syntax     : COPY FILE <expFN> TO <expFN>
+//
+lc_say='Copiando fichero {File_from} al fichero {File_To}'
+DO info_box WITH lc_say
+SET TALK ON
+//
+COPY FILE \
+{if File_from then}{File_from} TO {endif}\
+{if File_To then File_To}{endif}\
+
+SET TALK OFF
+//
+// EOP AD_COPY.COD
+

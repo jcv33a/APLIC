@@ -1,0 +1,56 @@
+//
+// Module name: as_muser.cod
+// Description: Multi-User error handler
+//
+// ERROR() MESSAGE()                          File, record error, critical
+// ========================================================================
+//     148 Network server busy                critical
+//     217 Lock table full                    critical
+//     131 Database is encrypted              file
+//     110 Exclusive open of file is required file
+//     108 File is in use by another          file
+//     129 Unable to lock                     file/record
+//     133 Unauthorized access level          file/record
+//     124 Invalid printer redirection        N/A
+//     132 Unauthorized login                 N/A
+//     111 Cannot write to a read-only file   record
+//     109 Record is in use by another        record
+//     130 Record is not locked               record
+//     128 Unable to skip                     record
+//
+// Errors will be handled in one of two ways:
+//
+// 1) Display message and return to menu
+// 2) Dialog box for options Try again and Return to menu
+//
+PROCEDURE Multerr
+*-- Establece la variable de error global
+gn_error=ERROR()
+*-- Contiene el n£mero de error que comprobar
+lc_erno=STR(ERROR(),3)+','
+*-- Variable de opci¢n
+lc_opt='T'
+*-- Ventana de di logo para las opciones Intentar de nuevo y Volver al men£
+IF lc_erno $ "108,109,128,129,"
+   ACTIVATE WINDOW Pause
+   @ 0,2 SAY lc_erno+" "+MESSAGE()
+   @ 2,22 SAY "I = Intentar de nuevo, V = Volver al men£." GET lc_opt ;
+PICTURE "!" VALID lc_opt $ "IV"
+   READ
+   DEACTIVATE WINDOW Pause
+   IF lc_opt = "V"
+      RETURN
+   ENDIF
+ENDIF
+*-- Muestra mensaje y vuelve al men£.
+IF .NOT. lc_erno $ "108,109,128,129,"
+   DO PAUSE WITH ERROR()
+   RETURN
+ENDIF
+*-- inicializa la variable global
+gn_error=0
+*-- Intenta de nuevo el mandato
+RETRY
+RETURN
+// EOP AS_MUSER.COD
+

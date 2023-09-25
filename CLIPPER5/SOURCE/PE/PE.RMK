@@ -1,0 +1,22 @@
+//
+//  Pe.rmk
+//
+//  Fichero make para PE, un simple editor de programas en CA-Clipper.
+//
+//  Copyright (c) 1991-1993, Computer Associates International, Inc.
+//  Todos los derechos reservados.
+//
+
+.prg.obj:
+    clipper $< /m/n/w
+
+.obj.exe:
+    set rtlinkcmd=/posi
+    rtlink $**, $@ ;
+
+
+pe.obj: pe.prg
+
+pe.exe: pe.obj
+
+

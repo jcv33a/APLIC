@@ -1,0 +1,11 @@
+//
+// Module Name: AD_PROG.COD - Menu_Act = 19
+// Selectors  : PRG_File, PRG_Parms
+// Description: DO program, optional WITH parameters.
+// Syntax     : DO <program filename>/<procedure name>
+//                  [WITH <exp list>]
+//
+DO {PRG_File}{if PRG_Parms} WITH {PRG_Parms}{endif}
+//
+// EOP AD_PROG.COD
+

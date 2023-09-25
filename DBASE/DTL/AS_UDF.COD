@@ -1,0 +1,201 @@
+//
+// Module name: AS_UDF.COD
+// Description: Apgen User defined functions
+//
+{define dbfOpen(mdbf,mndx,mord,actflag)
+  var tempext, // temporary extension
+      filestr  // file string
+;
+ tempext="";
+ filestr="";
+//
+ if mdbf and (filetype(mdbf) == "DBF" || !filetype(mdbf)) then
+   tempext=".DBF";
+ else
+   if mdbf then
+     tempext="."+filetype(mdbf);
+   endif
+ endif
+//
+ filestr="Error al abrir ";
+ if mdbf then
+   filestr=filestr+fileroot(mdbf)+tempext;
+ endif
+ if mndx then
+   if mdbf then
+     filestr=filestr+" o ";
+   endif
+   filestr=filestr+"¡ndice(s) "+upper(mndx);
+ endif}
+lc_message="0"
+ON ERROR lc_message=LTRIM(STR(ERROR()))+" "+MESSAGE()
+{if tempext == ".VUE" || tempext == ".QBE" || tempext == ".QBO" then}
+SET VIEW TO {mdbf}
+{else}
+{  if tempext == ".UPD" then}
+DO {mdbf}
+{  else}
+USE {mdbf}
+{  endif}
+{endif}
+{if mndx then}
+IF "" <> DBF()
+   SET INDEX TO {mndx}
+ENDIF
+{endif}
+{if mord then}
+SET ORDER TO {mord}
+{endif}
+ON ERROR
+gn_error=VAL(lc_message)
+IF gn_error > 0
+   DO Pause WITH ;
+   "{filestr}"
+{case actflag of}
+{0:}
+   gn_error=0
+   lc_file="SET"+gc_prognum
+   DO &lc_file.
+   RETURN
+{1:}
+   lc_new='Y'
+   RETURN
+{endcase}
+ENDIF
+lc_new='Y'
+RELEASE lc_message
+{return;
+ enddef;
+}
+//
+// UDF to handle item level help.
+//
+{define itmhlp();}
+{var hlprcnt;}
+{hlprcnt=1;  // line counter}
+{foreach Item_Help m in k}
+{  if ALLTRIM(Item_Help) then}
+   @ {hlprcnt+1},1 SAY "{Item_Help}"
+{  endif}
+{  ++hlprcnt;}
+{  if hlprcnt > 19 then}
+{    hlprcnt=1;}
+{  endif}
+{next m;}
+{return hlprcnt;}
+{enddef;}
+//
+// UDF to handle Text in Before and After code embeds and Menu help.
+//
+{define help_proc();}
+{var hlprcnt;}
+{hlprcnt=0;  // line counter}
+{foreach Menu_Help}
+{  if not hlprcnt then hlprcnt=1 endif;}
+{  if ALLTRIM(Menu_Help) then}
+   @ {hlprcnt+1},1 SAY "{Menu_Help}"
+{  endif}
+{  ++hlprcnt;}
+{  if hlprcnt > 19 then}
+{    hlprcnt=1;}
+{  endif}
+{next k;}
+{menucnt=hlprcnt;}
+{return;}
+{enddef;}
+//
+{
+ define color(getcolor);
+ var blink, forground, background, enhanced, incolor;
+//
+ forground = background = enhanced = 0;
+//
+ if getcolor != 255 then                      // black on black?
+   blink = getcolor >> 7;                     // high order bit set?
+   if blink then
+     getcolor = getcolor - 128;               // set high order bit to zero
+   endif
+   background = getcolor >> 4;                // getcolor divided by 16
+   forground  = getcolor - (background << 4); // (background times 16)
+   if forground > 7 then                      // high intensity?
+     enhanced = 1;
+     forground = forground - 8;
+   endif
+ endif
+ case forground of
+ 0: incolor = "N";
+ 1: incolor = "B";
+ 2: incolor = "G";
+ 3: incolor = "GB";
+ 4: incolor = "R";
+ 5: incolor = "RB";
+ 6: incolor = "RG";
+ 7: incolor = "W";
+ endcase
+ if blink then incolor = incolor + "*"; endif
+ if enhanced then
+   incolor = incolor + "+/";
+ else
+   incolor = incolor + "/";
+ endif
+ case background of
+ 0: incolor = incolor + "N";
+ 1: incolor = incolor + "B";
+ 2: incolor = incolor + "G";
+ 3: incolor = incolor + "GB";
+ 4: incolor = incolor + "R";
+ 5: incolor = incolor + "RB";
+ 6: incolor = incolor + "RG";
+ 7: incolor = incolor + "W";
+ endcase
+ return incolor;
+enddef;
+}
+{define itemover(cursor);
+//
+// these routines set a flag variable to indicate whether
+// an item in the menu has an overide to the menu database.
+// ---------------------------------------------------------
+// item database/view
+//
+    if (not itemview) then
+       if cursor.Item_View and (cursor.Item_View != Menu_View) then
+         itemview=1;
+       endif
+     endif
+//
+// item index
+//
+    if (not itemndx) then
+       if cursor.Item_NDX and (cursor.Item_NDX != Menu_NDX) then
+         itemndx=1;
+       endif
+     endif
+//
+// item index order
+//
+    if (not itemord) then
+       if cursor.Item_Order and (cursor.Item_Order != Menu_Order) then
+         itemord=1;
+       endif
+     endif
+// ---------------------------------------------------------
+//
+ return;
+enddef
+//
+define display_type()
+    // Find out the display type we are working on
+    var temp;
+    case display of
+       mono:   temp = "MONO"
+       cga:    temp = "COLOR"
+       ega25:  temp = "EGA25"
+       mono43: temp = "MONO43"
+       ega43:  temp = "EGA43"
+     endcase
+     return temp;
+enddef
+}
+// EOP AS_UDF.COD
+

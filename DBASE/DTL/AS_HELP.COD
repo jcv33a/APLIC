@@ -1,0 +1,37 @@
+//
+// Module Name: AS_HELP.COD
+// Description: Help procedure file
+//
+{count=0;}
+{menucnt=0;}
+{rowpoint=0;}
+*-- ayuda para el men£ {mnuname}
+{foreach FLD_ELEMENT k}
+{  count=count+1;}
+{  if !Fld_Pictur goto nexthlp;}
+{  if !Pldwn_Menu && Menu_Type == bar && Menu_Act == open && Open_Type then}
+{    goto nexthlp}
+{  endif}
+{  if item_help then}
+CASE "{upper(mnuname)}" = lc_popmenu .AND. \
+{    if Menu_Type == bar then}
+PAD() = "PAD_{count}"
+{    else}
+BAR() \
+{      if Menu_Type == popup then}
+= {Row_Positn}
+{      else}
+<> 0
+{      endif}
+{    endif}
+{    rowpoint=itmhlp();}
+{  endif}
+{  nexthlp:}
+{next k;}
+CASE "{upper(mnuname)}" = lc_popmenu
+{help_proc();}
+{if !menucnt then}
+   @ 2,2 SAY "No hay Ayuda definida."
+{endif}
+// EOP AS_HELP.COD
+

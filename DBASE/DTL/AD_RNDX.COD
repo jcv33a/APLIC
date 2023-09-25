@@ -1,0 +1,15 @@
+//
+// Module Name: AD_RNDX.COD - Menu_Act = 14
+// Description: to issue the dBASE REINDEX command
+// Syntax     : REINDEX
+//
+lc_say='Reindexando Base de datos...'
+DO info_box WITH lc_say
+SET TALK ON
+//
+REINDEX
+//
+SET TALK OFF
+//
+// EOP AD_RNDX.COD
+

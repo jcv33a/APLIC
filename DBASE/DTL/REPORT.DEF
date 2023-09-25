@@ -1,0 +1,240 @@
+//---------------------------------------------------------------------------
+// REPORT.DEF  NPI report object data selectors
+// Ashton-Tate (c) 1987, 1988
+//
+// Updated 9-21-88 KJN
+//
+// This include file contains all the selectors required for reports.
+// *** DO NOT CHANGE ANY OF THE NUMBERS BELOW ***
+//
+//---------------------------------------------------------------------------
+// NOTE:
+// Selectors listed in the following table which are shown to have
+// "Value: Number" will sometimes return the null string instead
+// of the numeric zero.  For logical compares, null is the same
+// as zero, however when emitting the value to the output file
+// the null string must be converted to a numeric zero explicitly.
+// A user defined function is used in the FORM.COD template program
+// called NUL2ZERO() for converting null strings to explicit numeric
+// zeros.
+//---------------------------------------------------------------------------
+{
+selectors
+#lstoff
+//
+// ELEMENT selectors (FOREACH loop elements)
+//
+ELEMENT            1000, // All elements types by row & column
+BAND_ELEMENT       1102, // Report band element
+BOX_ELEMENT        1086, // Box element
+FLD_ELEMENT        1130, // Field element
+TEXT_ELEMENT       1085, // Text element
+RULER_ELEMENT      1119, // Ruler element
+PARA_ELEMENT       1118, // Paragraph end marker element
+PAGE_ELEMENT       1117, // Page break marker element
+//
+// Selectors common to all elements
+//
+ELEMENT_TYPE        001, // Element type found in reports are:
+                         //     BAND_ELEMENT
+                         //     BOX_ELEMENT
+                         //     FLD_ELEMENT
+                         //     TEXT_ELEMENT
+                         //     RULER_ELEMENT
+                         //     PARA_ELEMENT
+ROW_POSITN          225, // Row number of Element
+                         // Menu Path: None - Value: Number
+COL_POSITN          093, // Column number of Element
+                         // Menu Path: None - Value: Number
+GROUP               091, // Report group id
+SYS_FLEN            053, // Element length in layout
+SYS_INAME           068, // reserved
+SYS_FMT             071, // reserved
+SYS_PAGE            090, // reserved
+SYS_ROW             092, // reserved
+SYS_ATRB            094, // reserved
+//
+// Frame level selectors - can be accessed at any time
+//
+NAME                040, // Name of NPI report object
+                         // Menu Path: None - Value: String
+FRAME_CLASS         181, // Object type (called MENU_TYPE in application.def)
+                         // Menu Path: None - Value:11=form, 12=label, 13=report
+FRAME_VER           150, // Version #
+                         // Menu Path: None - Value: Number
+FRAME_FILE_TYPE     151, // File type of object
+                         // Menu Path: None - Value: Number
+FRAME_PATH          042, // Path of object
+                         // Menu Path: None - Value: String
+FRAME_NUM_OF_FIELDS 153, // Number of fields on layout
+                         // Menu Path: None - Value: Number
+FRAME_NUM_OF_BANDS  154, // Number of bands in report
+                         // Menu Path: None - Value: Number
+FRAME_PAGEHEADINGS  155, // Use page heading
+                         // Menu Path: None - Value: 1:page headings in intro
+                         //                          0: No Page headings
+dBASE_III_PLUS      215, // Is this a dBASE III+ report
+                         // Menu Path: None - Value: 0:No 1:Yes
+PRINT_FORM          152, // Print form name
+                         // Menu Path: PU   - Value: String
+PRINT_DESTINATION   217, // Where to send output
+                         // Menu Path: PDW  - Value: 0: Printer 1:Dos file
+PRINT_DOS_FILE      218, // Name of DOS file
+                         // Menu Path: PDN  - Value: String
+PRINT_DRIVER        219, // Name of Printer driver
+                         // Menu Path: PDP  - Value: String
+PRINT_TO_SCREEN     220, // Echo outpu to screen
+                         // Menu Path: PDE  - Value: Numeric
+PRINT_PITCH         221, // Text Pitch
+                         // Menu Path: PCT  - Value: 0:Default 1:Pica 2:Elite
+                         //                          3:Condensed
+PRINT_QUALITY       222, // Quality Print
+                         // Menu Path: PCQ  - Value: 0:Default 1:Yes 2:No
+PRINT_NEW_PAGE      223, // When to goto New page
+                         // Menu Path: PCN  - Value: 0:Before 1:Both 2:None
+                         //                          3:After
+PRINT_PAUSE         224, // Wait between pages
+                         // Menu Path: PCW  - Value: 0:No 1:Yess
+PRINT_ADVANCE       226, // Advance page using
+                         // Menu Path: PCA  - Value: 0:Form Feeds 1:Line Feeds
+PRINT_START_CODES   227, // Starting control codes
+                         // Menu Path: PCS  - Value: String
+PRINT_END_CODES     228, // Ending control codes
+                         // Menu Path: PCE  - Value: String
+PRINT_START_PAGE    229, // Begin on page
+                         // Menu Path: POB  - Value: String
+PRINT_END_PAGE      230, // End on page
+                         // Menu Path: POB  - Value: String
+PRINT_FIRST_PAGE    231, // First page number
+                         // Menu Path: POE  - Value: String
+PRINT_COPIES        232, // Number of copies
+                         // Menu Path: PON  - Value: String
+PRINT_PAGE_LENGTH   233, // Length of page
+                         // Menu Path: PPL  - Value: String
+PRINT_LEFT_OFFSET   234, // Offeset from left
+                         // Menu Path: PPO  - Value: String
+PRINT_LINE_SPACING  235, // Spacing of lines
+                         // Menu Path: PPL  - Value: 0:Single 1:Double 2:Triple
+//
+// Text attribute selectors (FOREACH Text_element x .... NEXT)
+//
+TEXT_ITEM           095, // Static text data
+                         // Menu Path: None - Value: String
+//
+// Field attribute selectors (FOREACH Fld_element x .... NEXT)
+//
+FLD_FILENAME        060, // Name of file this field is in
+                         // Menu Path: None - Value: String
+FLD_FIELDNAME       061, // Field name
+                         // Menu Path: None - Value: String
+FLD_SUMFIELD        062, // Field name to summarize on
+FLD_FIELDTYPE       063, // Where the data is coming from
+                         // Menu Path: None - Value: 0:dBF field 1:calc'ed
+                         //                    2:sum 3:predefined 4:memory var
+FLD_VALUE_TYPE      064, // Field data type in dBF
+                         // Menu Path: None - Value: 67:char 68:date 70:float
+                         //                      76:logical 77:memo 78:numeric
+                         // Try chr(fld_value_type) return C:char D:date etc.
+FLD_LENGTH          065, // Length of field
+                         // Menu Path: None - Value: Number
+FLD_DECIMALS        066, // Number of decimal positions
+                         // Menu Path: None - Value: Number
+FLD_REPWIDTH        067, // Width in report
+FLD_SUPPRESS        069, // Suppress related values? 0:no 1:yes
+FLD_PREDEFINE       070, // Predef fld 0:date 1:time 2:recno 3:pageno
+FLD_OPERATION       098, // Op type 0:avg 1:count 2:max 3:min 4:sum
+FLD_RESET           072, // Reset 0:never 1:page 2:group names
+FLD_HIDDEN          073, // 0: visible  else: hidden
+FLD_TEMPLATE        074, // Picture template
+                         // Menu Path: FMT - Value: String
+FLD_PICFUN          075, // Picture functions
+                         // Menu Path: FMP - Value: String
+FLD_DESCRIPT        076, // Calc & sum description
+                         // Menu Path: FMD - Value: String
+FLD_EXPRESSION      077, // Calc expression
+                         // Menu Path: FME - Value: String
+FLD_STYLE           096, // Field style
+//
+// Band Attribute Selectors (FOREACH Band_element x ... NEXT)
+//
+BAND_BANDEDIT       115, // 1:word wrap editor 0:No word wrap editor
+BAND_BANDTYPE       100, // 0:Pg Hd 1:Rp Intr 2:Gr Intr 3:Det 4:Gr Sum 5:Rp Sum 6:Pg Ft
+BAND_GROUPNUM       101, // Group # 1:outer most band 2:inside of 1 etc
+BAND_OPENFLG        103, // 1: band open  0: band close
+BAND_GROUPTYPE      104, // 1: field  2: expression  3: record count
+BAND_GFIELD         116, // Field to group on
+BAND_GROUP_REC      106, // When grouping on record count  how many
+BAND_EXPRESSION     107, // Expression to group on
+BAND_INTROEACH      108, // 1: print group intro on each page  0:don't
+BAND_NEWPAGE        110, // 1: start band on new page  0: don't
+BAND_TEXTPITCH      111, // 0 1 2 3: default  pica  elite  condensed
+BAND_QUALITY        112, // Quality print 0: non quality
+BAND_HEIGHT         113, // Number of band lines
+BAND_SPACING        114, // Default  single, double, or triple
+//
+// Box Attribute Selectors (FOREACH Box_element x .... NEXT)
+//
+BOX_TYPE            160, // Box Type
+                         // Menu Path: LB - Value: 0:single 1:double 2:special
+BOX_SPECIAL_CHAR    161, // Box character
+                         // Menu Path: LBU - Value: Number
+BOX_LEFT            162, // Left column for box
+                         // Menu Path: None - Value: Number
+BOX_TOP             163, // Top row of box
+                         // Menu Path: None - Value: Number
+BOX_WIDTH           164, // Box width in columns
+                         // Menu Path: None - Value: Number
+BOX_HEIGHT          165, // Box height in rows
+                         // Menu Path: None - Value: Number
+//
+// Paragraph end markers have no additional selectors.
+//
+//
+// Ruler attribute selectors (FOREACH Ruler_element ... NEXT)
+//
+RULER_LEFTM         210, // Left margin
+                         // Menu Path: None - Value: Number
+RULER_RIGHTM        211, // Right margin
+                         // Menu Path: None - Value: Number
+RULER_INDENT        212, // Indent
+                         // Menu Path: None - Value: Number
+RULER_TABS          213, // Comma seperated list of tab stop positions
+                         // Menu Path: None - Value: String
+//
+#lston
+;
+//
+// enumerated values for FLD_STYLE
+//
+enum   User_Font  =   31,
+       Soft_space =  128,
+       Bold       =  256,
+       Italic     =  512,
+       Underline  = 1024,
+       Superscript= 2048,
+       Subscript  = 4096;
+//
+// Values returned by Band_BandType
+//
+enum   Page_Header=0,
+       Report_Intro,
+       Group_Intro,
+       Detail,
+       Group_Summary,
+       Report_Summary,
+       Page_Footer;
+//
+// Values returned by Fld_Reset
+//
+enum  Never=0,
+      Each_Page,
+      Each_Group;
+//
+// Values returned by Fld_Fieldtype
+//
+enum  Tabl_data=0,   // Table field from a database
+      Calc_data,     // Calculated expression
+      Summ_data,     // Summary ie. Average, Count, etc.
+      Pred_data;     // Predefined ie. Date, Page, etc.
+}
+
